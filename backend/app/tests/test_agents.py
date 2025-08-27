@@ -144,9 +144,12 @@ async def test_concierge_agent_execute_analyze_website_success():
 
     assert result.success is True
     assert result.data is not None
-    assert 'analysis' in result.data
-    assert 'source_url' in result.data
-    assert result.data['source_url'] == 'https://example.com'
+    # Check that we get business profile data directly (new structure)
+    assert 'company_name' in result.data
+    assert 'website_url' in result.data
+    assert result.data['website_url'] == 'https://example.com'
+    assert 'target_customer' in result.data
+    assert 'offer' in result.data
     assert result.metadata is not None
     assert result.metadata.agent_name == 'Concierge Agent'
 
@@ -962,11 +965,23 @@ async def test_openai_call_with_prompt_id():
             )
 
     # Mock tool with prompt_id
-    tool = MockTool(
+    from app.agents.shared.base_tool import ToolConfig, OpenAIConfig, OpenAIMode
+
+    tool_config = ToolConfig(
         name="Mock Tool",
         slug="mock-tool",
-        description="Mock tool for testing",
-        prompt_id="pmpt_test123"
+        description="Mock tool for testing"
+    )
+
+    openai_config = OpenAIConfig(
+        mode=OpenAIMode.PROMPT_ID,
+        prompt_id="pmpt_test123",
+        model="gpt-4o"
+    )
+
+    tool = MockTool(
+        config=tool_config,
+        openai_config=openai_config
     )
 
     # Mock the call_openai method to avoid actual API call
@@ -999,7 +1014,7 @@ async def test_openai_call_with_prompt_id():
 @pytest.mark.asyncio
 async def test_openai_call_with_system_message():
     """Test OpenAI call using system message approach"""
-    from app.agents.shared.base_tool import BaseTool, ToolInput, ToolOutput
+    from app.agents.shared.base_tool import BaseTool, ToolInput, ToolOutput, ToolConfig, OpenAIConfig, OpenAIMode
 
     # Create concrete implementation that uses call_openai
     class MockTool(BaseTool):
@@ -1028,11 +1043,21 @@ async def test_openai_call_with_system_message():
             )
 
     # Mock tool with system message
-    tool = MockTool(
+    tool_config = ToolConfig(
         name="Mock Tool",
         slug="mock-tool",
-        description="Mock tool for testing",
-        system_message="You are a helpful business analyst."
+        description="Mock tool for testing"
+    )
+
+    openai_config = OpenAIConfig(
+        mode=OpenAIMode.SYSTEM_MESSAGE,
+        system_message="You are a helpful business analyst.",
+        model="gpt-4o"
+    )
+
+    tool = MockTool(
+        config=tool_config,
+        openai_config=openai_config
     )
 
     # Mock the call_openai method to avoid actual API call
@@ -1080,11 +1105,23 @@ async def test_openai_call_error_handling():
 
             return ToolOutput(success=True, data="success")
 
-    tool = ErrorTool(
+    from app.agents.shared.base_tool import ToolConfig, OpenAIConfig, OpenAIMode
+
+    tool_config = ToolConfig(
         name="Error Tool",
         slug="error-tool",
-        description="Tool that simulates errors",
-        prompt_id="pmpt_error"
+        description="Tool that simulates errors"
+    )
+
+    openai_config = OpenAIConfig(
+        mode=OpenAIMode.PROMPT_ID,
+        prompt_id="pmpt_error",
+        model="gpt-4o"
+    )
+
+    tool = ErrorTool(
+        config=tool_config,
+        openai_config=openai_config
     )
 
     # Mock error response
