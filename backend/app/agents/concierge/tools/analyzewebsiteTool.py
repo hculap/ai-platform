@@ -85,7 +85,8 @@ class BusinessProfileParser:
         'avatar': 'target_customer',
         'customer_avatar': 'target_customer',
         'persona': 'target_customer',
-        'target_persona': 'target_customer'
+        'target_persona': 'target_customer',
+        'target_customer': 'target_customer'  # Direct mapping for AI responses
     }
     
     def __init__(self, json_extractor: Optional[JSONExtractor] = None):
