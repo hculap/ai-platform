@@ -200,12 +200,13 @@ class OpenAIClient:
             self._client = get_openai_client()
         return self._client
     
-    async def call(self, user_input: str, **kwargs) -> Dict[str, Any]:
+    async def call(self, user_input: str, background: bool = False, **kwargs) -> Dict[str, Any]:
         """
         Call OpenAI API based on configuration.
         
         Args:
             user_input: User input message
+            background: Whether to run in background mode
             **kwargs: Additional parameters
             
         Returns:
@@ -225,6 +226,7 @@ class OpenAIClient:
                 api_response = client.create_response_with_prompt_id(
                     prompt_id=self.config.prompt_id,
                     user_message=user_input,
+                    background=background,
                     **kwargs
                 )
             else:  # SYSTEM_MESSAGE mode
@@ -490,12 +492,13 @@ class BaseTool(ABC):
             additional_info=additional_info or {}
         )
     
-    async def call_openai(self, user_input: str, **kwargs) -> Dict[str, Any]:
+    async def call_openai(self, user_input: str, background: bool = False, **kwargs) -> Dict[str, Any]:
         """
         Call OpenAI API using configured settings.
         
         Args:
             user_input: User input message
+            background: Whether to run in background mode
             **kwargs: Additional parameters
             
         Returns:
@@ -508,7 +511,7 @@ class BaseTool(ABC):
                 'content': None
             }
         
-        return await self.openai_client.call(user_input, **kwargs)
+        return await self.openai_client.call(user_input, background=background, **kwargs)
     
     async def execute_with_monitoring(self, input_data: ToolInput) -> ToolOutput:
         """

@@ -244,20 +244,45 @@ def execute_tool(slug: str, tool_slug: str):
                 context={'agent_input': data, 'interaction_id': interaction_id}
             )
 
+            # Check for background mode
+            background_mode = data.get('background', False) and tool_slug == 'analyze-website'
+            
             # Execute tool synchronously
             import asyncio
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)
             try:
-                result = loop.run_until_complete(tool.execute(tool_input))
+                # Check if tool supports background mode
+                if background_mode and hasattr(tool.execute, '__code__') and 'background' in tool.execute.__code__.co_varnames:
+                    result = loop.run_until_complete(tool.execute(tool_input, background=background_mode))
+                else:
+                    result = loop.run_until_complete(tool.execute(tool_input))
             finally:
                 loop.close()
             execution_time = time.time() - start_time
 
             if result.success:
+                # Handle background mode responses
+                if background_mode and result.data.get('status') == 'pending':
+                    # For background requests, mark interaction as pending
+                    if interaction and interaction_id:
+                        interaction.status = 'pending'
+                        interaction.output_data = result.data
+                        db.session.commit()
+                    
+                    response_data = {
+                        'status': 'pending',
+                        'data': result.data
+                    }
+                    if interaction_id:
+                        response_data['interaction_id'] = interaction_id
+                    
+                    return jsonify(response_data)
+                
+                # Handle regular synchronous responses
                 # Process business profile update if this is an analyze-website tool
                 business_profile_id = data.get('business_profile_id')
-                if business_profile_id and tool_slug == 'analyze-website':
+                if business_profile_id and tool_slug == 'analyze-website' and not background_mode:
                     try:
                         from ..models.business_profile import BusinessProfile
                         profile = BusinessProfile.query.filter_by(

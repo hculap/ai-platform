@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppSection, LoadingState, BusinessProfile } from './types';
-import { analyzeWebsite } from './services/api';
+import { startBackgroundAnalysis, checkAnalysisStatus } from './services/api';
 
 // Components
 import BackgroundElements from './components/BackgroundElements';
@@ -15,6 +15,7 @@ function App() {
   const [currentSection, setCurrentSection] = useState<AppSection>(AppSection.URL_INPUT);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisData, setAnalysisData] = useState<BusinessProfile | null>(null);
+  const [openaiResponseId, setOpenaiResponseId] = useState<string | null>(null);
   const [loadingState, setLoadingState] = useState<LoadingState>({
     isLoading: false,
     progress: 0,
@@ -25,7 +26,43 @@ function App() {
     setIsAnalyzing(true);
     setCurrentSection(AppSection.LOADING);
     
-    // Simulate loading steps for ~40 seconds
+    try {
+      // Start background analysis
+      const startResult = await startBackgroundAnalysis(url);
+      
+      if (!startResult.success || !startResult.openaiResponseId) {
+        throw new Error(startResult.error || 'Failed to start analysis');
+      }
+      
+      setOpenaiResponseId(startResult.openaiResponseId);
+      console.log('Background analysis started with ID:', startResult.openaiResponseId);
+      
+      // Start polling for completion
+      pollAnalysisStatus(startResult.openaiResponseId);
+      
+    } catch (error) {
+      console.error('Analysis start error:', error);
+      
+      // Show error notification
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-4 rounded-xl shadow-lg z-50 animate-slide-up';
+      errorDiv.innerHTML = `
+        <div class="flex items-center space-x-2">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          <span>Failed to start analysis. Please try again.</span>
+        </div>
+      `;
+      document.body.appendChild(errorDiv);
+      setTimeout(() => errorDiv.remove(), 5000);
+      
+      setCurrentSection(AppSection.URL_INPUT);
+      setIsAnalyzing(false);
+    }
+  };
+
+  const pollAnalysisStatus = async (openaiResponseId: string) => {
     const loadingSteps = [
       { text: t('loading.steps.structure'), duration: 8000 },    // 8 seconds
       { text: t('loading.steps.content'), duration: 10000 },     // 10 seconds  
@@ -36,11 +73,14 @@ function App() {
     ];
 
     let currentStep = 0;
+    let pollCount = 0;
+    const maxPolls = 30; // 5 minutes max (10 second intervals)
+    
     const showNextStep = () => {
       if (currentStep < loadingSteps.length) {
         setLoadingState({
           isLoading: true,
-          progress: 0, // No longer used
+          progress: 0,
           text: loadingSteps[currentStep].text
         });
         
@@ -52,41 +92,70 @@ function App() {
         }, loadingSteps[currentStep].duration);
       }
     };
-    
+
     showNextStep();
 
-    try {
-      const result = await analyzeWebsite(url);
-      
-      if (result.success && result.data) {
-        setAnalysisData(result.data);
-        setTimeout(() => {
-          setCurrentSection(AppSection.FORM);
-          setIsAnalyzing(false);
-        }, 1000);
-      } else {
-        throw new Error(result.error || 'Analysis failed');
+    const checkStatus = async () => {
+      try {
+        const statusResult = await checkAnalysisStatus(openaiResponseId);
+        
+        if (statusResult.status === 'completed' && statusResult.data) {
+          setAnalysisData(statusResult.data);
+          setTimeout(() => {
+            setCurrentSection(AppSection.FORM);
+            setIsAnalyzing(false);
+          }, 1000);
+        } else if (statusResult.status === 'failed' || statusResult.status === 'canceled') {
+          throw new Error(statusResult.error || `Analysis ${statusResult.status}`);
+        } else if (statusResult.status === 'error') {
+          throw new Error(statusResult.error || 'Status check error');
+        } else if (statusResult.status === 'pending' || statusResult.status === 'queued' || statusResult.status === 'in_progress') {
+          // Still processing, continue polling
+          pollCount++;
+          if (pollCount < maxPolls) {
+            setTimeout(checkStatus, 10000); // Check every 10 seconds
+          } else {
+            throw new Error('Analysis is taking too long. Please try again later.');
+          }
+        } else {
+          // Unknown status, continue polling but log it
+          console.warn('Unknown analysis status:', statusResult.status);
+          pollCount++;
+          if (pollCount < maxPolls) {
+            setTimeout(checkStatus, 10000);
+          } else {
+            throw new Error('Analysis is taking too long. Please try again later.');
+          }
+        }
+      } catch (error) {
+        console.error('Status check error:', error);
+        
+        // Show error notification
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-4 rounded-xl shadow-lg z-50 animate-slide-up';
+        errorDiv.innerHTML = `
+          <div class="flex items-center space-x-2">
+            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>${error instanceof Error ? error.message : 'Analysis failed. Please try again.'}</span>
+          </div>
+        `;
+        document.body.appendChild(errorDiv);
+        setTimeout(() => errorDiv.remove(), 5000);
+        
+        setCurrentSection(AppSection.URL_INPUT);
+        setIsAnalyzing(false);
+        setLoadingState({
+          isLoading: false,
+          progress: 0,
+          text: ''
+        });
       }
-    } catch (error) {
-      console.error('Analysis error:', error);
-      
-      // Show error notification
-      const errorDiv = document.createElement('div');
-      errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-4 rounded-xl shadow-lg z-50 animate-slide-up';
-      errorDiv.innerHTML = `
-        <div class="flex items-center space-x-2">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
-          <span>Analysis failed. Please try again.</span>
-        </div>
-      `;
-      document.body.appendChild(errorDiv);
-      setTimeout(() => errorDiv.remove(), 5000);
-      
-      setCurrentSection(AppSection.URL_INPUT);
-      setIsAnalyzing(false);
-    }
+    };
+
+    // Start checking status immediately
+    checkStatus();
   };
 
   const handleSkipToForm = () => {
@@ -96,6 +165,7 @@ function App() {
   const handleReanalyze = () => {
     setCurrentSection(AppSection.URL_INPUT);
     setAnalysisData(null);
+    setOpenaiResponseId(null);
   };
 
   // Add keyboard shortcuts
@@ -141,7 +211,10 @@ function App() {
             )}
             
             {currentSection === AppSection.LOADING && (
-              <LoadingSection loadingState={loadingState} />
+              <LoadingSection 
+                loadingState={loadingState}
+                debugInfo={openaiResponseId ? `ID: ${openaiResponseId.slice(-8)}` : undefined}
+              />
             )}
             
             {currentSection === AppSection.FORM && (

@@ -9,6 +9,7 @@ from typing import Any, Dict, Optional
 
 from ..base import BaseAgent, AgentInput, AgentOutput, AgentMetadata, create_agent_metadata, AgentCapabilities
 from .tools.analyzewebsiteTool import AnalyzeWebsiteTool
+from .tools.checkAnalysisStatusTool import CheckAnalysisStatusTool
 from ...utils.messages import (
     get_message, AGENT_ACTION_PARAMETER_REQUIRED, AGENT_UNKNOWN_ACTION,
     AGENT_EXECUTION_FAILED, AGENT_UNKNOWN_ERROR
@@ -22,10 +23,16 @@ class ConciergeAgent(BaseAgent):
         """Initialize the Concierge Agent."""
         # Initialize tools
         analyze_website_tool = AnalyzeWebsiteTool()
+        from .tools.checkAnalysisStatusTool import TOOL_CONFIG as CHECK_STATUS_TOOL_CONFIG, OPENAI_CONFIG as CHECK_STATUS_OPENAI_CONFIG
+        check_status_tool = CheckAnalysisStatusTool(
+            tool_config=CHECK_STATUS_TOOL_CONFIG,
+            openai_config=CHECK_STATUS_OPENAI_CONFIG
+        )
 
         capabilities = AgentCapabilities(
             tools={
-                'analyze-website': analyze_website_tool
+                'analyze-website': analyze_website_tool,
+                'check-analysis-status': check_status_tool
             },
             resources={},
             prompts={},
@@ -80,7 +87,13 @@ class ConciergeAgent(BaseAgent):
                 user_id=input_data.user_id,
                 context=input_data
             )
-            result = await tool.execute(tool_input)
+            
+            # Check if background mode is requested for analyze-website tool
+            background_mode = parameters.get('background', False) and action == 'analyze-website'
+            if hasattr(tool.execute, '__code__') and 'background' in tool.execute.__code__.co_varnames:
+                result = await tool.execute(tool_input, background=background_mode)
+            else:
+                result = await tool.execute(tool_input)
             
             return AgentOutput(
                 success=result.success,

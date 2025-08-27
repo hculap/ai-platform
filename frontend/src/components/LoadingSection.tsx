@@ -4,9 +4,10 @@ import { LoadingState } from '../types';
 
 interface LoadingSectionProps {
   loadingState: LoadingState;
+  debugInfo?: string;
 }
 
-const LoadingSection: React.FC<LoadingSectionProps> = ({ loadingState }) => {
+const LoadingSection: React.FC<LoadingSectionProps> = ({ loadingState, debugInfo }) => {
   const { t } = useTranslation();
 
   return (
@@ -32,6 +33,9 @@ const LoadingSection: React.FC<LoadingSectionProps> = ({ loadingState }) => {
                 ))}
               </div>
               <p className="text-sm text-gray-600 font-medium">{loadingState.text}</p>
+              {debugInfo && (
+                <p className="text-xs text-gray-400 mt-2 font-mono">{debugInfo}</p>
+              )}
             </div>
           </div>
         </div>

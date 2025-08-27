@@ -41,6 +41,8 @@ class APIResponse:
     error: Optional[str] = None
     error_type: Optional[str] = None
     finish_reason: Optional[str] = None
+    status: Optional[str] = None  # For background requests: 'pending', 'completed', 'failed'
+    is_background: bool = False
 
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary, excluding None values."""
@@ -110,7 +112,55 @@ class OpenAIClient:
         Returns:
             Extracted text content or None
         """
-        # First, try to convert to dict if possible to avoid Pydantic issues
+        # FIRST: Try direct OpenAI Responses API structure
+        if hasattr(response, 'output'):
+            output = response.output
+            
+            # Handle string output directly
+            if isinstance(output, str):
+                logger.info("Found direct string output")
+                return output
+                
+            # Handle structured output
+            if output:
+                logger.info(f"Found structured output, type: {type(output)}")
+                # Try to access as list
+                if isinstance(output, list) and len(output) > 0:
+                    first_output = output[0]
+                    
+                    # Check if it has content attribute
+                    if hasattr(first_output, 'content'):
+                        content = first_output.content
+                        
+                        # If content is a list, get first item
+                        if isinstance(content, list) and len(content) > 0:
+                            content_item = content[0]
+                            
+                            # Try to get text from content item
+                            if hasattr(content_item, 'text'):
+                                logger.info("Found text in content[0].text")
+                                return content_item.text
+                            elif isinstance(content_item, dict) and 'text' in content_item:
+                                logger.info("Found text in content[0]['text']")
+                                return content_item['text']
+                            elif isinstance(content_item, str):
+                                logger.info("Found string content[0]")
+                                return content_item
+                        
+                        # If content is string
+                        elif isinstance(content, str):
+                            logger.info("Found string content")
+                            return content
+                    
+                    # Check direct text attribute
+                    elif hasattr(first_output, 'text'):
+                        logger.info("Found text in output[0].text")
+                        return first_output.text
+                    elif isinstance(first_output, str):
+                        logger.info("Found string output[0]")
+                        return first_output
+
+        # FALLBACK: Try to convert to dict if possible to avoid Pydantic issues
         response_data = None
         try:
             if hasattr(response, 'model_dump'):
@@ -217,6 +267,7 @@ class OpenAIClient:
         user_message: str,
         variables: Optional[Dict[str, Any]] = None,
         version: Optional[str] = None,
+        background: bool = False,
         **kwargs
     ) -> APIResponse:
         """
@@ -227,6 +278,7 @@ class OpenAIClient:
             user_message: The user's message/input
             variables: Variables for the prompt
             version: Prompt version
+            background: Whether to run in background mode
             **kwargs: Additional parameters for the API
 
         Returns:
@@ -247,6 +299,7 @@ class OpenAIClient:
             response = client.responses.create(
                 prompt=prompt_config,
                 input=user_message,
+                background=background,
                 **kwargs
             )
 
@@ -256,6 +309,7 @@ class OpenAIClient:
             model = None
             usage_data = None
             created_at = None
+            status = None
             
             # Try to extract data without triggering Pydantic serialization warnings
             try:
@@ -263,9 +317,14 @@ class OpenAIClient:
                 response_id = getattr(response, 'id', None)
                 model = getattr(response, 'model', None)
                 created_at = getattr(response, 'created_at', None)
+                status = getattr(response, 'status', None)
                 
-                # Extract content with the improved extraction method
-                content = self._extract_response_content(response)
+                # For background requests, we might not have content immediately
+                if background and status == 'pending':
+                    content = None  # Content will be available when status is 'completed'
+                else:
+                    # Extract content with the improved extraction method
+                    content = self._extract_response_content(response)
                 
                 # Extract usage data safely
                 if hasattr(response, 'usage'):
@@ -275,7 +334,8 @@ class OpenAIClient:
                 logger.warning(f"Error extracting response data: {e}")
             
             # Additional fallback: Check if response has a direct text/content attribute
-            if not content:
+            # But skip this for pending background requests
+            if not content and not (background and status == 'pending'):
                 for attr in ['text', 'content', 'output_text']:
                     if hasattr(response, attr):
                         attr_value = getattr(response, attr)
@@ -283,7 +343,15 @@ class OpenAIClient:
                             content = attr_value
                             break
             
-            if not content:
+            # For background requests, success depends on getting a response_id
+            if background:
+                success = bool(response_id)
+                error_msg = "No response ID for background request" if not response_id else None
+            else:
+                success = bool(content)
+                error_msg = "No content found in response" if not content else None
+            
+            if not content and not background:
                 logger.warning(f"No content extracted for prompt_id: {prompt_id}")
                 # Try to log response structure safely
                 try:
@@ -292,13 +360,15 @@ class OpenAIClient:
                     pass
             
             return APIResponse(
-                success=bool(content),
+                success=success,
                 content=content,
                 response_id=response_id,
                 model=model,
                 usage=usage_data,
                 created_at=created_at,
-                error="No content found in response" if not content else None
+                status=status,
+                is_background=background,
+                error=error_msg
             )
 
         except Exception as e:
@@ -306,7 +376,62 @@ class OpenAIClient:
             return APIResponse(
                 success=False,
                 error=str(e),
-                error_type=type(e).__name__
+                error_type=type(e).__name__,
+                is_background=background
+            )
+
+    def get_response_status(self, response_id: str) -> APIResponse:
+        """
+        Get the status of a background response.
+
+        Args:
+            response_id: The ID of the response to check
+
+        Returns:
+            APIResponse object with the current status and content (if completed)
+        """
+        try:
+            client = self._get_client()
+
+            # Retrieve the response by ID
+            response = client.responses.retrieve(response_id)
+
+            # Extract response data
+            content = None
+            status = getattr(response, 'status', None)
+            model = getattr(response, 'model', None)
+            usage_data = None
+            created_at = getattr(response, 'created_at', None)
+            
+            # If completed, extract content
+            if status == 'completed':
+                content = self._extract_response_content(response)
+                if hasattr(response, 'usage'):
+                    usage_data = self._extract_usage_data(response.usage)
+                
+                # Additional logging for debugging content extraction
+                logger.info(f"Extracted content length: {len(str(content)) if content else 0}")
+                logger.info(f"Content preview: {str(content)[:200] if content else 'None'}")
+            
+            return APIResponse(
+                success=True,
+                content=content,
+                response_id=response_id,
+                model=model,
+                usage=usage_data,
+                created_at=created_at,
+                status=status,
+                is_background=True
+            )
+
+        except Exception as e:
+            logger.error(f"Error retrieving response {response_id}: {e}", exc_info=True)
+            return APIResponse(
+                success=False,
+                error=str(e),
+                error_type=type(e).__name__,
+                response_id=response_id,
+                is_background=True
             )
 
     def create_chat_completion(

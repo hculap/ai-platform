@@ -60,16 +60,12 @@ def create_app(config_name='development'):
     from .agents import initialize_agents
     initialize_agents()
 
-    # Add route to serve the main application
-    @app.route('/')
-    def index():
-        return app.send_static_file('index.html')
-
-    @app.route('/<path:path>')
-    def catch_all(path):
-        # For client-side routing, serve the index.html for all non-API routes
-        if path.startswith('api/'):
-            return {'error': 'Not found'}, 404
-        return app.send_static_file('index.html')
+    # CORS headers for React development
+    @app.after_request
+    def after_request(response):
+        response.headers.add('Access-Control-Allow-Origin', '*')
+        response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+        response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+        return response
 
     return app

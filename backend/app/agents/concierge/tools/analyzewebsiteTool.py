@@ -24,6 +24,7 @@ from ....utils.messages import (
     get_message, TOOL_URL_PARAMETER_REQUIRED, TOOL_INVALID_URL_FORMAT,
     TOOL_EXECUTION_FAILED, TOOL_ANALYSIS_FAILED
 )
+# Removed AnalysisRequest - using browser state instead
 
 
 class JSONExtractor:
@@ -239,12 +240,13 @@ class AnalyzeWebsiteTool(BaseTool):
         self.url_validator = URLValidator()
         self.profile_parser = BusinessProfileParser()
     
-    async def execute(self, input_data: ToolInput) -> ToolOutput:
+    async def execute(self, input_data: ToolInput, background: bool = False) -> ToolOutput:
         """
         Execute website analysis using OpenAI.
         
         Args:
             input_data: Tool input containing parameters and user info
+            background: Whether to run in background mode (returns request_id instead of waiting)
             
         Returns:
             ToolOutput: Analysis results or error
@@ -263,7 +265,7 @@ class AnalyzeWebsiteTool(BaseTool):
             url = validation_result['url']
             
             # Call OpenAI API (now properly awaited)
-            openai_result = await self._analyze_website(url)
+            openai_result = await self._analyze_website(url, background=background)
             
             if not openai_result.get('success'):
                 return self._create_error_output(
@@ -271,7 +273,21 @@ class AnalyzeWebsiteTool(BaseTool):
                     start_time
                 )
             
-            # Process and return results
+            # Handle background mode
+            if background:
+                # Return OpenAI response_id directly - frontend will poll with this
+                return ToolOutput(
+                    success=True,
+                    data={
+                        'openai_response_id': openai_result.get('response_id'),
+                        'status': 'pending',
+                        'website_url': url,
+                        'message': 'Analysis started in background. Use openai_response_id to check status.'
+                    },
+                    metadata=self.create_metadata(time.time() - start_time)
+                )
+            
+            # Process and return results for synchronous mode
             response_data = self._process_analysis_result(
                 openai_result.get('content'),
                 url,
@@ -321,19 +337,20 @@ class AnalyzeWebsiteTool(BaseTool):
             'url': url
         }
     
-    async def _analyze_website(self, url: str) -> Dict[str, Any]:
+    async def _analyze_website(self, url: str, background: bool = False) -> Dict[str, Any]:
         """
         Analyze website using OpenAI.
         
         Args:
             url: Website URL to analyze
+            background: Whether to run in background mode
             
         Returns:
             OpenAI API response
         """
         user_input = f"Please analyze the following website URL and create a comprehensive business profile: {url}"
-        # Now properly awaiting the async method
-        return await self.call_openai(user_input)
+        # Now properly awaiting the async method with background parameter
+        return await self.call_openai(user_input, background=background)
     
     def _process_analysis_result(
         self,
