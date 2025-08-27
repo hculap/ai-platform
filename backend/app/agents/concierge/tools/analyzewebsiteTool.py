@@ -156,81 +156,63 @@ class AnalyzeWebsiteTool(BaseTool):
         }
 
     def create_error_response(
-        self, 
-        url: str, 
-        error_message: str, 
+        self,
+        url: str,
+        error_message: str,
         openai_result: Optional[Dict] = None,
         user_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Create a standardized error response.
-        
+
         Args:
             url: The website URL that was analyzed
             error_message: Error message to include
             openai_result: Optional OpenAI result for metadata
             user_id: Optional user ID for access tracking
-            
+
         Returns:
             Dict: Formatted error response
         """
-        response = {
-            'business_profile': {
-                'company_name': 'Unknown',
-                'website_url': url,
-                'error': error_message,
-                'confidence_score': 0.0
-            },
-            'is_public_access': user_id is None,
-            'analysis_timestamp': datetime.now().isoformat()
+        return {
+            'company_name': 'Unknown',
+            'website_url': url,
+            'error': error_message
         }
-        
-        if openai_result:
-            response.update({
-                'openai_model': openai_result.get('model'),
-                'openai_usage': openai_result.get('usage'),
-                'response_id': openai_result.get('response_id')
-            })
-        
-        return response
 
     def enrich_business_profile(
-        self, 
-        profile: Dict[str, Any], 
+        self,
+        profile: Dict[str, Any],
         url: str,
         openai_result: Dict[str, Any],
         user_id: Optional[str] = None
     ) -> Dict[str, Any]:
         """
         Enrich business profile with additional metadata.
-        
+
         Args:
             profile: Business profile data
             url: Website URL
             openai_result: OpenAI API result
             user_id: Optional user ID
-            
+
         Returns:
             Dict: Enriched response data
         """
         # Ensure business_profile exists and is a dict
         if 'business_profile' not in profile:
             profile = {'business_profile': profile}
-        
+
         business_profile = profile['business_profile']
-        
+
         # Ensure it's a dict
         if not isinstance(business_profile, dict):
             business_profile = {'description': str(business_profile)}
-        
+
         # Add website URL if not present
         if 'website_url' not in business_profile:
             business_profile['website_url'] = url
-        
-        # Ensure confidence score exists
-        if 'confidence_score' not in business_profile:
-            business_profile['confidence_score'] = 0.9  # High confidence for successful parse
-        
+
         # Map common fields if they exist with different names
         field_mappings = {
             'name': 'company_name',
@@ -240,23 +222,13 @@ class AnalyzeWebsiteTool(BaseTool):
             'services': 'offer',
             'products': 'offer'
         }
-        
+
         for old_key, new_key in field_mappings.items():
             if old_key in business_profile and new_key not in business_profile:
                 business_profile[new_key] = business_profile[old_key]
                 del business_profile[old_key]
-        
-        # Build final response
-        response = {
-            'business_profile': business_profile,
-            'is_public_access': user_id is None,
-            'openai_model': openai_result.get('model'),
-            'openai_usage': openai_result.get('usage'),
-            'response_id': openai_result.get('response_id'),
-            'analysis_timestamp': datetime.now().isoformat()
-        }
-        
-        return response
+
+        return business_profile
 
     async def execute(self, input_data: ToolInput) -> ToolOutput:
         """
