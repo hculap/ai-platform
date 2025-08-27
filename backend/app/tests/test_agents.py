@@ -4,11 +4,14 @@ Tests agent registration, execution, and tool functionality.
 """
 
 import pytest
+import json
 from app.agents import AgentRegistry, ConciergeAgent, initialize_agents
 from app.agents.base import AgentInput
 from app.utils.messages import (
     AGENT_ACTION_PARAMETER_REQUIRED, AGENT_UNKNOWN_ACTION,
-    TOOL_URL_PARAMETER_REQUIRED, TOOL_INVALID_URL_FORMAT
+    TOOL_URL_PARAMETER_REQUIRED, TOOL_INVALID_URL_FORMAT,
+    ERROR_VALIDATION_ERROR, ERROR_NOT_FOUND, ERROR_UNAUTHORIZED,
+    ERROR_SERVER_ERROR
 )
 
 
@@ -218,3 +221,283 @@ def test_agent_output_creation():
     assert output.success is True
     assert output.data == {'result': 'success'}
     assert output.metadata is metadata
+
+
+# ============================================================================
+# INTERACTION API TESTS
+# ============================================================================
+
+def test_list_agents_api(client):
+    """Test GET /api/agents endpoint"""
+    response = client.get('/api/agents')
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert 'data' in data
+    assert isinstance(data['data'], list)
+    assert len(data['data']) >= 1  # Should have at least concierge agent
+
+    # Check agent structure
+    agent = data['data'][0]
+    assert 'id' in agent
+    assert 'name' in agent
+    assert 'slug' in agent
+    assert 'description' in agent
+    assert 'tools' in agent
+    assert isinstance(agent['tools'], list)
+
+
+def test_get_agent_api(client):
+    """Test GET /api/agents/:slug endpoint"""
+    response = client.get('/api/agents/business-concierge')
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert 'id' in data
+    assert 'name' in data
+    assert 'slug' in data
+    assert 'description' in data
+    assert 'tools' in data
+    assert data['slug'] == 'business-concierge'
+
+
+def test_get_agent_not_found_api(client):
+    """Test GET /api/agents/:slug endpoint with non-existent agent"""
+    response = client.get('/api/agents/non-existent-agent')
+
+    assert response.status_code == 404
+    data = response.get_json()
+    assert data['error'] == ERROR_NOT_FOUND
+
+
+def test_get_agent_tools_api(client, test_user_headers):
+    """Test GET /api/agents/:slug/tools endpoint"""
+    response = client.get('/api/agents/business-concierge/tools', headers=test_user_headers)
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert 'data' in data
+    assert isinstance(data['data'], list)
+    assert len(data['data']) >= 1  # Should have analyze-website tool
+
+    # Check tool structure
+    tool = data['data'][0]
+    assert 'name' in tool
+    assert 'slug' in tool
+    assert 'description' in tool
+
+
+def test_execute_tool_unauthorized(client):
+    """Test POST /api/agents/:slug/tools/:tool_slug/call without authentication"""
+    response = client.post('/api/agents/business-concierge/tools/analyze-website/call', json={
+        'input': {'url': 'https://example.com'}
+    })
+
+    assert response.status_code == 401
+    data = response.get_json()
+    assert 'msg' in data  # Flask-JWT-Extended uses 'msg' for auth errors
+
+
+def test_execute_tool_success(client, test_user_headers):
+    """Test POST /api/agents/:slug/tools/:tool_slug/call success case"""
+    response = client.post('/api/agents/business-concierge/tools/analyze-website/call',
+                         json={
+                             'business_profile_id': 'test-profile-id',
+                             'input': {
+                                 'url': 'https://example.com'
+                             }
+                         },
+                         headers=test_user_headers)
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert 'interaction_id' in data
+    assert 'status' in data
+    assert data['status'] == 'completed'
+
+    # Verify interaction was created
+    interaction_id = data['interaction_id']
+    assert interaction_id is not None
+
+
+def test_execute_tool_invalid_agent(client, test_user_headers):
+    """Test POST /api/agents/:slug/tools/:tool_slug/call with invalid agent"""
+    response = client.post('/api/agents/invalid-agent/tools/analyze-website/call',
+                         json={'input': {'url': 'https://example.com'}},
+                         headers=test_user_headers)
+
+    assert response.status_code == 404
+    data = response.get_json()
+    assert data['error'] == ERROR_NOT_FOUND
+
+
+def test_execute_tool_invalid_tool(client, test_user_headers):
+    """Test POST /api/agents/:slug/tools/:tool_slug/call with invalid tool"""
+    response = client.post('/api/agents/business-concierge/tools/invalid-tool/call',
+                         json={'input': {'url': 'https://example.com'}},
+                         headers=test_user_headers)
+
+    assert response.status_code == 404
+    data = response.get_json()
+    assert data['error'] == ERROR_NOT_FOUND
+
+
+def test_execute_tool_missing_url(client, test_user_headers):
+    """Test POST /api/agents/:slug/tools/:tool_slug/call with missing URL"""
+    response = client.post('/api/agents/business-concierge/tools/analyze-website/call',
+                         json={'input': {}},  # Missing URL
+                         headers=test_user_headers)
+
+    assert response.status_code == 500
+    data = response.get_json()
+    assert data['error'] == ERROR_SERVER_ERROR
+
+
+def test_get_interaction_success(client, test_user_headers):
+    """Test GET /api/interactions/:interaction_id success case"""
+    # First create an interaction
+    response = client.post('/api/agents/business-concierge/tools/analyze-website/call',
+                         json={'input': {'url': 'https://example.com'}},
+                         headers=test_user_headers)
+
+    interaction_id = response.get_json()['interaction_id']
+
+    # Now get the interaction
+    response = client.get(f'/api/agents/interactions/{interaction_id}', headers=test_user_headers)
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert 'id' in data
+    assert 'status' in data
+    assert 'output' in data
+    assert 'agent_name' in data
+    assert 'tool_name' in data
+    assert data['id'] == interaction_id
+    assert data['agent_name'] == 'Concierge Agent'
+    assert data['tool_name'] == 'analyze-website'
+
+
+def test_get_interaction_not_found(client, test_user_headers):
+    """Test GET /api/interactions/:interaction_id with non-existent interaction"""
+    response = client.get('/api/agents/interactions/non-existent-id', headers=test_user_headers)
+
+    assert response.status_code == 404
+    data = response.get_json()
+    if data:  # Only check if data is not None
+        assert data['error'] == ERROR_NOT_FOUND
+
+
+def test_get_interaction_unauthorized(client):
+    """Test GET /api/interactions/:interaction_id without authentication"""
+    response = client.get('/api/agents/interactions/test-id')
+
+    assert response.status_code == 401
+
+
+def test_list_interactions_success(client, test_user_headers):
+    """Test GET /api/interactions success case"""
+    # Create a few interactions first
+    client.post('/api/agents/business-concierge/tools/analyze-website/call',
+               json={'input': {'url': 'https://example1.com'}},
+               headers=test_user_headers)
+
+    client.post('/api/agents/business-concierge/tools/analyze-website/call',
+               json={'input': {'url': 'https://example2.com'}},
+               headers=test_user_headers)
+
+    # Now list interactions
+    response = client.get('/api/agents/interactions', headers=test_user_headers)
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert 'data' in data
+    assert isinstance(data['data'], list)
+    assert len(data['data']) >= 2  # Should have at least the 2 we created
+
+    # Check interaction structure
+    interaction = data['data'][0]
+    assert 'id' in interaction
+    assert 'agent_name' in interaction
+    assert 'tool_name' in interaction
+    assert 'status' in interaction
+    assert 'created_at' in interaction
+
+
+def test_list_interactions_empty(client, test_user_headers):
+    """Test GET /api/interactions when no interactions exist"""
+    # Make sure we have a fresh user with no interactions
+    response = client.get('/api/agents/interactions', headers=test_user_headers)
+
+    assert response.status_code == 200
+    data = response.get_json()
+    assert 'data' in data
+    assert isinstance(data['data'], list)
+
+
+def test_list_interactions_unauthorized(client):
+    """Test GET /api/interactions without authentication"""
+    response = client.get('/api/agents/interactions')
+
+    assert response.status_code == 401
+
+
+def test_interaction_model_creation():
+    """Test Interaction model creation and methods"""
+    from app.models.interaction import Interaction
+
+    interaction = Interaction(
+        user_id='test-user-123',
+        business_profile_id='test-profile-456',
+        agent_type='business-concierge',
+        agent_name='Concierge Agent',
+        tool_name='analyze-website',
+        tool_description='Website analysis tool',
+        input_data={'url': 'https://example.com'}
+    )
+
+    # Set status explicitly since SQLAlchemy defaults don't apply until database commit
+    interaction.status = 'processing'
+
+    assert interaction.user_id == 'test-user-123'
+    assert interaction.business_profile_id == 'test-profile-456'
+    assert interaction.agent_type == 'business-concierge'
+    assert interaction.agent_name == 'Concierge Agent'
+    assert interaction.tool_name == 'analyze-website'
+    assert interaction.status == 'processing'
+    assert interaction.input_data == {'url': 'https://example.com'}
+
+    # Test marking as completed
+    interaction.mark_completed(
+        output_data={'analysis': 'Test analysis'},
+        execution_time=1.5
+    )
+
+    assert interaction.status == 'completed'
+    assert interaction.output_data == {'analysis': 'Test analysis'}
+    assert interaction.execution_time == 1.5
+
+    # Test marking as failed
+    interaction.mark_failed(
+        error_message='Test error',
+        execution_time=0.5
+    )
+
+    assert interaction.status == 'failed'
+    assert interaction.error_message == 'Test error'
+    assert interaction.execution_time == 0.5
+
+    # Test to_dict method
+    data = interaction.to_dict()
+    assert 'id' in data
+    assert 'agent_name' in data
+    assert 'tool_name' in data
+    assert 'status' in data
+    assert 'created_at' in data
+    assert data['status'] == 'failed'
+
+    # Test to_detail_dict method
+    detail_data = interaction.to_detail_dict()
+    assert 'input_data' in detail_data
+    assert 'output_data' in detail_data
+    assert 'error_message' in detail_data
+    assert detail_data['error_message'] == 'Test error'

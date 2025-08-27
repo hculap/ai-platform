@@ -38,6 +38,7 @@ class ConciergeAgent(BaseAgent):
         
         super().__init__(
             name='Concierge Agent',
+            slug='business-concierge',
             short_description='AI-powered business profile generator from website analysis',
             description='The Concierge Agent analyzes website URLs to create business profiles using OpenAI.',
             version='1.0.0',

@@ -67,6 +67,7 @@ class BaseTool(ABC):
     def __init__(
         self,
         name: str,
+        slug: str,
         description: str,
         version: str = "1.0.0",
         category: str = "general",
@@ -80,6 +81,7 @@ class BaseTool(ABC):
 
         Args:
             name: Unique name for the tool
+            slug: URL-friendly identifier for the tool
             description: Human-readable description
             version: Tool version string
             category: Tool category for organization
@@ -89,6 +91,7 @@ class BaseTool(ABC):
             rate_limit_per_minute: Rate limit for tool usage
         """
         self.name = name
+        self.slug = slug
         self.description = description
         self.version = version
         self.category = category

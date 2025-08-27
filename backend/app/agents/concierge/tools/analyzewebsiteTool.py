@@ -23,7 +23,8 @@ class AnalyzeWebsiteTool(BaseTool):
 
     def __init__(self):
         super().__init__(
-            name='analyze-website',
+            name='Analyze Website',
+            slug='analyze-website',
             description='Analyze a website URL to create a business profile using OpenAI',
             version='1.0.0'
         )

@@ -44,12 +44,14 @@ class BaseAgent(ABC):
     def __init__(
         self,
         name: str,
+        slug: str,
         short_description: str,
         description: str,
         version: str,
         capabilities: AgentCapabilities
     ):
         self.name = name
+        self.slug = slug
         self.short_description = short_description
         self.description = description
         self.version = version
@@ -115,6 +117,7 @@ class ExampleAgent(BaseAgent):
         
         super().__init__(
             name="ExampleAgent",
+            slug="example-agent",
             short_description="An example agent",
             description="This is an example agent implementation",
             version="1.0.0",
