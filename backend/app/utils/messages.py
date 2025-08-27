@@ -39,6 +39,7 @@ ERROR_SERVER_ERROR = 'server_error'
 # Agent System Messages
 AGENT_ACTION_PARAMETER_REQUIRED = 'agent_action_parameter_required'
 AGENT_UNKNOWN_ACTION = 'agent_unknown_action'
+AGENT_INVALID_ACTION = 'agent_invalid_action'
 AGENT_EXECUTION_FAILED = 'agent_execution_failed'
 AGENT_UNKNOWN_ERROR = 'agent_unknown_error'
 
@@ -47,6 +48,7 @@ TOOL_URL_PARAMETER_REQUIRED = 'tool_url_parameter_required'
 TOOL_INVALID_URL_FORMAT = 'tool_invalid_url_format'
 TOOL_EXECUTION_FAILED = 'tool_execution_failed'
 TOOL_ANALYSIS_FAILED = 'tool_analysis_failed'
+TOOL_TEXT_PARAMETER_REQUIRED = 'tool_text_parameter_required'
 
 # Message mapping for easy access (all values are keys, no translations)
 MESSAGES = {
@@ -82,6 +84,7 @@ MESSAGES = {
     # Agent System
     AGENT_ACTION_PARAMETER_REQUIRED: AGENT_ACTION_PARAMETER_REQUIRED,
     AGENT_UNKNOWN_ACTION: AGENT_UNKNOWN_ACTION,
+    AGENT_INVALID_ACTION: AGENT_INVALID_ACTION,
     AGENT_EXECUTION_FAILED: AGENT_EXECUTION_FAILED,
     AGENT_UNKNOWN_ERROR: AGENT_UNKNOWN_ERROR,
 
@@ -90,6 +93,7 @@ MESSAGES = {
     TOOL_INVALID_URL_FORMAT: TOOL_INVALID_URL_FORMAT,
     TOOL_EXECUTION_FAILED: TOOL_EXECUTION_FAILED,
     TOOL_ANALYSIS_FAILED: TOOL_ANALYSIS_FAILED,
+    TOOL_TEXT_PARAMETER_REQUIRED: TOOL_TEXT_PARAMETER_REQUIRED,
 }
 
 def get_message(message_key):

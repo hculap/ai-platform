@@ -15,6 +15,7 @@ migrate = Migrate()
 
 def create_app(config_name='development'):
     """Application factory pattern"""
+    print(f"DEBUG: Creating Flask app with config: {config_name}")
     import sys
     import os
 
@@ -26,14 +27,17 @@ def create_app(config_name='development'):
     from config import config
 
     app = Flask(__name__)
+    print("DEBUG: Flask app created")
 
     # Load configuration
     app.config.from_object(config[config_name])
+    print("DEBUG: Configuration loaded")
 
     # Initialize extensions with app
     db.init_app(app)
     jwt.init_app(app)
     migrate.init_app(app, db)
+    print("DEBUG: Extensions initialized")
 
     # Register blueprints
     from .routes.auth import auth_bp

@@ -9,9 +9,17 @@ import time
 @dataclass
 class AgentCapabilities:
     tools: Dict[str, Any]
-    resources: Dict[str, Any]
-    prompts: Dict[str, Any]
-    logging: Dict[str, Any]
+    resources: Dict[str, Any] = None
+    prompts: Dict[str, Any] = None
+    logging: Dict[str, Any] = None
+
+    def __post_init__(self):
+        if self.resources is None:
+            self.resources = {}
+        if self.prompts is None:
+            self.prompts = {}
+        if self.logging is None:
+            self.logging = {}
 
 
 # Agent Input/Output Types

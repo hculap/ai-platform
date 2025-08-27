@@ -819,6 +819,284 @@ def test_debug_interaction_creation(client, test_user_headers):
         print(f"API error: {data}")
 
 
+# ============================================================================
+# OPENAI INTEGRATION TESTS
+# ============================================================================
+
+def test_openai_client_initialization():
+    """Test OpenAI client initialization and configuration"""
+    from app.services.openai_client import OpenAIClient
+
+    # Test with valid config
+    client = OpenAIClient(
+        api_key="test-key",
+        base_url="https://api.openai.com/v1"
+    )
+
+    assert client.api_key == "test-key"
+    assert client.base_url == "https://api.openai.com/v1"
+
+
+def test_base_tool_openai_fields():
+    """Test BaseTool OpenAI integration fields"""
+    from app.agents.shared.base_tool import BaseTool, ToolInput, ToolOutput
+
+    # Create a concrete implementation for testing
+    class TestTool(BaseTool):
+        async def execute(self, input_data: ToolInput) -> ToolOutput:
+            return ToolOutput(success=True, data="test")
+
+    # Test with prompt_id
+    tool_with_prompt = TestTool(
+        name="Test Tool",
+        slug="test-tool",
+        description="A test tool",
+        prompt_id="pmpt_test123"
+    )
+
+    assert tool_with_prompt.prompt_id == "pmpt_test123"
+    assert tool_with_prompt.system_message is None
+    assert tool_with_prompt.openai_model == "gpt-4o"
+
+    # Test with system_message
+    tool_with_system = TestTool(
+        name="Test Tool 2",
+        slug="test-tool-2",
+        description="Another test tool",
+        system_message="You are a helpful assistant"
+    )
+
+    assert tool_with_system.system_message == "You are a helpful assistant"
+    assert tool_with_system.prompt_id is None
+
+    # Test validation - neither provided should raise error
+    with pytest.raises(ValueError, match="Either system_message or prompt_id must be provided"):
+        TestTool(
+            name="Invalid Tool",
+            slug="invalid-tool",
+            description="Invalid tool"
+        )
+
+    # Test validation - both provided should raise error
+    with pytest.raises(ValueError, match="Cannot specify both system_message and prompt_id"):
+        TestTool(
+            name="Invalid Tool 2",
+            slug="invalid-tool-2",
+            description="Invalid tool 2",
+            system_message="You are helpful",
+            prompt_id="pmpt_test123"
+        )
+
+
+def test_analyze_website_tool_openai_integration():
+    """Test that AnalyzeWebsiteTool is properly configured for OpenAI"""
+    from app.agents.concierge.tools.analyzewebsiteTool import AnalyzeWebsiteTool
+
+    tool = AnalyzeWebsiteTool()
+
+    # Check OpenAI configuration
+    assert tool.prompt_id == 'pmpt_68aec68cbe2081909e109ce3b087d6ba07eff42b26c15bb8'
+    assert tool.system_message is None
+    assert tool.openai_model == "gpt-4o"
+    assert tool.name == "Analyze Website"
+    assert tool.slug == "analyze-website"
+
+
+@pytest.mark.asyncio
+async def test_openai_call_with_prompt_id():
+    """Test OpenAI call using prompt_id approach"""
+    from app.agents.shared.base_tool import BaseTool, ToolInput, ToolOutput
+
+    # Create concrete implementation that uses call_openai
+    class MockTool(BaseTool):
+        async def execute(self, input_data: ToolInput) -> ToolOutput:
+            # Prepare user input
+            user_input = f"Analyze: {input_data.parameters.get('url', 'unknown')}"
+
+            # Call OpenAI
+            openai_result = self.call_openai(user_input)
+
+            if not openai_result['success']:
+                return ToolOutput(
+                    success=False,
+                    error=f"OpenAI API error: {openai_result['error']}"
+                )
+
+            # Return formatted result
+            return ToolOutput(
+                success=True,
+                data={
+                    'analysis': openai_result['content'],
+                    'source_url': input_data.parameters.get('url'),
+                    'openai_model': openai_result.get('model'),
+                    'openai_usage': openai_result.get('usage')
+                }
+            )
+
+    # Mock tool with prompt_id
+    tool = MockTool(
+        name="Mock Tool",
+        slug="mock-tool",
+        description="Mock tool for testing",
+        prompt_id="pmpt_test123"
+    )
+
+    # Mock the call_openai method to avoid actual API call
+    def mock_openai_call(user_input, **kwargs):
+        return {
+            'success': True,
+            'content': f'OpenAI response for: {user_input}',
+            'model': 'gpt-4o',
+            'usage': {'prompt_tokens': 10, 'completion_tokens': 20, 'total_tokens': 30},
+            'response_id': 'resp_test123'
+        }
+
+    tool.call_openai = mock_openai_call
+
+    # Test execution
+    input_data = ToolInput(
+        parameters={'url': 'https://example.com'},
+        user_id='test-user'
+    )
+
+    result = await tool.execute(input_data)
+
+    assert result.success is True
+    assert 'analysis' in result.data
+    assert result.data['source_url'] == 'https://example.com'
+    assert 'openai_model' in result.data
+    assert 'openai_usage' in result.data
+
+
+@pytest.mark.asyncio
+async def test_openai_call_with_system_message():
+    """Test OpenAI call using system message approach"""
+    from app.agents.shared.base_tool import BaseTool, ToolInput, ToolOutput
+
+    # Create concrete implementation that uses call_openai
+    class MockTool(BaseTool):
+        async def execute(self, input_data: ToolInput) -> ToolOutput:
+            # Prepare user input
+            user_input = input_data.parameters.get('query', 'unknown query')
+
+            # Call OpenAI
+            openai_result = self.call_openai(user_input)
+
+            if not openai_result['success']:
+                return ToolOutput(
+                    success=False,
+                    error=f"OpenAI API error: {openai_result['error']}"
+                )
+
+            # Return formatted result
+            return ToolOutput(
+                success=True,
+                data={
+                    'analysis': openai_result['content'],
+                    'query': user_input,
+                    'openai_model': openai_result.get('model'),
+                    'openai_usage': openai_result.get('usage')
+                }
+            )
+
+    # Mock tool with system message
+    tool = MockTool(
+        name="Mock Tool",
+        slug="mock-tool",
+        description="Mock tool for testing",
+        system_message="You are a helpful business analyst."
+    )
+
+    # Mock the call_openai method to avoid actual API call
+    def mock_openai_call(user_input, **kwargs):
+        return {
+            'success': True,
+            'content': f'Analysis result for: {user_input}',
+            'model': 'gpt-4o',
+            'usage': {'prompt_tokens': 15, 'completion_tokens': 25, 'total_tokens': 40}
+        }
+
+    tool.call_openai = mock_openai_call
+
+    # Test execution
+    input_data = ToolInput(
+        parameters={'query': 'Analyze this business'},
+        user_id='test-user'
+    )
+
+    result = await tool.execute(input_data)
+
+    assert result.success is True
+    assert 'analysis' in result.data
+
+
+@pytest.mark.asyncio
+async def test_openai_call_error_handling():
+    """Test error handling in OpenAI calls"""
+    from app.agents.shared.base_tool import BaseTool, ToolInput, ToolOutput
+
+    # Create concrete implementation that uses call_openai
+    class ErrorTool(BaseTool):
+        async def execute(self, input_data: ToolInput) -> ToolOutput:
+            # Prepare user input
+            user_input = f"Test input: {input_data.parameters.get('url', 'unknown')}"
+
+            # Call OpenAI (which will return error)
+            openai_result = self.call_openai(user_input)
+
+            if not openai_result['success']:
+                return ToolOutput(
+                    success=False,
+                    error=f"OpenAI API error: {openai_result['error']}"
+                )
+
+            return ToolOutput(success=True, data="success")
+
+    tool = ErrorTool(
+        name="Error Tool",
+        slug="error-tool",
+        description="Tool that simulates errors",
+        prompt_id="pmpt_error"
+    )
+
+    # Mock error response
+    def mock_error_call(user_input, **kwargs):
+        return {
+            'success': False,
+            'error': 'OpenAI API rate limit exceeded',
+            'error_type': 'RateLimitError'
+        }
+
+    tool.call_openai = mock_error_call
+
+    input_data = ToolInput(
+        parameters={'url': 'https://example.com'},
+        user_id='test-user'
+    )
+
+    result = await tool.execute(input_data)
+
+    assert result.success is False
+    assert 'OpenAI API error' in result.error
+
+
+def test_openai_configuration_in_config():
+    """Test that OpenAI configuration is properly loaded"""
+    from config import Config
+
+    # Test the Config class directly
+    config = Config()
+
+    # Check that OpenAI config attributes exist
+    assert hasattr(config, 'OPENAI_API_KEY')
+    assert hasattr(config, 'OPENAI_BASE_URL')
+    assert hasattr(config, 'OPENAI_DEFAULT_MODEL')
+
+    # Check default values
+    assert config.OPENAI_BASE_URL == 'https://api.openai.com/v1'
+    assert config.OPENAI_DEFAULT_MODEL == 'gpt-4o'
+
+
 def test_interaction_model_creation():
     """Test Interaction model creation and methods"""
     from app.models.interaction import Interaction

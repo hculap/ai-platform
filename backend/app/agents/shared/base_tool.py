@@ -74,7 +74,11 @@ class BaseTool(ABC):
         tags: List[str] = None,
         requires_authentication: bool = False,
         max_execution_time: Optional[float] = None,
-        rate_limit_per_minute: Optional[int] = None
+        rate_limit_per_minute: Optional[int] = None,
+        # OpenAI integration fields
+        system_message: Optional[str] = None,
+        prompt_id: Optional[str] = None,
+        openai_model: str = "gpt-4o"
     ):
         """
         Initialize the base tool.
@@ -89,6 +93,9 @@ class BaseTool(ABC):
             requires_authentication: Whether tool requires user authentication
             max_execution_time: Maximum allowed execution time in seconds
             rate_limit_per_minute: Rate limit for tool usage
+            system_message: System message for OpenAI chat completion (alternative to prompt_id)
+            prompt_id: OpenAI prompt ID for responses API (alternative to system_message)
+            openai_model: OpenAI model to use for generation
         """
         self.name = name
         self.slug = slug
@@ -100,9 +107,130 @@ class BaseTool(ABC):
         self.max_execution_time = max_execution_time
         self.rate_limit_per_minute = rate_limit_per_minute
 
+        # OpenAI integration
+        self.system_message = system_message
+        self.prompt_id = prompt_id
+        self.openai_model = openai_model
+
+        # Note: Allow tools to work without OpenAI integration
+        # Some tools might not need AI capabilities
+        
         # Runtime state
         self._execution_count = 0
         self._last_execution_time = None
+
+    def call_openai(self, user_input: str, **kwargs) -> Dict[str, Any]:
+        """
+        Call OpenAI API using either prompt_id or system_message approach.
+
+        Args:
+            user_input: The user's input/message
+            **kwargs: Additional parameters to pass to OpenAI API
+
+        Returns:
+            Dict containing OpenAI response or error information
+        """
+        try:
+            # Import the client
+            from ...services.openai_client import get_openai_client
+            client = get_openai_client()
+
+            result = None
+            
+            if self.prompt_id:
+                # Use responses API with prompt_id
+                logger.debug(f"Calling OpenAI responses API with prompt_id: {self.prompt_id}")
+                
+                # Call the API and get APIResponse object
+                api_response = client.create_response_with_prompt_id(
+                    prompt_id=self.prompt_id,
+                    user_message=user_input,
+                    **kwargs
+                )
+                
+                # Convert APIResponse to dict
+                if hasattr(api_response, 'to_dict'):
+                    result = api_response.to_dict()
+                else:
+                    # Manual conversion if to_dict not available
+                    result = {
+                        'success': getattr(api_response, 'success', False),
+                        'content': getattr(api_response, 'content', None),
+                        'response_id': getattr(api_response, 'response_id', None),
+                        'model': getattr(api_response, 'model', None),
+                        'usage': getattr(api_response, 'usage', None),
+                        'created_at': getattr(api_response, 'created_at', None),
+                        'error': getattr(api_response, 'error', None),
+                        'error_type': getattr(api_response, 'error_type', None)
+                    }
+                
+            elif self.system_message:
+                # Use chat completion with system message
+                logger.debug(f"Calling OpenAI chat completion with model: {self.openai_model}")
+                
+                api_response = client.create_chat_completion(
+                    system_message=self.system_message,
+                    user_message=user_input,
+                    model=self.openai_model,
+                    **kwargs
+                )
+                
+                # Convert APIResponse to dict
+                if hasattr(api_response, 'to_dict'):
+                    result = api_response.to_dict()
+                else:
+                    # Manual conversion
+                    result = {
+                        'success': getattr(api_response, 'success', False),
+                        'content': getattr(api_response, 'content', None),
+                        'model': getattr(api_response, 'model', None),
+                        'usage': getattr(api_response, 'usage', None),
+                        'created_at': getattr(api_response, 'created_at', None),
+                        'finish_reason': getattr(api_response, 'finish_reason', None),
+                        'error': getattr(api_response, 'error', None),
+                        'error_type': getattr(api_response, 'error_type', None)
+                    }
+            else:
+                # No OpenAI configuration
+                logger.warning(f"Tool {self.slug} has no OpenAI configuration")
+                result = {
+                    'success': False,
+                    'error': 'No OpenAI configuration found (missing prompt_id or system_message)',
+                    'content': None
+                }
+            
+            # Clean up the result - remove None values for cleaner output
+            if result:
+                result = {k: v for k, v in result.items() if v is not None}
+            
+            # Log the result for debugging
+            if not result.get('success'):
+                logger.warning(f"OpenAI call failed for tool {self.slug}: {result.get('error')}")
+                logger.debug(f"Full OpenAI response: {result}")
+            elif not result.get('content'):
+                logger.warning(f"OpenAI call succeeded but no content returned for tool {self.slug}")
+                logger.debug(f"Full OpenAI response: {result}")
+            else:
+                logger.debug(f"OpenAI call successful for tool {self.slug}, content length: {len(str(result.get('content', '')))}")
+            
+            return result
+
+        except ImportError as e:
+            logger.error(f"Failed to import OpenAI client: {e}")
+            return {
+                'success': False,
+                'error': f'OpenAI client not available: {e}',
+                'error_type': 'ImportError',
+                'content': None
+            }
+        except Exception as e:
+            logger.error(f"OpenAI call failed for tool {self.slug}: {e}", exc_info=True)
+            return {
+                'success': False,
+                'error': str(e),
+                'error_type': type(e).__name__,
+                'content': None
+            }
 
     @abstractmethod
     async def execute(self, input_data: ToolInput) -> ToolOutput:
@@ -292,7 +420,9 @@ class BaseTool(ABC):
             "tags": self.tags,
             "requires_authentication": self.requires_authentication,
             "max_execution_time": self.max_execution_time,
-            "rate_limit_per_minute": self.rate_limit_per_minute
+            "rate_limit_per_minute": self.rate_limit_per_minute,
+            "has_openai_integration": bool(self.prompt_id or self.system_message),
+            "openai_mode": "prompt_id" if self.prompt_id else ("system_message" if self.system_message else None)
         }
 
     def __repr__(self) -> str:

@@ -12,7 +12,7 @@ def initialize_agents() -> None:
     # Clear any existing registrations
     AgentRegistry.clear()
 
-    # Register Business Concierge Agent
+    # Register Business Concierge Agent (uses prompt_id approach)
     AgentRegistry.register('business-concierge', ConciergeAgent())
 
     print('✅ Agent system initialized')
@@ -31,6 +31,7 @@ __all__ = [
 
     # Individual agents
     'ConciergeAgent',
+    'ExampleAgent',
 
     # Initialization function
     'initialize_agents'

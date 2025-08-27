@@ -23,6 +23,16 @@ from ..utils.messages import (
 # Create blueprint for agent routes
 agents_bp = Blueprint('agents', __name__, url_prefix='/api/agents')
 
+# Simple debug route
+@agents_bp.route('/debug', methods=['GET'])
+def debug_route():
+    """Debug route to test if Flask is working."""
+    print("DEBUG: Debug route called")
+    return jsonify({
+        'message': 'Debug route working',
+        'agents_available': len(AgentRegistry.list_agents())
+    })
+
 
 def conditional_auth(f):
     """
@@ -171,6 +181,8 @@ def execute_tool(slug: str, tool_slug: str):
         data = request.get_json() or {}
 
         # Get current user (may be None for public agents)
+        print(f"DEBUG: execute_tool called with slug={slug}, tool_slug={tool_slug}")
+        print(f"DEBUG: Request data: {data}")
         current_user_id = None
 
         # Check if Authorization header is present
@@ -253,7 +265,10 @@ def execute_tool(slug: str, tool_slug: str):
                     interaction.tool_version = getattr(tool, 'version', '1.0.0')
                     db.session.commit()
 
-                response_data = {'status': 'completed'}
+                response_data = {
+                    'status': 'completed',
+                    'data': result.data  # Include the actual tool output
+                }
                 if interaction_id:
                     response_data['interaction_id'] = interaction_id
 
@@ -294,11 +309,6 @@ def execute_tool(slug: str, tool_slug: str):
             'error': ERROR_SERVER_ERROR,
             'message': get_message(ERROR_SERVER_ERROR)
         }), 500
-
-
-# ============================================================================
-# PROMPTS ENDPOINTS
-# ============================================================================
 
 
 # ============================================================================
