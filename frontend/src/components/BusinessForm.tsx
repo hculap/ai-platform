@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FormData, BusinessProfile } from '../types';
 import { createBusinessProfile } from '../services/api';
+import { ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface BusinessFormProps {
   initialData?: BusinessProfile | null;
@@ -80,9 +81,7 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze })
         successDiv.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-xl shadow-lg z-50 animate-slide-up';
         successDiv.innerHTML = `
           <div class="flex items-center space-x-2">
-            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-            </svg>
+            <div class="w-5 h-5">✓</div>
             <span>Business profile created successfully!</span>
           </div>
         `;
@@ -99,9 +98,7 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze })
       errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-4 rounded-xl shadow-lg z-50 animate-slide-up';
       errorDiv.innerHTML = `
         <div class="flex items-center space-x-2">
-          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-          </svg>
+          <div class="w-5 h-5">⚠</div>
           <span>Failed to create profile. Please try again.</span>
         </div>
       `;
@@ -113,7 +110,7 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze })
   };
 
   return (
-    <section className="px-6 py-20">
+    <section className="px-6 py-12">
       <div className="max-w-4xl mx-auto">
         <div className="animate-fade-in">
           <div className="text-center mb-12">
@@ -239,9 +236,10 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze })
                 <button 
                   type="button" 
                   onClick={onReanalyze}
-                  className="px-6 py-3 text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200"
+                  className="flex items-center px-6 py-3 text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200"
                 >
-                  ← Re-analyze Website
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Re-analyze Website
                 </button>
                 
                 <div className="flex space-x-4">

@@ -119,29 +119,33 @@ function App() {
   }, [currentSection]);
 
   return (
-    <div className="min-h-screen bg-gray-50 scroll-smooth">
+    <div className="min-h-screen bg-gray-50 scroll-smooth flex flex-col">
       <BackgroundElements />
       
-      <div className="relative z-10">
+      <div className="relative z-10 flex flex-col min-h-screen">
         <Header onSkipToForm={handleSkipToForm} />
         
-        {currentSection === AppSection.URL_INPUT && (
-          <URLSection 
-            onAnalyze={handleAnalyze}
-            isAnalyzing={isAnalyzing}
-          />
-        )}
-        
-        {currentSection === AppSection.LOADING && (
-          <LoadingSection loadingState={loadingState} />
-        )}
-        
-        {currentSection === AppSection.FORM && (
-          <BusinessForm 
-            initialData={analysisData}
-            onReanalyze={handleReanalyze}
-          />
-        )}
+        <div className="flex-1 flex items-center justify-center">
+          <div className="w-full">
+            {currentSection === AppSection.URL_INPUT && (
+              <URLSection 
+                onAnalyze={handleAnalyze}
+                isAnalyzing={isAnalyzing}
+              />
+            )}
+            
+            {currentSection === AppSection.LOADING && (
+              <LoadingSection loadingState={loadingState} />
+            )}
+            
+            {currentSection === AppSection.FORM && (
+              <BusinessForm 
+                initialData={analysisData}
+                onReanalyze={handleReanalyze}
+              />
+            )}
+          </div>
+        </div>
       </div>
     </div>
   );

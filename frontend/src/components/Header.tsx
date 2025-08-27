@@ -1,4 +1,5 @@
 import React from 'react';
+import { Zap } from 'lucide-react';
 
 interface HeaderProps {
   onSkipToForm: () => void;
@@ -10,9 +11,7 @@ const Header: React.FC<HeaderProps> = ({ onSkipToForm }) => {
       <nav className="max-w-7xl mx-auto flex justify-between items-center">
         <div className="flex items-center space-x-3">
           <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center">
-            <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
-            </svg>
+            <Zap className="w-6 h-6 text-white" />
           </div>
           <span className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
             AI Business Analyzer

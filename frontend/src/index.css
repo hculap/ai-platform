@@ -47,7 +47,7 @@
   box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1), 0 0 20px rgba(59, 130, 246, 0.2);
 }
 
-/* Loading animation */
+/* Loading animations */
 .loading-dot {
   animation: loading-dot 1.4s infinite ease-in-out both;
 }
@@ -58,6 +58,22 @@
 @keyframes loading-dot {
   0%, 80%, 100% { transform: scale(0); }
   40% { transform: scale(1); }
+}
+
+/* Wave loader animation */
+.animate-wave {
+  animation: wave 1.2s ease-in-out infinite;
+}
+
+@keyframes wave {
+  0%, 100% { 
+    transform: scaleY(0.4);
+    opacity: 0.7;
+  }
+  50% { 
+    transform: scaleY(1);
+    opacity: 1;
+  }
 }
 
 /* Custom scrollbar */
