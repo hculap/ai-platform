@@ -2,6 +2,7 @@ from flask import Flask
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager
 from flask_migrate import Migrate
+from flask_cors import CORS
 import os
 from dotenv import load_dotenv
 
@@ -12,6 +13,7 @@ load_dotenv()
 db = SQLAlchemy()
 jwt = JWTManager()
 migrate = Migrate()
+cors = CORS()
 
 def create_app(config_name='development'):
     """Application factory pattern"""
@@ -37,6 +39,7 @@ def create_app(config_name='development'):
     db.init_app(app)
     jwt.init_app(app)
     migrate.init_app(app, db)
+    cors.init_app(app)
     print("DEBUG: Extensions initialized")
 
     # Register blueprints
@@ -56,5 +59,17 @@ def create_app(config_name='development'):
     # Initialize agents
     from .agents import initialize_agents
     initialize_agents()
+
+    # Add route to serve the main application
+    @app.route('/')
+    def index():
+        return app.send_static_file('index.html')
+
+    @app.route('/<path:path>')
+    def catch_all(path):
+        # For client-side routing, serve the index.html for all non-API routes
+        if path.startswith('api/'):
+            return {'error': 'Not found'}, 404
+        return app.send_static_file('index.html')
 
     return app

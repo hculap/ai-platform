@@ -76,7 +76,11 @@ class BusinessProfile(db.Model):
                 self.offer_description = (business_profile_data.get('offer') or
                                         business_profile_data.get('offer_description') or
                                         business_profile_data.get('description'))
-                # target_customer field doesn't have a direct mapping from OpenAI response
+                # target_customer field maps from avatar or target_customer
+                self.target_customer = (business_profile_data.get('avatar') or
+                                      business_profile_data.get('target_customer') or
+                                      business_profile_data.get('customer_avatar') or
+                                      business_profile_data.get('persona'))
                 self.problem_solved = business_profile_data.get('problems') or business_profile_data.get('problem_solved')
                 self.customer_desires = business_profile_data.get('desires') or business_profile_data.get('customer_desires')
                 self.brand_tone = business_profile_data.get('tone') or business_profile_data.get('brand_tone')
