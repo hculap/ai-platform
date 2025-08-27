@@ -48,7 +48,8 @@ class BaseAgent(ABC):
         short_description: str,
         description: str,
         version: str,
-        capabilities: AgentCapabilities
+        capabilities: AgentCapabilities,
+        is_public: bool = False
     ):
         self.name = name
         self.slug = slug
@@ -56,6 +57,7 @@ class BaseAgent(ABC):
         self.description = description
         self.version = version
         self.capabilities = capabilities
+        self.is_public = is_public
 
     @abstractmethod
     async def execute(self, input_data: AgentInput) -> AgentOutput:
@@ -121,7 +123,8 @@ class ExampleAgent(BaseAgent):
             short_description="An example agent",
             description="This is an example agent implementation",
             version="1.0.0",
-            capabilities=capabilities
+            capabilities=capabilities,
+            is_public=False
         )
 
     async def execute(self, input_data: AgentInput) -> AgentOutput:

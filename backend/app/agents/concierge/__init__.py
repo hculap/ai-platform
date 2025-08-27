@@ -42,7 +42,8 @@ class ConciergeAgent(BaseAgent):
             short_description='AI-powered business profile generator from website analysis',
             description='The Concierge Agent analyzes website URLs to create business profiles using OpenAI.',
             version='1.0.0',
-            capabilities=capabilities
+            capabilities=capabilities,
+            is_public=True
         )
 
     async def execute(self, input_data: AgentInput) -> AgentOutput:

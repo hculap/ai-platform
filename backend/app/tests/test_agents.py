@@ -289,13 +289,17 @@ def test_get_agent_tools_api(client, test_user_headers):
 
 def test_execute_tool_unauthorized(client):
     """Test POST /api/agents/:slug/tools/:tool_slug/call without authentication"""
+    # Note: concierge agent is now public, so it should work without authentication
+    # but no interaction will be created since user is not authenticated
     response = client.post('/api/agents/business-concierge/tools/analyze-website/call', json={
         'input': {'url': 'https://example.com'}
     })
 
-    assert response.status_code == 401
+    assert response.status_code == 200
     data = response.get_json()
-    assert 'msg' in data  # Flask-JWT-Extended uses 'msg' for auth errors
+    assert 'interaction_id' not in data  # No interaction for unauthenticated users
+    assert 'status' in data
+    assert data['status'] == 'completed'
 
 
 def test_execute_tool_success(client, test_user_headers):
@@ -311,7 +315,7 @@ def test_execute_tool_success(client, test_user_headers):
 
     assert response.status_code == 200
     data = response.get_json()
-    assert 'interaction_id' in data
+    assert 'interaction_id' in data  # Should have interaction_id for authenticated users
     assert 'status' in data
     assert data['status'] == 'completed'
 
@@ -439,6 +443,380 @@ def test_list_interactions_unauthorized(client):
     response = client.get('/api/agents/interactions')
 
     assert response.status_code == 401
+
+
+# ============================================================================
+# COMPREHENSIVE API ENDPOINT TESTS
+# ============================================================================
+
+def test_agent_slug_field():
+    """Test that agents have proper slug fields"""
+    from app.agents.concierge import ConciergeAgent
+
+    agent = ConciergeAgent()
+    assert hasattr(agent, 'slug')
+    assert agent.slug == 'business-concierge'
+    assert agent.slug is not None
+    assert isinstance(agent.slug, str)
+
+
+def test_agent_public_field():
+    """Test that agents have proper is_public fields"""
+    from app.agents.concierge import ConciergeAgent
+    from app.agents.base import ExampleAgent
+
+    # Concierge agent should be public
+    concierge_agent = ConciergeAgent()
+    assert hasattr(concierge_agent, 'is_public')
+    assert concierge_agent.is_public is True
+
+    # Example agent should be private by default
+    example_agent = ExampleAgent()
+    assert hasattr(example_agent, 'is_public')
+    assert example_agent.is_public is False
+
+
+def test_tool_slug_field():
+    """Test that tools have proper slug fields"""
+    from app.agents.concierge.tools.analyzewebsiteTool import AnalyzeWebsiteTool
+
+    tool = AnalyzeWebsiteTool()
+    assert hasattr(tool, 'slug')
+    assert tool.slug == 'analyze-website'
+    assert tool.slug is not None
+    assert isinstance(tool.slug, str)
+
+
+def test_api_response_structure_agents(client):
+    """Test that API responses have correct structure for agents"""
+    response = client.get('/api/agents')
+    assert response.status_code == 200
+
+    data = response.get_json()
+    assert 'data' in data
+    assert isinstance(data['data'], list)
+
+    if len(data['data']) > 0:
+        agent = data['data'][0]
+        required_fields = ['id', 'name', 'slug', 'description', 'tools']
+        for field in required_fields:
+            assert field in agent
+
+        # Test tools structure
+        if len(agent['tools']) > 0:
+            tool = agent['tools'][0]
+            assert 'name' in tool
+            assert 'slug' in tool
+
+
+def test_api_response_structure_single_agent(client):
+    """Test that single agent API response has correct structure"""
+    response = client.get('/api/agents/business-concierge')
+    assert response.status_code == 200
+
+    data = response.get_json()
+    required_fields = ['id', 'name', 'slug', 'description', 'tools']
+    for field in required_fields:
+        assert field in data
+
+    assert data['slug'] == 'business-concierge'
+
+
+def test_api_response_structure_agent_tools(client, test_user_headers):
+    """Test that agent tools API response has correct structure"""
+    response = client.get('/api/agents/business-concierge/tools', headers=test_user_headers)
+    assert response.status_code == 200
+
+    data = response.get_json()
+    assert 'data' in data
+    assert isinstance(data['data'], list)
+
+    if len(data['data']) > 0:
+        tool = data['data'][0]
+        required_fields = ['name', 'slug', 'description']
+        for field in required_fields:
+            assert field in tool
+
+
+def test_api_response_structure_tool_execution(client, test_user_headers):
+    """Test that tool execution API response has correct structure"""
+    response = client.post('/api/agents/business-concierge/tools/analyze-website/call',
+                         json={'input': {'url': 'https://example.com'}},
+                         headers=test_user_headers)
+    assert response.status_code == 200
+
+    data = response.get_json()
+    assert 'interaction_id' in data  # Should have interaction_id for authenticated users
+    assert 'status' in data
+    assert data['status'] == 'completed'
+
+
+def test_api_response_structure_interactions_list(client, test_user_headers):
+    """Test that interactions list API response has correct structure"""
+    # First create an interaction
+    client.post('/api/agents/business-concierge/tools/analyze-website/call',
+               json={'input': {'url': 'https://example.com'}},
+               headers=test_user_headers)
+
+    response = client.get('/api/agents/interactions', headers=test_user_headers)
+    assert response.status_code == 200
+
+    data = response.get_json()
+    assert 'data' in data
+    assert isinstance(data['data'], list)
+
+    if len(data['data']) > 0:
+        interaction = data['data'][0]
+        required_fields = ['id', 'agent_name', 'tool_name', 'status', 'created_at']
+        for field in required_fields:
+            assert field in interaction
+
+
+def test_api_response_structure_single_interaction(client, test_user_headers):
+    """Test that single interaction API response has correct structure"""
+    # First create an interaction
+    response = client.post('/api/agents/business-concierge/tools/analyze-website/call',
+                         json={'input': {'url': 'https://example.com'}},
+                         headers=test_user_headers)
+
+    interaction_id = response.get_json()['interaction_id']
+
+    # Now get the interaction
+    response = client.get(f'/api/agents/interactions/{interaction_id}', headers=test_user_headers)
+    assert response.status_code == 200
+
+    data = response.get_json()
+    required_fields = ['id', 'status', 'output', 'agent_name', 'tool_name']
+    for field in required_fields:
+        assert field in data
+
+    assert data['id'] == interaction_id
+    assert data['agent_name'] == 'Concierge Agent'
+    assert data['tool_name'] == 'analyze-website'
+
+
+def test_public_agent_access_without_authentication(client):
+    """Test that public agents can be accessed without authentication"""
+    # Test public agent list access without auth
+    response = client.get('/api/agents')
+    assert response.status_code == 200
+
+    # Test public agent details access without auth
+    response = client.get('/api/agents/business-concierge')
+    assert response.status_code == 200
+
+    # Test public agent tools access without auth
+    response = client.get('/api/agents/business-concierge/tools')
+    assert response.status_code == 200
+
+    # Test public agent tool execution without auth (no interaction created for anonymous users)
+    response = client.post('/api/agents/business-concierge/tools/analyze-website/call',
+                         json={'input': {'url': 'https://example.com'}})
+    assert response.status_code == 200
+    data = response.get_json()
+    assert 'interaction_id' not in data  # No interaction for unauthenticated users
+    assert 'status' in data
+    assert data['status'] == 'completed'
+
+
+def test_public_agent_with_authenticated_user(client, test_user_headers):
+    """Test that public agents create interactions when accessed by authenticated users"""
+    # Test public agent tool execution with authenticated user (interaction should be created)
+    response = client.post('/api/agents/business-concierge/tools/analyze-website/call',
+                         json={'input': {'url': 'https://example.com'}},
+                         headers=test_user_headers)
+    assert response.status_code == 200
+    data = response.get_json()
+    assert 'interaction_id' in data  # Should have interaction_id for authenticated users
+    assert 'status' in data
+    assert data['status'] == 'completed'
+
+
+def test_private_agent_requires_authentication(client):
+    """Test that private agents require authentication"""
+    # Register a private agent for testing
+    from app.agents.base import AgentRegistry, AgentCapabilities
+    from app.agents.base import BaseAgent
+
+    class PrivateAgent(BaseAgent):
+        def __init__(self):
+            capabilities = AgentCapabilities(
+                tools={},
+                resources={},
+                prompts={},
+                logging={}
+            )
+            super().__init__(
+                name='Private Agent',
+                slug='private-agent',
+                short_description='A private agent for testing',
+                description='This is a private agent that requires authentication',
+                version='1.0.0',
+                capabilities=capabilities,
+                is_public=False
+            )
+
+        async def execute(self, input_data):
+            return {"message": "Private agent executed"}
+
+    # Register the private agent
+    private_agent = PrivateAgent()
+    AgentRegistry.register('private-agent', private_agent)
+
+    try:
+        # Test that private agent tools require authentication
+        response = client.get('/api/agents/private-agent/tools')
+        assert response.status_code == 401
+
+        # Test that private agent tool execution requires authentication
+        response = client.post('/api/agents/private-agent/tools/some-tool/call',
+                             json={'input': {}})
+        assert response.status_code == 401
+
+    finally:
+        # Clean up
+        AgentRegistry._agents.pop('private-agent', None)
+
+
+def test_api_error_responses(client, test_user_headers):
+    """Test that API error responses have correct structure"""
+    # Test 404 for non-existent agent
+    response = client.get('/api/agents/non-existent-agent')
+    assert response.status_code == 404
+    data = response.get_json()
+    assert 'error' in data
+    assert 'message' in data
+
+    # Test 404 for non-existent tool
+    response = client.post('/api/agents/business-concierge/tools/non-existent-tool/call',
+                         json={'input': {}},
+                         headers=test_user_headers)
+    assert response.status_code == 404
+    data = response.get_json()
+    assert 'error' in data
+    assert 'message' in data
+
+    # Test 401 for unauthorized access to private agents (if we had any)
+    # This test would be for private agents only
+
+
+def test_api_input_validation(client, test_user_headers):
+    """Test API input validation"""
+    # Test tool execution with missing URL
+    response = client.post('/api/agents/business-concierge/tools/analyze-website/call',
+                         json={'input': {}},  # Missing URL
+                         headers=test_user_headers)
+    assert response.status_code == 500
+    data = response.get_json()
+    assert 'error' in data
+
+    # Test tool execution with invalid URL
+    response = client.post('/api/agents/business-concierge/tools/analyze-website/call',
+                         json={'input': {'url': 'not-a-valid-url'}},
+                         headers=test_user_headers)
+    assert response.status_code == 500
+    data = response.get_json()
+    assert 'error' in data
+
+
+def test_api_pagination_and_filtering(client, test_user_headers):
+    """Test API pagination and filtering capabilities"""
+    # Create multiple interactions
+    for i in range(3):
+        client.post('/api/agents/business-concierge/tools/analyze-website/call',
+                   json={'input': {'url': f'https://example{i}.com'}},
+                   headers=test_user_headers)
+
+    # Test interactions list
+    response = client.get('/api/agents/interactions', headers=test_user_headers)
+    assert response.status_code == 200
+    data = response.get_json()
+    assert len(data['data']) >= 3
+
+
+def test_api_cross_references(client):
+    """Test that API responses are consistent across different endpoints"""
+    # Get agent from list
+    response = client.get('/api/agents')
+    agents_data = response.get_json()['data']
+    agent_from_list = agents_data[0]
+
+    # Get same agent individually
+    response = client.get(f'/api/agents/{agent_from_list["slug"]}')
+    agent_individual = response.get_json()
+
+    # Compare key fields
+    assert agent_from_list['id'] == agent_individual['id']
+    assert agent_from_list['name'] == agent_individual['name']
+    assert agent_from_list['slug'] == agent_individual['slug']
+
+    # Compare tools
+    tools_from_list = agent_from_list['tools']
+    tools_individual = agent_individual['tools']
+
+    assert len(tools_from_list) == len(tools_individual)
+    if len(tools_from_list) > 0:
+        assert tools_from_list[0]['slug'] == tools_individual[0]['slug']
+
+
+def test_api_response_consistency(client):
+    """Test that API responses are consistent in format and structure"""
+    endpoints = [
+        '/api/agents',
+        '/api/agents/business-concierge'
+    ]
+
+    for endpoint in endpoints:
+        response = client.get(endpoint)
+        assert response.status_code == 200
+        data = response.get_json()
+
+        # All endpoints should return proper JSON
+        assert isinstance(data, dict)
+
+        # Error endpoints should have error structure
+        if 'error' in data:
+            assert 'message' in data
+
+
+def test_debug_interaction_creation(client, test_user_headers):
+    """Debug test to understand interaction creation/retrieval issue"""
+    from flask_jwt_extended import decode_token
+
+    # First, let's see what user ID is in the JWT token
+    auth_header = test_user_headers['Authorization']
+    token = auth_header.split(' ')[1]  # Remove 'Bearer ' prefix
+    decoded = decode_token(token)
+    jwt_user_id = decoded['sub']
+    print(f"JWT User ID: {jwt_user_id}")
+
+    # Create an interaction
+    response = client.post('/api/agents/business-concierge/tools/analyze-website/call',
+                         json={'input': {'url': 'https://example.com'}},
+                         headers=test_user_headers)
+
+    assert response.status_code == 200
+    data = response.get_json()
+    interaction_id = data['interaction_id']
+    print(f"Created interaction ID: {interaction_id}")
+
+    # Check if interaction exists in database
+    from app.models.interaction import Interaction
+    from app import db
+
+    interaction = Interaction.query.filter_by(id=interaction_id).first()
+    if interaction:
+        print(f"Interaction found - User ID: {interaction.user_id}, Status: {interaction.status}")
+    else:
+        print("Interaction NOT found in database")
+
+    # Try to retrieve via API
+    response = client.get(f'/api/agents/interactions/{interaction_id}', headers=test_user_headers)
+    print(f"API retrieval status: {response.status_code}")
+
+    if response.status_code != 200:
+        data = response.get_json()
+        print(f"API error: {data}")
 
 
 def test_interaction_model_creation():

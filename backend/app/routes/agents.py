@@ -8,7 +8,7 @@ from typing import Dict, Any, Optional
 from functools import wraps
 
 from flask import Blueprint, request, jsonify, Response
-from flask_jwt_extended import jwt_required, get_jwt_identity
+from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request
 from werkzeug.exceptions import NotFound, BadRequest
 
 from ..agents.base import AgentRegistry, AgentInput
@@ -22,6 +22,37 @@ from ..utils.messages import (
 
 # Create blueprint for agent routes
 agents_bp = Blueprint('agents', __name__, url_prefix='/api/agents')
+
+
+def conditional_auth(f):
+    """
+    Decorator for conditional authentication based on agent's public_access property.
+    Public agents don't require authentication, private agents do.
+    For interaction endpoints, authentication is always required since they deal with user-specific data.
+    """
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # Check if this is an interaction endpoint (always requires auth)
+        if request.endpoint and 'interaction' in request.endpoint:
+            return jwt_required()(f)(*args, **kwargs)
+
+        # Get agent slug from URL parameters
+        agent_slug = kwargs.get('slug')
+        if not agent_slug:
+            # If no slug in kwargs, try to get from request view_args
+            agent_slug = request.view_args.get('slug')
+
+        if agent_slug:
+            # Get agent from registry
+            agent = AgentRegistry.get(agent_slug)
+            if agent and hasattr(agent, 'is_public') and agent.is_public:
+                # Public agent - no authentication required
+                return f(*args, **kwargs)
+
+        # Private agent or no agent found - require authentication
+        return jwt_required()(f)(*args, **kwargs)
+
+    return decorated_function
 
 
 @agents_bp.route('/', methods=['GET'])
@@ -101,7 +132,7 @@ def get_agent(slug: str):
 
 @agents_bp.route('/<string:slug>/tools/', methods=['GET'])
 @agents_bp.route('/<string:slug>/tools', methods=['GET'])
-@jwt_required()
+@conditional_auth
 def get_agent_tools(slug: str):
     """Get tools for a specific agent as specified in API_SCHEMA.md."""
     try:
@@ -133,14 +164,24 @@ def get_agent_tools(slug: str):
 
 @agents_bp.route('/<string:slug>/tools/<string:tool_slug>/call/', methods=['POST'])
 @agents_bp.route('/<string:slug>/tools/<string:tool_slug>/call', methods=['POST'])
-@jwt_required()
+@conditional_auth
 def execute_tool(slug: str, tool_slug: str):
     """Execute a specific tool and create interaction record as specified in API_SCHEMA.md."""
     try:
         data = request.get_json() or {}
 
-        # Get current user
-        current_user_id = get_jwt_identity()
+        # Get current user (may be None for public agents)
+        current_user_id = None
+
+        # Check if Authorization header is present
+        auth_header = request.headers.get('Authorization')
+        if auth_header:
+            try:
+                # Verify JWT and get user identity
+                verify_jwt_in_request()
+                current_user_id = get_jwt_identity()
+            except Exception as e:
+                pass  # Keep current_user_id as None if JWT verification fails
 
         # Get agent from registry
         agent = AgentRegistry.get(slug)
@@ -159,21 +200,26 @@ def execute_tool(slug: str, tool_slug: str):
 
         tool = agent.capabilities.tools[tool_slug]
 
-        # Create interaction record
-        interaction = Interaction(
-            user_id=current_user_id,
-            business_profile_id=data.get('business_profile_id'),
-            agent_type=agent.slug,
-            agent_name=agent.name,
-            tool_name=getattr(tool, 'slug', tool_slug),
-            tool_description=getattr(tool, 'description', ''),
-            input_data={
-                'parameters': data.get('input', {}),
-                'context': data.get('context', {})
-            }
-        )
-        db.session.add(interaction)
-        db.session.commit()
+        # Create interaction record if user is authenticated
+        # Skip interaction tracking only for unauthenticated users on public agents
+        interaction = None
+        interaction_id = None
+        if current_user_id is not None:
+            interaction = Interaction(
+                user_id=current_user_id,
+                business_profile_id=data.get('business_profile_id'),
+                agent_type=agent.slug,
+                agent_name=agent.name,
+                tool_name=getattr(tool, 'slug', tool_slug),
+                tool_description=getattr(tool, 'description', ''),
+                input_data={
+                    'parameters': data.get('input', {}),
+                    'context': data.get('context', {})
+                }
+            )
+            db.session.add(interaction)
+            db.session.commit()
+            interaction_id = interaction.id
 
         # Execute tool asynchronously (for now, we'll execute synchronously)
         start_time = time.time()
@@ -183,7 +229,7 @@ def execute_tool(slug: str, tool_slug: str):
             tool_input = ToolInput(
                 parameters=data.get('input', {}),
                 user_id=current_user_id,
-                context={'agent_input': data, 'interaction_id': interaction.id}
+                context={'agent_input': data, 'interaction_id': interaction_id}
             )
 
             # Execute tool synchronously
@@ -197,26 +243,29 @@ def execute_tool(slug: str, tool_slug: str):
             execution_time = time.time() - start_time
 
             if result.success:
-                # Mark interaction as completed
-                interaction.mark_completed(
-                    output_data=result.data,
-                    execution_time=execution_time
-                )
-                interaction.agent_version = agent.version
-                interaction.tool_version = getattr(tool, 'version', '1.0.0')
-                db.session.commit()
+                # Mark interaction as completed (if it exists)
+                if interaction and interaction_id:
+                    interaction.mark_completed(
+                        output_data=result.data,
+                        execution_time=execution_time
+                    )
+                    interaction.agent_version = agent.version
+                    interaction.tool_version = getattr(tool, 'version', '1.0.0')
+                    db.session.commit()
 
-                return jsonify({
-                    'interaction_id': interaction.id,
-                    'status': 'completed'
-                })
+                response_data = {'status': 'completed'}
+                if interaction_id:
+                    response_data['interaction_id'] = interaction_id
+
+                return jsonify(response_data)
             else:
-                # Mark interaction as failed
-                interaction.mark_failed(
-                    error_message=result.error,
-                    execution_time=execution_time
-                )
-                db.session.commit()
+                # Mark interaction as failed (if it exists)
+                if interaction and interaction_id:
+                    interaction.mark_failed(
+                        error_message=result.error,
+                        execution_time=execution_time
+                    )
+                    db.session.commit()
 
                 return jsonify({
                     'error': ERROR_SERVER_ERROR,
@@ -225,11 +274,13 @@ def execute_tool(slug: str, tool_slug: str):
 
         except Exception as tool_error:
             execution_time = time.time() - start_time
-            interaction.mark_failed(
-                error_message=str(tool_error),
-                execution_time=execution_time
-            )
-            db.session.commit()
+            # Mark interaction as failed (if it exists)
+            if interaction and interaction_id:
+                interaction.mark_failed(
+                    error_message=str(tool_error),
+                    execution_time=execution_time
+                )
+                db.session.commit()
 
             print(f'Tool execution error: {tool_error}')
             return jsonify({
@@ -256,7 +307,7 @@ def execute_tool(slug: str, tool_slug: str):
 
 @agents_bp.route('/interactions/<string:interaction_id>/', methods=['GET'])
 @agents_bp.route('/interactions/<string:interaction_id>', methods=['GET'])
-@jwt_required()
+@conditional_auth
 def get_interaction(interaction_id: str):
     """Get specific interaction details as specified in API_SCHEMA.md."""
     try:
@@ -292,7 +343,7 @@ def get_interaction(interaction_id: str):
 
 @agents_bp.route('/interactions/', methods=['GET'])
 @agents_bp.route('/interactions', methods=['GET'])
-@jwt_required()
+@conditional_auth
 def list_interactions():
     """Get all interactions for current user as specified in API_SCHEMA.md."""
     try:
