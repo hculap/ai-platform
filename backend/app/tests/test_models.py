@@ -59,6 +59,38 @@ def test_business_profile_update_analysis(app, test_user):
         assert profile.offer_description == 'We provide testing services'
         assert profile.analysis_status == 'completed'
 
+def test_business_profile_update_analysis_openai_format(app, test_user):
+    """Test updating business profile with OpenAI response format"""
+    with app.app_context():
+        profile = BusinessProfile(
+            user_id=test_user.id,
+            website_url='https://example.com'
+        )
+
+        # Simulate OpenAI response format
+        openai_response = {
+            'business_profile': {
+                'name': 'Starbucks Coffee Company',
+                'website_url': 'https://www.starbucks.com',
+                'offer': 'Handcrafted coffee beverages, seasonal drinks, food items, merchandise, mobile ordering, and the Starbucks Rewards program',
+                'problems': 'Long wait times, limited seating',
+                'desires': 'Quality coffee, comfortable atmosphere, quick service',
+                'tone': 'Warm, inviting, and enthusiastic',
+                'language': 'en'
+            }
+        }
+
+        profile.update_analysis_results(openai_response)
+
+        assert profile.name == 'Starbucks Coffee Company'
+        assert profile.website_url == 'https://www.starbucks.com'
+        assert profile.offer_description == 'Handcrafted coffee beverages, seasonal drinks, food items, merchandise, mobile ordering, and the Starbucks Rewards program'
+        assert profile.problem_solved == 'Long wait times, limited seating'
+        assert profile.customer_desires == 'Quality coffee, comfortable atmosphere, quick service'
+        assert profile.brand_tone == 'Warm, inviting, and enthusiastic'
+        assert profile.communication_language == 'en'
+        assert profile.analysis_status == 'completed'
+
 def test_user_business_profile_relationship(app):
     """Test User and BusinessProfile relationship"""
     with app.app_context():

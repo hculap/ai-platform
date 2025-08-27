@@ -255,6 +255,24 @@ def execute_tool(slug: str, tool_slug: str):
             execution_time = time.time() - start_time
 
             if result.success:
+                # Process business profile update if this is an analyze-website tool
+                business_profile_id = data.get('business_profile_id')
+                if business_profile_id and tool_slug == 'analyze-website':
+                    try:
+                        from ..models.business_profile import BusinessProfile
+                        profile = BusinessProfile.query.filter_by(
+                            id=business_profile_id,
+                            user_id=current_user_id
+                        ).first()
+
+                        if profile:
+                            # Update the business profile with analysis results
+                            profile.update_analysis_results(result.data)
+                            db.session.commit()
+                    except Exception as profile_error:
+                        print(f'Error updating business profile: {profile_error}')
+                        # Don't fail the entire request if profile update fails
+
                 # Mark interaction as completed (if it exists)
                 if interaction and interaction_id:
                     interaction.mark_completed(
