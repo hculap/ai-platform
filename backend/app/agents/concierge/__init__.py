@@ -72,7 +72,7 @@ class ConciergeAgent(BaseAgent):
             tool = self.capabilities.tools[action]
             
             # Execute the tool
-            from .tools.base_tool import ToolInput
+            from ..shared.base_tool import ToolInput
             tool_input = ToolInput(
                 parameters=parameters,
                 user_id=input_data.user_id,

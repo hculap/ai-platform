@@ -8,7 +8,7 @@ import re
 from typing import Dict, Any, Optional
 from urllib.parse import urlparse
 
-from .base_tool import BaseTool, ToolInput, ToolOutput
+from ...shared.base_tool import BaseTool, ToolInput, ToolOutput
 from ....utils.messages import (
     get_message, TOOL_URL_PARAMETER_REQUIRED, TOOL_INVALID_URL_FORMAT,
     TOOL_EXECUTION_FAILED, TOOL_ANALYSIS_FAILED

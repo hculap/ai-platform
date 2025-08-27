@@ -10,16 +10,25 @@ The agent system is built with a clean, modular architecture:
 agents/
 ├── __init__.py          # Agent initialization and registry exports
 ├── base.py              # Base agent classes and registry
+├── shared/              # Shared components for all agents
+│   ├── __init__.py      # Shared exports
+│   └── base_tool.py     # Universal base tool class
 ├── concierge/           # Business Concierge Agent
 │   ├── __init__.py      # ConciergeAgent implementation
-│   └── tools/           # Agent tools
+│   └── tools/           # Agent-specific tools
 │       ├── __init__.py
-│       ├── base_tool.py # Base tool class
 │       └── analyzewebsiteTool.py # Website analysis tool
 └── README.md           # This documentation
 ```
 
 ## 🎯 Core Components
+
+### Shared Components (`agents/shared/`)
+Contains reusable components that can be used by all agents:
+
+- **`BaseTool`**: Universal base class for all tools
+- **`ToolInput/ToolOutput`**: Standardized data structures
+- **`ToolMetadata`**: Execution metadata and tracking
 
 ### AgentRegistry
 Central registry for managing all available agents.
@@ -65,15 +74,26 @@ AI-powered agent for analyzing websites and creating business profiles.
 
 ## 🔧 Tool System
 
-### BaseTool
-Abstract base class for all agent tools.
+### Shared BaseTool (`agents/shared/base_tool.py`)
+Universal abstract base class for all agent tools across the entire system.
+
+**Key Features:**
+- **Input Validation**: Built-in parameter validation with customizable rules
+- **Execution Monitoring**: Automatic timing and performance tracking
+- **Error Handling**: Comprehensive error handling with logging
+- **Rate Limiting**: Basic rate limiting capabilities
+- **Metadata Creation**: Automatic metadata generation
+- **Monitoring Integration**: Ready for integration with monitoring systems
 
 **Key Methods:**
-- `execute(input_data)` - Execute the tool
-- Properties: `name`, `description`, `version`
+- `execute(input_data)` - Main execution method (must be implemented by subclasses)
+- `execute_with_monitoring()` - Wrapper with monitoring and error handling
+- `validate_input()` - Input validation (can be overridden)
+- `create_metadata()` - Metadata generation
+- Properties: `name`, `description`, `version`, `category`, `tags`, etc.
 
 ### ToolInput/ToolOutput
-Standardized structures for tool communication.
+Standardized structures for tool communication with enhanced metadata support.
 
 ## 🚀 Usage Examples
 
@@ -166,7 +186,7 @@ AgentRegistry.register('my-custom-agent', MyCustomAgent())
 
 1. **Create Tool Class:**
 ```python
-from app.agents.concierge.tools.base_tool import BaseTool
+from app.agents.shared.base_tool import BaseTool
 
 class MyCustomTool(BaseTool):
     def __init__(self):
@@ -234,16 +254,24 @@ All agents include execution metadata:
 - Include execution metadata
 
 ### Tool Design
-- Validate input parameters
-- Provide clear error messages
+- Extend from `agents.shared.BaseTool` for consistency
+- Use `execute_with_monitoring()` for automatic monitoring
+- Override `validate_input()` for custom validation
+- Leverage built-in error handling and logging
 - Include execution metadata
-- Handle edge cases gracefully
+
+### Shared Components Usage
+- Import from `agents.shared` for reusable components
+- Use `ToolInput` and `ToolOutput` for consistent data structures
+- Leverage `ToolMetadata` for execution tracking
+- Take advantage of built-in validation and monitoring
 
 ### Testing
 - Test both success and failure scenarios
 - Mock external dependencies
 - Validate input/output structures
 - Test agent registration and execution
+- Test shared component integration
 
 ## 🔄 Future Enhancements
 
