@@ -1,11 +1,15 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { Zap } from 'lucide-react';
+import LanguageSwitcher from './LanguageSwitcher';
 
 interface HeaderProps {
   onSkipToForm: () => void;
 }
 
 const Header: React.FC<HeaderProps> = ({ onSkipToForm }) => {
+  const { t } = useTranslation();
+
   return (
     <header className="px-6 py-8">
       <nav className="max-w-7xl mx-auto flex justify-between items-center">
@@ -14,16 +18,19 @@ const Header: React.FC<HeaderProps> = ({ onSkipToForm }) => {
             <Zap className="w-6 h-6 text-white" />
           </div>
           <span className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-            AI Business Analyzer
+            {t('header.title')}
           </span>
         </div>
         
-        <button 
-          onClick={onSkipToForm}
-          className="px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 bg-white hover:bg-gray-50 border border-gray-200 rounded-full transition-all duration-200 hover:shadow-md"
-        >
-          Skip to Manual Form
-        </button>
+        <div className="flex items-center space-x-4">
+          <LanguageSwitcher />
+          <button 
+            onClick={onSkipToForm}
+            className="px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 bg-white hover:bg-gray-50 border border-gray-200 rounded-full transition-all duration-200 hover:shadow-md"
+          >
+            {t('header.skipToForm')}
+          </button>
+        </div>
       </nav>
     </header>
   );

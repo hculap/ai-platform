@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FormData, BusinessProfile } from '../types';
 import { createBusinessProfile } from '../services/api';
 import { ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
@@ -9,6 +10,7 @@ interface BusinessFormProps {
 }
 
 const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze }) => {
+  const { t } = useTranslation();
   const [formData, setFormData] = useState<FormData>({
     companyName: '',
     formWebsiteUrl: '',
@@ -82,7 +84,7 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze })
         successDiv.innerHTML = `
           <div class="flex items-center space-x-2">
             <div class="w-5 h-5">✓</div>
-            <span>Business profile created successfully!</span>
+            <span>${t('notification.success.profileCreated')}</span>
           </div>
         `;
         document.body.appendChild(successDiv);
@@ -99,7 +101,7 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze })
       errorDiv.innerHTML = `
         <div class="flex items-center space-x-2">
           <div class="w-5 h-5">⚠</div>
-          <span>Failed to create profile. Please try again.</span>
+          <span>${t('notification.error.profileFailed')}</span>
         </div>
       `;
       document.body.appendChild(errorDiv);
@@ -114,8 +116,8 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze })
       <div className="max-w-4xl mx-auto">
         <div className="animate-fade-in">
           <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">Business Profile</h2>
-            <p className="text-lg text-gray-600">Review and refine your business information</p>
+            <h2 className="text-4xl font-bold text-gray-900 mb-4">{t('form.title')}</h2>
+            <p className="text-lg text-gray-600">{t('form.description')}</p>
           </div>
 
           <form id="businessForm" onSubmit={handleSubmit} className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
@@ -123,111 +125,107 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze })
               <div className="grid md:grid-cols-2 gap-8">
                 {/* Company Name */}
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Company Name</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">{t('form.companyName')}</label>
                   <input 
                     type="text" 
                     name="companyName"
                     value={formData.companyName}
                     onChange={handleInputChange}
                     className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-200"
-                    placeholder="Your company name"
+                    placeholder={t('form.companyName.placeholder')}
                   />
                 </div>
 
                 {/* Website URL */}
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Website URL</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">{t('form.websiteUrl')}</label>
                   <input 
                     type="url" 
                     name="formWebsiteUrl"
                     value={formData.formWebsiteUrl}
                     onChange={handleInputChange}
                     className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-200"
-                    placeholder="https://example.com"
+                    placeholder={t('form.websiteUrl.placeholder')}
                     readOnly={!!initialData}
                   />
                 </div>
 
                 {/* Offer Description */}
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Offer Description</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">{t('form.offerDescription')}</label>
                   <textarea 
                     name="offerDescription"
                     value={formData.offerDescription}
                     onChange={handleInputChange}
                     rows={4}
                     className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-200 resize-none"
-                    placeholder="Describe what your business offers..."
+                    placeholder={t('form.offerDescription.placeholder')}
                   />
                 </div>
 
                 {/* Target Customer */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Target Customer</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">{t('form.targetCustomer')}</label>
                   <textarea 
                     name="targetCustomer"
                     value={formData.targetCustomer}
                     onChange={handleInputChange}
                     rows={3}
                     className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-200 resize-none"
-                    placeholder="Describe your ideal customer..."
+                    placeholder={t('form.targetCustomer.placeholder')}
                   />
                 </div>
 
                 {/* Problem Solved */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Problem Solved</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">{t('form.problemSolved')}</label>
                   <textarea 
                     name="problemSolved"
                     value={formData.problemSolved}
                     onChange={handleInputChange}
                     rows={3}
                     className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-200 resize-none"
-                    placeholder="What problems do you solve?"
+                    placeholder={t('form.problemSolved.placeholder')}
                   />
                 </div>
 
                 {/* Customer Desires */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Customer Desires</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">{t('form.customerDesires')}</label>
                   <textarea 
                     name="customerDesires"
                     value={formData.customerDesires}
                     onChange={handleInputChange}
                     rows={3}
                     className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-200 resize-none"
-                    placeholder="What do your customers really want?"
+                    placeholder={t('form.customerDesires.placeholder')}
                   />
                 </div>
 
                 {/* Brand Tone */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Brand Tone</label>
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">{t('form.brandTone')}</label>
                   <input
                     type="text"
                     name="brandTone"
                     value={formData.brandTone}
                     onChange={handleInputChange}
-                    placeholder="e.g., Professional, Friendly, Innovative..."
+                    placeholder={t('form.brandTone.placeholder')}
                     className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-200"
                   />
                 </div>
 
                 {/* Communication Language */}
                 <div>
-                  <label className="block text-sm font-semibold text-gray-700 mb-3">Communication Language</label>
-                  <select 
+                  <label className="block text-sm font-semibold text-gray-700 mb-3">{t('form.communicationLanguage')}</label>
+                  <input
+                    type="text"
                     name="communicationLanguage"
                     value={formData.communicationLanguage}
                     onChange={handleInputChange}
+                    placeholder={t('form.communicationLanguage.placeholder')}
                     className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-200"
-                  >
-                    <option value="en">English</option>
-                    <option value="pl">Polish</option>
-                    <option value="es">Spanish</option>
-                    <option value="fr">French</option>
-                    <option value="de">German</option>
-                  </select>
+                  />
                 </div>
               </div>
 
@@ -239,7 +237,7 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze })
                   className="flex items-center px-6 py-3 text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
-                  Re-analyze Website
+                  {t('form.button.reanalyze')}
                 </button>
                 
                 <div className="flex space-x-4">
@@ -247,14 +245,14 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze })
                     type="button"
                     className="px-8 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all duration-200"
                   >
-                    Save as Draft
+                    {t('form.button.saveAsDraft')}
                   </button>
                   <button 
                     type="submit"
                     disabled={isSubmitting}
                     className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                   >
-                    {isSubmitting ? 'Creating...' : 'Create Business Profile'}
+                    {isSubmitting ? t('form.button.creating') : t('form.button.createProfile')}
                   </button>
                 </div>
               </div>

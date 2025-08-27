@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AppSection, LoadingState, BusinessProfile } from './types';
 import { analyzeWebsite } from './services/api';
 
@@ -10,42 +11,49 @@ import LoadingSection from './components/LoadingSection';
 import BusinessForm from './components/BusinessForm';
 
 function App() {
+  const { t } = useTranslation();
   const [currentSection, setCurrentSection] = useState<AppSection>(AppSection.URL_INPUT);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisData, setAnalysisData] = useState<BusinessProfile | null>(null);
   const [loadingState, setLoadingState] = useState<LoadingState>({
     isLoading: false,
     progress: 0,
-    text: 'Initializing analysis...'
+    text: t('loading.steps.structure')
   });
 
   const handleAnalyze = async (url: string) => {
     setIsAnalyzing(true);
     setCurrentSection(AppSection.LOADING);
     
-    // Simulate progress updates
-    const progressSteps = [
-      { percent: 15, text: 'Analyzing website structure...' },
-      { percent: 35, text: 'Extracting content and metadata...' },
-      { percent: 55, text: 'Processing with AI algorithms...' },
-      { percent: 75, text: 'Generating business insights...' },
-      { percent: 90, text: 'Finalizing analysis...' },
-      { percent: 100, text: 'Analysis complete!' }
+    // Simulate loading steps for ~40 seconds
+    const loadingSteps = [
+      { text: t('loading.steps.structure'), duration: 8000 },    // 8 seconds
+      { text: t('loading.steps.content'), duration: 10000 },     // 10 seconds  
+      { text: t('loading.steps.processing'), duration: 15000 },  // 15 seconds
+      { text: t('loading.steps.insights'), duration: 5000 },     // 5 seconds
+      { text: t('loading.steps.finalizing'), duration: 2000 },   // 2 seconds
+      { text: t('loading.steps.complete'), duration: 1000 }      // 1 second
     ];
 
     let currentStep = 0;
-    const progressInterval = setInterval(() => {
-      if (currentStep < progressSteps.length) {
+    const showNextStep = () => {
+      if (currentStep < loadingSteps.length) {
         setLoadingState({
           isLoading: true,
-          progress: progressSteps[currentStep].percent,
-          text: progressSteps[currentStep].text
+          progress: 0, // No longer used
+          text: loadingSteps[currentStep].text
         });
-        currentStep++;
-      } else {
-        clearInterval(progressInterval);
+        
+        setTimeout(() => {
+          currentStep++;
+          if (currentStep < loadingSteps.length) {
+            showNextStep();
+          }
+        }, loadingSteps[currentStep].duration);
       }
-    }, 800);
+    };
+    
+    showNextStep();
 
     try {
       const result = await analyzeWebsite(url);
@@ -78,8 +86,6 @@ function App() {
       
       setCurrentSection(AppSection.URL_INPUT);
       setIsAnalyzing(false);
-    } finally {
-      clearInterval(progressInterval);
     }
   };
 
