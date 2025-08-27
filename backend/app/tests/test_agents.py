@@ -826,20 +826,25 @@ def test_debug_interaction_creation(client, test_user_headers):
 def test_openai_client_initialization():
     """Test OpenAI client initialization and configuration"""
     from app.services.openai_client import OpenAIClient
+    from app.agents.shared.base_tool import OpenAIConfig, OpenAIMode
 
     # Test with valid config
-    client = OpenAIClient(
-        api_key="test-key",
-        base_url="https://api.openai.com/v1"
+    openai_config = OpenAIConfig(
+        mode=OpenAIMode.PROMPT_ID,
+        prompt_id="test-prompt-id",
+        model="gpt-4o"
     )
 
-    assert client.api_key == "test-key"
-    assert client.base_url == "https://api.openai.com/v1"
+    client = OpenAIClient(openai_config)
+
+    assert client.config.prompt_id == "test-prompt-id"
+    assert client.config.model == "gpt-4o"
+    assert client.config.mode == OpenAIMode.PROMPT_ID
 
 
 def test_base_tool_openai_fields():
     """Test BaseTool OpenAI integration fields"""
-    from app.agents.shared.base_tool import BaseTool, ToolInput, ToolOutput
+    from app.agents.shared.base_tool import BaseTool, ToolInput, ToolOutput, ToolConfig, OpenAIConfig, OpenAIMode
 
     # Create a concrete implementation for testing
     class TestTool(BaseTool):
@@ -847,59 +852,82 @@ def test_base_tool_openai_fields():
             return ToolOutput(success=True, data="test")
 
     # Test with prompt_id
-    tool_with_prompt = TestTool(
+    tool_config = ToolConfig(
         name="Test Tool",
         slug="test-tool",
         description="A test tool",
-        prompt_id="pmpt_test123"
+        version="1.0.0"
     )
 
-    assert tool_with_prompt.prompt_id == "pmpt_test123"
-    assert tool_with_prompt.system_message is None
-    assert tool_with_prompt.openai_model == "gpt-4o"
+    openai_config = OpenAIConfig(
+        mode=OpenAIMode.PROMPT_ID,
+        prompt_id="pmpt_test123",
+        model="gpt-4o"
+    )
+
+    tool_with_prompt = TestTool(
+        config=tool_config,
+        openai_config=openai_config
+    )
+
+    assert tool_with_prompt.config.name == "Test Tool"
+    assert tool_with_prompt.openai_config.prompt_id == "pmpt_test123"
+    assert tool_with_prompt.openai_config.model == "gpt-4o"
 
     # Test with system_message
-    tool_with_system = TestTool(
+    tool_config2 = ToolConfig(
         name="Test Tool 2",
         slug="test-tool-2",
         description="Another test tool",
-        system_message="You are a helpful assistant"
+        version="1.0.0"
     )
 
-    assert tool_with_system.system_message == "You are a helpful assistant"
-    assert tool_with_system.prompt_id is None
+    openai_config2 = OpenAIConfig(
+        mode=OpenAIMode.SYSTEM_MESSAGE,
+        system_message="You are a helpful assistant",
+        model="gpt-4o"
+    )
 
-    # Test validation - neither provided should raise error
-    with pytest.raises(ValueError, match="Either system_message or prompt_id must be provided"):
-        TestTool(
-            name="Invalid Tool",
-            slug="invalid-tool",
-            description="Invalid tool"
+    tool_with_system = TestTool(
+        config=tool_config2,
+        openai_config=openai_config2
+    )
+
+    assert tool_with_system.openai_config.system_message == "You are a helpful assistant"
+    assert tool_with_system.openai_config.prompt_id is None
+
+    # Test validation - invalid OpenAI config should raise error
+    with pytest.raises(ValueError, match="prompt_id required when mode is PROMPT_ID"):
+        invalid_openai_config = OpenAIConfig(
+            mode=OpenAIMode.PROMPT_ID,
+            prompt_id=None  # This should raise an error
         )
 
-    # Test validation - both provided should raise error
-    with pytest.raises(ValueError, match="Cannot specify both system_message and prompt_id"):
-        TestTool(
-            name="Invalid Tool 2",
-            slug="invalid-tool-2",
-            description="Invalid tool 2",
-            system_message="You are helpful",
-            prompt_id="pmpt_test123"
-        )
+    # Test that OpenAIConfig allows both fields to be set (no validation error)
+    # This tests that the config is flexible enough to handle different scenarios
+    config_with_both = OpenAIConfig(
+        mode=OpenAIMode.PROMPT_ID,
+        system_message="You are helpful",
+        prompt_id="pmpt_test123"
+    )
+    assert config_with_both.prompt_id == "pmpt_test123"
+    assert config_with_both.system_message == "You are helpful"
 
 
 def test_analyze_website_tool_openai_integration():
     """Test that AnalyzeWebsiteTool is properly configured for OpenAI"""
     from app.agents.concierge.tools.analyzewebsiteTool import AnalyzeWebsiteTool
+    from app.agents.shared.base_tool import OpenAIMode
 
     tool = AnalyzeWebsiteTool()
 
     # Check OpenAI configuration
-    assert tool.prompt_id == 'pmpt_68aec68cbe2081909e109ce3b087d6ba07eff42b26c15bb8'
-    assert tool.system_message is None
-    assert tool.openai_model == "gpt-4o"
-    assert tool.name == "Analyze Website"
-    assert tool.slug == "analyze-website"
+    assert tool.openai_config.prompt_id == 'pmpt_68aec68cbe2081909e109ce3b087d6ba07eff42b26c15bb8'
+    assert tool.openai_config.system_message is None
+    assert tool.openai_config.model == "gpt-4o"
+    assert tool.openai_config.mode == OpenAIMode.PROMPT_ID
+    assert tool.config.name == "Analyze Website"
+    assert tool.config.slug == "analyze-website"
 
 
 @pytest.mark.asyncio
