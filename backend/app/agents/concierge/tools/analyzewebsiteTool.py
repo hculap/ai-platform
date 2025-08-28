@@ -133,8 +133,13 @@ class BusinessProfileParser:
             if 'business_profile' in parsed_json:
                 profile = parsed_json['business_profile']
                 self._extract_embedded_json(profile)
+                # Apply field mappings
+                self._normalize_fields(profile)
                 return parsed_json
-            return {'business_profile': parsed_json}
+            else:
+                # Apply field mappings to the root level
+                self._normalize_fields(parsed_json)
+                return {'business_profile': parsed_json}
         
         return self._create_profile_wrapper(content)
     

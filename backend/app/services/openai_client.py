@@ -118,47 +118,46 @@ class OpenAIClient:
             
             # Handle string output directly
             if isinstance(output, str):
-                logger.info("Found direct string output")
                 return output
                 
-            # Handle structured output
-            if output:
-                logger.info(f"Found structured output, type: {type(output)}")
-                # Try to access as list
-                if isinstance(output, list) and len(output) > 0:
-                    first_output = output[0]
+            # Handle structured output (list of ResponseReasoningItem objects)
+            if output and isinstance(output, list) and len(output) > 0:
+                # Extract content from each item in the output list
+                extracted_content = []
+                for item in output:
+                    # Check for various content attributes
+                    content_text = None
+                    if hasattr(item, 'content') and item.content:
+                        # Handle ResponseOutputText objects
+                        if isinstance(item.content, list):
+                            # Extract text from ResponseOutputText objects
+                            text_parts = []
+                            for content_item in item.content:
+                                if hasattr(content_item, 'text'):
+                                    text_parts.append(str(content_item.text))
+                                else:
+                                    text_parts.append(str(content_item))
+                            content_text = ''.join(text_parts)
+                        else:
+                            content_text = str(item.content)
+                    elif hasattr(item, 'text') and item.text:
+                        content_text = str(item.text)
+                    elif hasattr(item, 'summary') and item.summary:
+                        # Summary might be a list or string
+                        if isinstance(item.summary, list):
+                            content_text = ' '.join(str(s) for s in item.summary if s)
+                        else:
+                            content_text = str(item.summary)
                     
-                    # Check if it has content attribute
-                    if hasattr(first_output, 'content'):
-                        content = first_output.content
-                        
-                        # If content is a list, get first item
-                        if isinstance(content, list) and len(content) > 0:
-                            content_item = content[0]
-                            
-                            # Try to get text from content item
-                            if hasattr(content_item, 'text'):
-                                logger.info("Found text in content[0].text")
-                                return content_item.text
-                            elif isinstance(content_item, dict) and 'text' in content_item:
-                                logger.info("Found text in content[0]['text']")
-                                return content_item['text']
-                            elif isinstance(content_item, str):
-                                logger.info("Found string content[0]")
-                                return content_item
-                        
-                        # If content is string
-                        elif isinstance(content, str):
-                            logger.info("Found string content")
-                            return content
-                    
-                    # Check direct text attribute
-                    elif hasattr(first_output, 'text'):
-                        logger.info("Found text in output[0].text")
-                        return first_output.text
-                    elif isinstance(first_output, str):
-                        logger.info("Found string output[0]")
-                        return first_output
+                    if content_text and content_text.strip():
+                        extracted_content.append(content_text.strip())
+                
+                if extracted_content:
+                    return '\n'.join(extracted_content)
+        
+        # Try output_text field (might be available in some responses)
+        if hasattr(response, 'output_text') and response.output_text:
+            return str(response.output_text)
 
         # FALLBACK: Try to convert to dict if possible to avoid Pydantic issues
         response_data = None
@@ -395,7 +394,6 @@ class OpenAIClient:
 
             # Retrieve the response by ID
             response = client.responses.retrieve(response_id)
-
             # Extract response data
             content = None
             status = getattr(response, 'status', None)
@@ -403,15 +401,12 @@ class OpenAIClient:
             usage_data = None
             created_at = getattr(response, 'created_at', None)
             
-            # If completed, extract content
+            # Only extract content if status is 'completed'
             if status == 'completed':
                 content = self._extract_response_content(response)
                 if hasattr(response, 'usage'):
                     usage_data = self._extract_usage_data(response.usage)
-                
-                # Additional logging for debugging content extraction
-                logger.info(f"Extracted content length: {len(str(content)) if content else 0}")
-                logger.info(f"Content preview: {str(content)[:200] if content else 'None'}")
+            # For other statuses (pending, queued, in_progress), leave content as None
             
             return APIResponse(
                 success=True,
