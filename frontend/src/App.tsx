@@ -30,6 +30,7 @@ function App() {
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [isAuthLoaded, setIsAuthLoaded] = useState(false);
+  const [refreshBusinessProfiles, setRefreshBusinessProfiles] = useState<(() => Promise<void>) | null>(null);
 
   const handleAnalyze = async (url: string) => {
     setIsAnalyzing(true);
@@ -209,10 +210,15 @@ function App() {
       // Create business profile if we have accepted profile data
       if (acceptedProfileData) {
         const profileResult = await createBusinessProfile(acceptedProfileData, authData.access_token);
-        
+
         if (!profileResult.success) {
           console.error('Profile creation failed:', profileResult.error);
           // Still proceed to dashboard even if profile creation fails
+        } else {
+          // Refresh business profiles after successful creation
+          if (refreshBusinessProfiles) {
+            await refreshBusinessProfiles();
+          }
         }
       }
 
@@ -402,6 +408,7 @@ function App() {
         user={currentUser}
         authToken={authToken || ''}
         onLogout={handleLogout}
+        onProfileCreated={(refreshFn) => setRefreshBusinessProfiles(() => refreshFn)}
       />
     );
   }

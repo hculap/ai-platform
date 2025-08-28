@@ -282,4 +282,32 @@ export const getInteractionsCount = async (authToken: string): Promise<{ success
   }
 };
 
+export const getBusinessProfiles = async (authToken: string): Promise<{ success: boolean; data?: any[]; error?: string }> => {
+  try {
+    const response = await api.get('/business-profiles', {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    if (response.data && response.data.data) {
+      return {
+        success: true,
+        data: response.data.data
+      };
+    }
+
+    return {
+      success: false,
+      error: 'Invalid response format'
+    };
+  } catch (error: any) {
+    console.error('Error fetching business profiles:', error);
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to fetch business profiles'
+    };
+  }
+};
+
 export default api;

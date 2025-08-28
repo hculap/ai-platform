@@ -6,12 +6,21 @@ import {
   Users, Activity, Clock, CheckCircle, Plus, Menu
 } from 'lucide-react';
 import { User as UserType } from '../types';
-import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount } from '../services/api';
+import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles } from '../services/api';
 
 interface DashboardProps {
   user: UserType;
   authToken: string;
   onLogout?: () => void;
+  onProfileCreated?: (refreshFn: () => Promise<void>) => void;
+}
+
+interface BusinessProfile {
+  id: string;
+  name: string;
+  website_url: string;
+  is_active: boolean;
+  created_at: string;
 }
 
 interface NavItem {
@@ -27,11 +36,10 @@ interface NavSection {
   items: NavItem[];
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout }) => {
+const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProfileCreated }) => {
   const { t } = useTranslation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeSection, setActiveSection] = useState('dashboard');
-  const [selectedBusinessProfile, setSelectedBusinessProfile] = useState('My Business');
 
   // Real data state
   const [agentsCount, setAgentsCount] = useState<number>(0);
@@ -39,11 +47,51 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout }) => {
   const [interactionsCount, setInteractionsCount] = useState<number>(0);
   const [isLoadingStats, setIsLoadingStats] = useState<boolean>(true);
 
+  // Business profiles state
+  const [businessProfiles, setBusinessProfiles] = useState<BusinessProfile[]>([]);
+  const [selectedBusinessProfile, setSelectedBusinessProfile] = useState<BusinessProfile | null>(null);
+  const [isLoadingProfiles, setIsLoadingProfiles] = useState<boolean>(true);
+
+  // Function to refresh business profiles
+  const refreshBusinessProfiles = async () => {
+    try {
+      setIsLoadingProfiles(true);
+
+      // Fetch business profiles count and list
+      const profilesResult = await getBusinessProfilesCount(authToken);
+      if (profilesResult.success && profilesResult.data !== undefined) {
+        setBusinessProfilesCount(profilesResult.data);
+      }
+
+      // Fetch business profiles list
+      const profilesListResult = await getBusinessProfiles(authToken);
+      if (profilesListResult.success && profilesListResult.data) {
+        setBusinessProfiles(profilesListResult.data);
+        // Auto-select first profile if available and none selected
+        if (profilesListResult.data.length > 0 && !selectedBusinessProfile) {
+          setSelectedBusinessProfile(profilesListResult.data[0]);
+        }
+        // If we currently have a selected profile, make sure it still exists in the updated list
+        else if (selectedBusinessProfile) {
+          const stillExists = profilesListResult.data.some(p => p.id === selectedBusinessProfile.id);
+          if (!stillExists && profilesListResult.data.length > 0) {
+            setSelectedBusinessProfile(profilesListResult.data[0]);
+          }
+        }
+      }
+    } catch (error) {
+      console.error('Error refreshing business profiles:', error);
+    } finally {
+      setIsLoadingProfiles(false);
+    }
+  };
+
   // Fetch real dashboard data
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setIsLoadingStats(true);
+        setIsLoadingProfiles(true);
 
         // Fetch agents count
         const agentsResult = await getAgentsCount(authToken);
@@ -51,11 +99,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout }) => {
           setAgentsCount(agentsResult.data);
         }
 
-        // Fetch business profiles count
-        const profilesResult = await getBusinessProfilesCount(authToken);
-        if (profilesResult.success && profilesResult.data !== undefined) {
-          setBusinessProfilesCount(profilesResult.data);
-        }
+        // Refresh business profiles
+        await refreshBusinessProfiles();
 
         // Fetch interactions count
         const interactionsResult = await getInteractionsCount(authToken);
@@ -66,11 +111,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout }) => {
         console.error('Error fetching dashboard data:', error);
       } finally {
         setIsLoadingStats(false);
+        setIsLoadingProfiles(false);
       }
     };
 
     fetchDashboardData();
   }, [authToken]);
+
+  // Call onProfileCreated when component mounts to register the refresh function
+  useEffect(() => {
+    if (onProfileCreated) {
+      onProfileCreated(() => refreshBusinessProfiles());
+    }
+  }, [onProfileCreated, refreshBusinessProfiles]);
 
   const navigationSections: NavSection[] = [
     {
@@ -195,14 +248,34 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout }) => {
               
               {/* Business Profile Selector */}
               <div className="relative">
-                <button
-                  onClick={() => {}}
-                  className="flex items-center space-x-2 px-4 py-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors"
-                >
-                  <Building2 className="w-4 h-4 text-gray-600" />
-                  <span className="text-sm font-medium text-gray-900">{selectedBusinessProfile}</span>
-                  <ChevronDown className="w-4 h-4 text-gray-600" />
-                </button>
+                {isLoadingProfiles ? (
+                  <div className="flex items-center space-x-2 px-4 py-2 bg-gray-50 rounded-lg">
+                    <Building2 className="w-4 h-4 text-gray-600" />
+                    <span className="text-sm font-medium text-gray-900">Loading...</span>
+                  </div>
+                ) : businessProfiles.length > 0 ? (
+                  <select
+                    value={selectedBusinessProfile?.id || ''}
+                    onChange={(e) => {
+                      const selectedProfile = businessProfiles.find(p => p.id === e.target.value);
+                      if (selectedProfile) {
+                        setSelectedBusinessProfile(selectedProfile);
+                      }
+                    }}
+                    className="flex items-center space-x-2 px-4 py-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border-0 focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer min-w-[200px]"
+                  >
+                    {businessProfiles.map((profile) => (
+                      <option key={profile.id} value={profile.id}>
+                        {profile.name || profile.website_url}
+                      </option>
+                    ))}
+                  </select>
+                ) : (
+                  <div className="flex items-center space-x-2 px-4 py-2 bg-gray-50 rounded-lg text-gray-500">
+                    <Building2 className="w-4 h-4" />
+                    <span className="text-sm font-medium">No business profiles</span>
+                  </div>
+                )}
               </div>
             </div>
 
