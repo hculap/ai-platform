@@ -160,42 +160,7 @@ export const loginUser = async (email: string, password: string): Promise<{ succ
   }
 };
 
-export const createBusinessProfile = async (profileData: BusinessProfile, authToken?: string): Promise<{ success: boolean; profileId?: string; error?: string }> => {
-  try {
-    const headers: any = {
-      'Content-Type': 'application/json'
-    };
-    
-    if (authToken) {
-      headers['Authorization'] = `Bearer ${authToken}`;
-    }
 
-    // Map frontend BusinessProfile to backend expected format
-    const backendProfileData = {
-      website_url: profileData.website_url,
-      name: profileData.company_name,
-      offer_description: profileData.offer,
-      target_customer: profileData.target_customer,
-      problem_solved: profileData.problems,
-      customer_desires: profileData.desires,
-      brand_tone: profileData.tone,
-      communication_language: profileData.language
-    };
-
-    const response = await api.post('/business-profiles', backendProfileData, { headers });
-
-    return {
-      success: true,
-      profileId: response.data.id
-    };
-  } catch (error: any) {
-    console.error('Profile creation error:', error);
-    return {
-      success: false,
-      error: error.response?.data?.message || error.message || 'Profile creation failed'
-    };
-  }
-};
 
 // Dashboard data API functions
 export const getAgentsCount = async (authToken: string): Promise<{ success: boolean; data?: number; error?: string }> => {
@@ -415,6 +380,178 @@ export const getBusinessProfiles = async (authToken: string): Promise<{ success:
     return {
       success: false,
       error: error.response?.data?.message || error.message || 'Failed to fetch business profiles'
+    };
+  }
+};
+
+export const deleteBusinessProfile = async (profileId: string, authToken: string): Promise<{ success: boolean; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.delete(`/business-profiles/${profileId}`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    return {
+      success: true
+    };
+  } catch (error: any) {
+    console.error('Error deleting business profile:', error);
+
+    // Check if token is expired
+    if (error.response?.status === 401 || error.response?.data?.msg === 'Signature verification failed') {
+      // Try to refresh the token first
+      const refreshResult = await refreshAuthToken();
+
+      if (refreshResult.success && refreshResult.access_token) {
+        // Token refreshed successfully, retry the original request
+        try {
+          await api.delete(`/business-profiles/${profileId}`, {
+            headers: {
+              'Authorization': `Bearer ${refreshResult.access_token}`
+            }
+          });
+
+          return {
+            success: true
+          };
+        } catch (retryError) {
+          console.error('Retry after token refresh failed:', retryError);
+        }
+      }
+
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to delete business profile'
+    };
+  }
+};
+
+export const createBusinessProfile = async (profileData: any, authToken: string): Promise<{ success: boolean; data?: any; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.post('/business-profiles', profileData, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    if (response.data) {
+      return {
+        success: true,
+        data: response.data
+      };
+    }
+
+    return {
+      success: false,
+      error: 'Invalid response format'
+    };
+  } catch (error: any) {
+    console.error('Error creating business profile:', error);
+
+    // Check if token is expired
+    if (error.response?.status === 401 || error.response?.data?.msg === 'Signature verification failed') {
+      // Try to refresh the token first
+      const refreshResult = await refreshAuthToken();
+
+      if (refreshResult.success && refreshResult.access_token) {
+        // Token refreshed successfully, retry the original request
+        try {
+          const retryResponse = await api.post('/business-profiles', profileData, {
+            headers: {
+              'Authorization': `Bearer ${refreshResult.access_token}`
+            }
+          });
+
+          if (retryResponse.data) {
+            return {
+              success: true,
+              data: retryResponse.data
+            };
+          }
+        } catch (retryError) {
+          console.error('Retry after token refresh failed:', retryError);
+        }
+      }
+
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to create business profile'
+    };
+  }
+};
+
+export const updateBusinessProfile = async (profileId: string, profileData: any, authToken: string): Promise<{ success: boolean; data?: any; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.put(`/business-profiles/${profileId}`, profileData, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    if (response.data) {
+      return {
+        success: true,
+        data: response.data
+      };
+    }
+
+    return {
+      success: false,
+      error: 'Invalid response format'
+    };
+  } catch (error: any) {
+    console.error('Error updating business profile:', error);
+
+    // Check if token is expired
+    if (error.response?.status === 401 || error.response?.data?.msg === 'Signature verification failed') {
+      // Try to refresh the token first
+      const refreshResult = await refreshAuthToken();
+
+      if (refreshResult.success && refreshResult.access_token) {
+        // Token refreshed successfully, retry the original request
+        try {
+          const retryResponse = await api.put(`/business-profiles/${profileId}`, profileData, {
+            headers: {
+              'Authorization': `Bearer ${refreshResult.access_token}`
+            }
+          });
+
+          if (retryResponse.data) {
+            return {
+              success: true,
+              data: retryResponse.data
+            };
+          }
+        } catch (retryError) {
+          console.error('Retry after token refresh failed:', retryError);
+        }
+      }
+
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to update business profile'
     };
   }
 };

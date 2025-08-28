@@ -15,15 +15,21 @@ import {
   Activity,
   X
 } from 'lucide-react';
-import { getBusinessProfiles } from '../services/api';
+import { getBusinessProfiles, deleteBusinessProfile, createBusinessProfile, updateBusinessProfile } from '../services/api';
+import BusinessProfileForm from './BusinessProfileForm';
 
 interface BusinessProfile {
   id: string;
   name: string;
   website_url: string;
   offer_description: string;
+  target_customer: string;
+  problem_solved: string;
+  customer_desires: string;
+  brand_tone: string;
+  communication_language: string;
   is_active: boolean;
-  created_at: string;
+  created_at?: string;
 }
 
 interface BusinessProfilesProps {
@@ -31,13 +37,15 @@ interface BusinessProfilesProps {
   onCreateProfile?: () => void;
   onEditProfile?: (profile: BusinessProfile) => void;
   onTokenRefreshed?: (newToken: string) => void;
+  onProfilesChanged?: () => void;
 }
 
 const BusinessProfiles: React.FC<BusinessProfilesProps> = ({
   authToken,
   onCreateProfile,
   onEditProfile,
-  onTokenRefreshed
+  onTokenRefreshed,
+  onProfilesChanged
 }) => {
   const { t } = useTranslation();
 
@@ -49,6 +57,8 @@ const BusinessProfiles: React.FC<BusinessProfilesProps> = ({
   const [isLoading, setIsLoading] = useState(true);
   const [isTokenExpired, setIsTokenExpired] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
+  const [showProfileForm, setShowProfileForm] = useState(false);
+  const [editingProfile, setEditingProfile] = useState<BusinessProfile | null>(null);
 
   // Function to highlight search terms in text
   const highlightSearchTerm = useCallback((text: string, searchTerm: string) => {
@@ -123,11 +133,7 @@ const BusinessProfiles: React.FC<BusinessProfilesProps> = ({
     setSearchQuery(e.target.value);
   };
 
-  const handleDeleteProfile = useCallback(async (profileId: string) => {
-    // For now, just show a placeholder - delete functionality would need backend support
-    alert('Delete functionality not yet implemented. This would require backend API support.');
-    setShowDeleteConfirm(null);
-  }, []);
+
 
   const handleEditProfile = useCallback((profile: BusinessProfile) => {
     if (onEditProfile) {
@@ -138,6 +144,97 @@ const BusinessProfiles: React.FC<BusinessProfilesProps> = ({
     }
   }, [onEditProfile]);
 
+  const handleDeleteProfile = useCallback(async (profile: BusinessProfile) => {
+    try {
+      const result = await deleteBusinessProfile(profile.id, authToken);
+
+      if (result.isTokenExpired) {
+        setIsTokenExpired(true);
+        return;
+      }
+
+      if (result.success) {
+        // Refresh the profiles list
+        await fetchBusinessProfiles();
+        setShowDeleteConfirm(null);
+        // Notify parent component to refresh header selector
+        if (onProfilesChanged) {
+          onProfilesChanged();
+        }
+      } else {
+        // Show error message
+        alert(t('businessProfiles.deleteFailed', 'Usuwanie nie powiodło się'));
+      }
+    } catch (error) {
+      console.error('Delete profile error:', error);
+      alert(t('businessProfiles.deleteFailed', 'Usuwanie nie powiodło się'));
+    }
+  }, [authToken, fetchBusinessProfiles, t]);
+
+  const handleCreateProfile = useCallback(() => {
+    setEditingProfile(null);
+    setShowProfileForm(true);
+  }, []);
+
+  const handleEditProfileForm = useCallback((profile: BusinessProfile) => {
+    setEditingProfile(profile);
+    setShowProfileForm(true);
+  }, []);
+
+  const handleSaveProfile = useCallback(async (profileData: Omit<BusinessProfile, 'id'>) => {
+    try {
+      if (editingProfile) {
+        // Update existing profile
+        const result = await updateBusinessProfile(editingProfile.id, profileData, authToken);
+
+        if (result.isTokenExpired) {
+          setIsTokenExpired(true);
+          return;
+        }
+
+        if (result.success) {
+          await fetchBusinessProfiles();
+          setShowProfileForm(false);
+          setEditingProfile(null);
+          // Notify parent component to refresh header selector
+          if (onProfilesChanged) {
+            onProfilesChanged();
+          }
+        } else {
+          alert(result.error || t('businessProfiles.form.update', 'Zaktualizuj'));
+        }
+      } else {
+        // Create new profile
+        const result = await createBusinessProfile(profileData, authToken);
+
+        if (result.isTokenExpired) {
+          setIsTokenExpired(true);
+          return;
+        }
+
+        if (result.success) {
+          await fetchBusinessProfiles();
+          setShowProfileForm(false);
+          setEditingProfile(null);
+          // Notify parent component to refresh header selector
+          if (onProfilesChanged) {
+            onProfilesChanged();
+          }
+        } else {
+          alert(result.error || t('businessProfiles.form.create', 'Utwórz'));
+        }
+      }
+    } catch (error) {
+      console.error('Save profile error:', error);
+      alert(t('businessProfiles.form.saving', 'Zapisywanie...'));
+    }
+  }, [authToken, editingProfile, fetchBusinessProfiles, t]);
+
+  const handleCancelForm = useCallback(() => {
+    setShowProfileForm(false);
+    setEditingProfile(null);
+  }, []);
+
   // Confirmation Dialog Component
   const DeleteConfirmationDialog = ({ profile }: { profile: BusinessProfile }) => (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
@@ -146,23 +243,26 @@ const BusinessProfiles: React.FC<BusinessProfilesProps> = ({
           <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center mx-auto mb-4">
             <Trash2 className="w-6 h-6 text-red-600" />
           </div>
-          <h3 className="text-lg font-semibold text-gray-900 mb-2">Delete Profile</h3>
+          <h3 className="text-lg font-semibold text-gray-900 mb-2">
+            {t('businessProfiles.deleteConfirmTitle', 'Potwierdź usunięcie')}
+          </h3>
           <p className="text-gray-600 mb-6">
-            Are you sure you want to delete <strong>{profile.name || profile.website_url}</strong>?
-            This action cannot be undone.
+            {t('businessProfiles.deleteConfirm', 'Czy na pewno chcesz usunąć ten profil biznesowy?')}
+            <br />
+            <strong>{profile.name || profile.website_url}</strong>
           </p>
           <div className="flex gap-3">
             <button
               onClick={() => setShowDeleteConfirm(null)}
               className="flex-1 px-4 py-2 text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors"
             >
-              Cancel
+              {t('businessProfiles.cancel', 'Anuluj')}
             </button>
             <button
-              onClick={() => handleDeleteProfile(profile.id)}
+              onClick={() => handleDeleteProfile(profile)}
               className="flex-1 px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors"
             >
-              Delete
+              {t('businessProfiles.delete', 'Usuń')}
             </button>
           </div>
         </div>
@@ -244,7 +344,7 @@ const BusinessProfiles: React.FC<BusinessProfilesProps> = ({
             {/* Top Right - Create Button */}
             <div className="flex justify-end">
               <button
-                onClick={onCreateProfile}
+                onClick={handleCreateProfile}
                 className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg transition-all duration-300"
               >
                 <Plus className="w-4 h-4" />
@@ -401,7 +501,7 @@ const BusinessProfiles: React.FC<BusinessProfilesProps> = ({
 
                       <div className="space-y-4">
                         <button
-                          onClick={onCreateProfile}
+                          onClick={handleCreateProfile}
                           className="inline-flex items-center px-8 py-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
                         >
                           <Plus className="w-5 h-5 mr-2" />
@@ -465,7 +565,7 @@ const BusinessProfiles: React.FC<BusinessProfilesProps> = ({
                             
                             <div className="flex items-center text-sm text-gray-500">
                               <Calendar className="w-4 h-4 mr-2 flex-shrink-0" />
-                                                             <span>{t('businessProfiles.created', 'Utworzono')} {formatDate(profile.created_at)}</span>
+                                                             <span>{t('businessProfiles.created', 'Utworzono')} {formatDate(profile.created_at || '')}</span>
                             </div>
                           </div>
                         </div>
@@ -522,7 +622,7 @@ const BusinessProfiles: React.FC<BusinessProfilesProps> = ({
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          handleEditProfile(profile);
+                          handleEditProfileForm(profile);
                         }}
                         className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-100 hover:bg-blue-200 text-blue-700 hover:text-blue-800 font-medium text-sm rounded-lg transition-all duration-300"
                       >
@@ -530,16 +630,18 @@ const BusinessProfiles: React.FC<BusinessProfilesProps> = ({
                         <span>{t('businessProfiles.edit', 'Edytuj')}</span>
                       </button>
 
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setShowDeleteConfirm(profile.id);
-                        }}
-                        className="flex items-center gap-1.5 px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 hover:text-red-800 font-medium text-sm rounded-lg transition-all duration-300"
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                        <span>{t('businessProfiles.delete', 'Usuń')}</span>
-                      </button>
+                      {filteredProfiles.length > 1 && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setShowDeleteConfirm(profile.id);
+                          }}
+                          className="flex items-center gap-1.5 px-3 py-1.5 bg-red-100 hover:bg-red-200 text-red-700 hover:text-red-800 font-medium text-sm rounded-lg transition-all duration-300"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          <span>{t('businessProfiles.delete', 'Usuń')}</span>
+                        </button>
+                      )}
                     </div>
                   </div>
                 </div>
@@ -553,6 +655,15 @@ const BusinessProfiles: React.FC<BusinessProfilesProps> = ({
         {showDeleteConfirm && (
           <DeleteConfirmationDialog
             profile={profiles.find(p => p.id === showDeleteConfirm)!}
+          />
+        )}
+
+        {/* Business Profile Form */}
+        {showProfileForm && (
+          <BusinessProfileForm
+            profile={editingProfile}
+            onSave={handleSaveProfile}
+            onCancel={handleCancelForm}
           />
         )}
     </div>

@@ -6,7 +6,7 @@ import {
   Users, Activity, Clock, CheckCircle, Plus, Menu
 } from 'lucide-react';
 import { User as UserType } from '../types';
-import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, refreshAuthToken } from '../services/api';
+import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, refreshAuthToken, updateBusinessProfile } from '../services/api';
 import BusinessProfiles from './BusinessProfiles';
 
 interface DashboardProps {
@@ -55,6 +55,44 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
   const [isLoadingProfiles, setIsLoadingProfiles] = useState<boolean>(true);
   const [isTokenExpired, setIsTokenExpired] = useState<boolean>(false);
 
+  // Function to update active profile (only one can be active at a time)
+  const updateActiveProfile = useCallback(async (profileId: string) => {
+    try {
+      // First, get the current profile data
+      const currentProfile = businessProfiles.find(p => p.id === profileId);
+      if (!currentProfile) return;
+
+      // Set this profile as active (backend will handle deactivating others)
+      const result = await updateBusinessProfile(profileId, {
+        ...currentProfile,
+        is_active: true
+      }, authToken);
+
+      if (result.isTokenExpired && onTokenRefreshed) {
+        const refreshResult = await refreshAuthToken();
+        if (refreshResult.success && refreshResult.access_token) {
+          onTokenRefreshed(refreshResult.access_token);
+          // Retry with new token
+          await updateBusinessProfile(profileId, {
+            ...currentProfile,
+            is_active: true
+          }, refreshResult.access_token);
+        }
+      }
+
+      // Update local state immediately
+      setBusinessProfiles(prev => prev.map(p => ({
+        ...p,
+        is_active: p.id === profileId
+      })));
+      
+      // Update selected profile
+      setSelectedBusinessProfile(currentProfile);
+    } catch (error) {
+      console.error('Error updating active profile:', error);
+    }
+  }, [businessProfiles, authToken, onTokenRefreshed]);
+
   // Function to refresh business profiles (useCallback to prevent infinite loops)
   const refreshBusinessProfiles = useCallback(async () => {
     try {
@@ -95,15 +133,24 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
 
       if (profilesListResult.success && profilesListResult.data) {
         setBusinessProfiles(profilesListResult.data);
-        // Auto-select first profile if available and none selected
-        if (profilesListResult.data.length > 0 && !selectedBusinessProfile) {
-          setSelectedBusinessProfile(profilesListResult.data[0]);
+        
+        // Auto-select the active profile (there should be only one)
+        const activeProfile = profilesListResult.data.find(p => p.is_active);
+        if (activeProfile) {
+          setSelectedBusinessProfile(activeProfile);
         }
-        // If we currently have a selected profile, make sure it still exists in the updated list
-        else if (selectedBusinessProfile) {
-          const stillExists = profilesListResult.data.some(p => p.id === selectedBusinessProfile.id);
-          if (!stillExists && profilesListResult.data.length > 0) {
-            setSelectedBusinessProfile(profilesListResult.data[0]);
+        // If no active profile found, select the first one and make it active
+        else if (profilesListResult.data.length > 0) {
+          const firstProfile = profilesListResult.data[0];
+          setSelectedBusinessProfile(firstProfile);
+          // Make this profile active in the backend (without triggering refresh)
+          try {
+            await updateBusinessProfile(firstProfile.id, {
+              ...firstProfile,
+              is_active: true
+            }, authToken);
+          } catch (error) {
+            console.error('Error setting first profile as active:', error);
           }
         }
       }
@@ -301,10 +348,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                 ) : businessProfiles.length > 0 ? (
                   <select
                     value={selectedBusinessProfile?.id || ''}
-                    onChange={(e) => {
+                    onChange={async (e) => {
                       const selectedProfile = businessProfiles.find(p => p.id === e.target.value);
                       if (selectedProfile) {
-                        setSelectedBusinessProfile(selectedProfile);
+                        // Update the active profile in the backend
+                        await updateActiveProfile(selectedProfile.id);
                       }
                     }}
                     className="flex items-center px-4 py-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border-0 focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer min-w-[200px]"
@@ -380,6 +428,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                   alert(`Edit profile: ${profile.name}`);
                 }}
                 onTokenRefreshed={onTokenRefreshed}
+                onProfilesChanged={refreshBusinessProfiles}
               />
             ) : (
               <>

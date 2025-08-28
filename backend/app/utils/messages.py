@@ -29,6 +29,9 @@ BUSINESS_PROFILE_NOT_FOUND = 'business_profile_not_found'
 BUSINESS_PROFILE_RETRIEVE_SINGLE_FAILED = 'business_profile_retrieve_single_failed'
 BUSINESS_PROFILE_UPDATED_SUCCESS = 'business_profile_updated_success'
 BUSINESS_PROFILE_UPDATE_FAILED = 'business_profile_update_failed'
+BUSINESS_PROFILE_DELETED_SUCCESS = 'business_profile_deleted_success'
+BUSINESS_PROFILE_DELETE_FAILED = 'business_profile_delete_failed'
+BUSINESS_PROFILE_LAST_PROFILE_ERROR = 'business_profile_last_profile_error'
 
 # General Error Messages
 ERROR_VALIDATION_ERROR = 'validation_error'
