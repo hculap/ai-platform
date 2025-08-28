@@ -398,8 +398,9 @@ function App() {
   // Render dashboard separately without background elements
   if (currentSection === AppSection.DASHBOARD && currentUser) {
     return (
-      <Dashboard 
+      <Dashboard
         user={currentUser}
+        authToken={authToken || ''}
         onLogout={handleLogout}
       />
     );

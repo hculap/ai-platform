@@ -197,4 +197,89 @@ export const createBusinessProfile = async (profileData: BusinessProfile, authTo
   }
 };
 
+// Dashboard data API functions
+export const getAgentsCount = async (authToken: string): Promise<{ success: boolean; data?: number; error?: string }> => {
+  try {
+    const response = await api.get('/agents', {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    if (response.data && response.data.data) {
+      return {
+        success: true,
+        data: response.data.data.length
+      };
+    }
+
+    return {
+      success: false,
+      error: 'Invalid response format'
+    };
+  } catch (error: any) {
+    console.error('Error fetching agents count:', error);
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to fetch agents count'
+    };
+  }
+};
+
+export const getBusinessProfilesCount = async (authToken: string): Promise<{ success: boolean; data?: number; error?: string }> => {
+  try {
+    const response = await api.get('/business-profiles', {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    if (response.data && response.data.data) {
+      return {
+        success: true,
+        data: response.data.data.length
+      };
+    }
+
+    return {
+      success: false,
+      error: 'Invalid response format'
+    };
+  } catch (error: any) {
+    console.error('Error fetching business profiles count:', error);
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to fetch business profiles count'
+    };
+  }
+};
+
+export const getInteractionsCount = async (authToken: string): Promise<{ success: boolean; data?: number; error?: string }> => {
+  try {
+    const response = await api.get('/agents/interactions', {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    if (response.data && response.data.data) {
+      return {
+        success: true,
+        data: response.data.data.length
+      };
+    }
+
+    return {
+      success: false,
+      error: 'Invalid response format'
+    };
+  } catch (error: any) {
+    console.error('Error fetching interactions count:', error);
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to fetch interactions count'
+    };
+  }
+};
+
 export default api;

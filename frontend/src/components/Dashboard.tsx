@@ -1,14 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { 
-  User, Building2, BarChart3, Settings, LogOut, ChevronDown, Search, Bell, 
-  Bot, Zap, FileText, Video, Target, TrendingUp, Megaphone, 
+import {
+  User, Building2, BarChart3, Settings, LogOut, ChevronDown, Search, Bell,
+  Bot, Zap, FileText, Video, Target, TrendingUp, Megaphone,
   Users, Activity, Clock, CheckCircle, Plus, Menu
 } from 'lucide-react';
 import { User as UserType } from '../types';
+import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount } from '../services/api';
 
 interface DashboardProps {
   user: UserType;
+  authToken: string;
   onLogout?: () => void;
 }
 
@@ -25,18 +27,57 @@ interface NavSection {
   items: NavItem[];
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
+const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout }) => {
   const { t } = useTranslation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeSection, setActiveSection] = useState('dashboard');
   const [selectedBusinessProfile, setSelectedBusinessProfile] = useState('My Business');
+
+  // Real data state
+  const [agentsCount, setAgentsCount] = useState<number>(0);
+  const [businessProfilesCount, setBusinessProfilesCount] = useState<number>(0);
+  const [interactionsCount, setInteractionsCount] = useState<number>(0);
+  const [isLoadingStats, setIsLoadingStats] = useState<boolean>(true);
+
+  // Fetch real dashboard data
+  useEffect(() => {
+    const fetchDashboardData = async () => {
+      try {
+        setIsLoadingStats(true);
+
+        // Fetch agents count
+        const agentsResult = await getAgentsCount(authToken);
+        if (agentsResult.success && agentsResult.data !== undefined) {
+          setAgentsCount(agentsResult.data);
+        }
+
+        // Fetch business profiles count
+        const profilesResult = await getBusinessProfilesCount(authToken);
+        if (profilesResult.success && profilesResult.data !== undefined) {
+          setBusinessProfilesCount(profilesResult.data);
+        }
+
+        // Fetch interactions count
+        const interactionsResult = await getInteractionsCount(authToken);
+        if (interactionsResult.success && interactionsResult.data !== undefined) {
+          setInteractionsCount(interactionsResult.data);
+        }
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+
+    fetchDashboardData();
+  }, [authToken]);
 
   const navigationSections: NavSection[] = [
     {
       id: 'ai-tools',
       title: t('dashboard.nav.aiTools'),
       items: [
-        { id: 'agents', label: t('dashboard.nav.agents'), icon: Bot, count: 5 },
+        { id: 'agents', label: t('dashboard.nav.agents'), icon: Bot, count: agentsCount },
         { id: 'automations', label: t('dashboard.nav.automations'), icon: Zap, count: 12 },
         { id: 'prompts', label: t('dashboard.nav.prompts'), icon: FileText, count: 28 },
         { id: 'videos', label: t('dashboard.nav.videos'), icon: Video, count: 3 },
@@ -46,7 +87,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
       id: 'business',
       title: t('dashboard.nav.business'),
       items: [
-        { id: 'business-profiles', label: t('dashboard.nav.businessProfiles'), icon: Building2, count: 1 },
+        { id: 'business-profiles', label: t('dashboard.nav.businessProfiles'), icon: Building2, count: businessProfilesCount },
         { id: 'competition', label: t('dashboard.nav.competition'), icon: Target, count: 7 },
         { id: 'campaigns', label: t('dashboard.nav.campaigns'), icon: TrendingUp, count: 4 },
         { id: 'ads', label: t('dashboard.nav.ads'), icon: Megaphone, count: 15 },
@@ -55,12 +96,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, onLogout }) => {
   ];
 
   const stats = [
-    { id: 'agents', label: t('dashboard.stats.totalAgents'), value: '5', icon: Bot, bgColor: 'bg-blue-100', textColor: 'text-blue-600', trend: '+2 this week' },
+    { id: 'agents', label: t('dashboard.stats.totalAgents'), value: isLoadingStats ? '...' : agentsCount.toString(), icon: Bot, bgColor: 'bg-blue-100', textColor: 'text-blue-600', trend: '+2 this week' },
     { id: 'automations', label: t('dashboard.stats.totalAutomations'), value: '12', icon: Zap, bgColor: 'bg-purple-100', textColor: 'text-purple-600', trend: '+3 this week' },
     { id: 'prompts', label: t('dashboard.stats.totalPrompts'), value: '28', icon: FileText, bgColor: 'bg-green-100', textColor: 'text-green-600', trend: '+8 this week' },
     { id: 'campaigns', label: t('dashboard.stats.activeCampaigns'), value: '4', icon: TrendingUp, bgColor: 'bg-orange-100', textColor: 'text-orange-600', trend: '2 running' },
     { id: 'users', label: t('dashboard.stats.totalUsers'), value: '156', icon: Users, bgColor: 'bg-indigo-100', textColor: 'text-indigo-600', trend: '+12 this month' },
-    { id: 'activity', label: t('dashboard.stats.todayActivity'), value: '89', icon: Activity, bgColor: 'bg-pink-100', textColor: 'text-pink-600', trend: '↑ 23% vs yesterday' },
+    { id: 'activity', label: t('dashboard.stats.todayActivity'), value: isLoadingStats ? '...' : interactionsCount.toString(), icon: Activity, bgColor: 'bg-pink-100', textColor: 'text-pink-600', trend: '↑ 23% vs yesterday' },
   ];
 
   return (
