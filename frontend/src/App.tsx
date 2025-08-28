@@ -29,6 +29,7 @@ function App() {
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [isSigningUp, setIsSigningUp] = useState(false);
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const [isAuthLoaded, setIsAuthLoaded] = useState(false);
 
   const handleAnalyze = async (url: string) => {
     setIsAnalyzing(true);
@@ -200,6 +201,10 @@ function App() {
       const authData = registerResult.data;
       setCurrentUser(authData.user);
       setAuthToken(authData.access_token);
+      
+      // Save to localStorage
+      localStorage.setItem('user', JSON.stringify(authData.user));
+      localStorage.setItem('authToken', authData.access_token);
 
       // Create business profile if we have accepted profile data
       if (acceptedProfileData) {
@@ -259,6 +264,10 @@ function App() {
       const authData = loginResult.data;
       setCurrentUser(authData.user);
       setAuthToken(authData.access_token);
+      
+      // Save to localStorage
+      localStorage.setItem('user', JSON.stringify(authData.user));
+      localStorage.setItem('authToken', authData.access_token);
 
       // Show success notification
       const successDiv = document.createElement('div');
@@ -307,6 +316,10 @@ function App() {
     setAuthToken(null);
     setAcceptedProfileData(null);
     setCurrentSection(AppSection.URL_INPUT);
+    
+    // Clear localStorage
+    localStorage.removeItem('user');
+    localStorage.removeItem('authToken');
   };
 
   // Add keyboard shortcuts
@@ -339,12 +352,48 @@ function App() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [currentSection]);
 
+  // Load authentication state from localStorage on app startup
+  useEffect(() => {
+    const savedUser = localStorage.getItem('user');
+    const savedToken = localStorage.getItem('authToken');
+    
+    if (savedUser && savedToken) {
+      try {
+        const user = JSON.parse(savedUser);
+        setCurrentUser(user);
+        setAuthToken(savedToken);
+        setCurrentSection(AppSection.DASHBOARD);
+      } catch (error) {
+        console.error('Error parsing saved user data:', error);
+        // Clear invalid data
+        localStorage.removeItem('user');
+        localStorage.removeItem('authToken');
+      }
+    }
+    
+    setIsAuthLoaded(true);
+  }, []);
+
   // Auto-redirect if user is already signed in
   useEffect(() => {
-    if (currentUser && currentSection !== AppSection.DASHBOARD) {
+    if (currentUser && currentSection !== AppSection.DASHBOARD && isAuthLoaded) {
       setCurrentSection(AppSection.DASHBOARD);
     }
-  }, [currentUser, currentSection]);
+  }, [currentUser, currentSection, isAuthLoaded]);
+
+  // Show loading screen while checking authentication
+  if (!isAuthLoaded) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
+            <div className="w-8 h-8 bg-white rounded-full"></div>
+          </div>
+          <p className="text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Render dashboard separately without background elements
   if (currentSection === AppSection.DASHBOARD && currentUser) {
