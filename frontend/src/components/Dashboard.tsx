@@ -379,6 +379,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                   // For now, show alert - can be enhanced later
                   alert(`Edit profile: ${profile.name}`);
                 }}
+                onTokenRefreshed={onTokenRefreshed}
               />
             ) : (
               <>
