@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   User, Building2, BarChart3, Settings, LogOut, ChevronDown, Search, Bell,
@@ -6,13 +6,15 @@ import {
   Users, Activity, Clock, CheckCircle, Plus, Menu
 } from 'lucide-react';
 import { User as UserType } from '../types';
-import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles } from '../services/api';
+import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, refreshAuthToken } from '../services/api';
+import BusinessProfiles from './BusinessProfiles';
 
 interface DashboardProps {
   user: UserType;
   authToken: string;
   onLogout?: () => void;
   onProfileCreated?: (refreshFn: () => Promise<void>) => void;
+  onTokenRefreshed?: (newToken: string) => void;
 }
 
 interface BusinessProfile {
@@ -36,7 +38,7 @@ interface NavSection {
   items: NavItem[];
 }
 
-const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProfileCreated }) => {
+const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProfileCreated, onTokenRefreshed }) => {
   const { t } = useTranslation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeSection, setActiveSection] = useState('dashboard');
@@ -51,20 +53,46 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
   const [businessProfiles, setBusinessProfiles] = useState<BusinessProfile[]>([]);
   const [selectedBusinessProfile, setSelectedBusinessProfile] = useState<BusinessProfile | null>(null);
   const [isLoadingProfiles, setIsLoadingProfiles] = useState<boolean>(true);
+  const [isTokenExpired, setIsTokenExpired] = useState<boolean>(false);
 
-  // Function to refresh business profiles
-  const refreshBusinessProfiles = async () => {
+  // Function to refresh business profiles (useCallback to prevent infinite loops)
+  const refreshBusinessProfiles = useCallback(async () => {
     try {
       setIsLoadingProfiles(true);
 
       // Fetch business profiles count and list
       const profilesResult = await getBusinessProfilesCount(authToken);
+
+      if (profilesResult.isTokenExpired) {
+        // Try to refresh token
+        const refreshResult = await refreshAuthToken();
+        if (refreshResult.success && refreshResult.access_token && onTokenRefreshed) {
+          onTokenRefreshed(refreshResult.access_token);
+          // Retry with new token
+          const retryResult = await getBusinessProfilesCount(refreshResult.access_token);
+          if (retryResult.success && retryResult.data !== undefined) {
+            setBusinessProfilesCount(retryResult.data);
+          }
+        } else {
+          setIsTokenExpired(true);
+          setIsLoadingProfiles(false);
+          return;
+        }
+      }
+
       if (profilesResult.success && profilesResult.data !== undefined) {
         setBusinessProfilesCount(profilesResult.data);
       }
 
       // Fetch business profiles list
       const profilesListResult = await getBusinessProfiles(authToken);
+
+      if (profilesListResult.isTokenExpired) {
+        setIsTokenExpired(true);
+        setIsLoadingProfiles(false);
+        return;
+      }
+
       if (profilesListResult.success && profilesListResult.data) {
         setBusinessProfiles(profilesListResult.data);
         // Auto-select first profile if available and none selected
@@ -84,23 +112,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     } finally {
       setIsLoadingProfiles(false);
     }
-  };
+  }, [authToken]);
 
   // Fetch real dashboard data
   useEffect(() => {
     const fetchDashboardData = async () => {
       try {
         setIsLoadingStats(true);
-        setIsLoadingProfiles(true);
 
         // Fetch agents count
         const agentsResult = await getAgentsCount(authToken);
         if (agentsResult.success && agentsResult.data !== undefined) {
           setAgentsCount(agentsResult.data);
         }
-
-        // Refresh business profiles
-        await refreshBusinessProfiles();
 
         // Fetch interactions count
         const interactionsResult = await getInteractionsCount(authToken);
@@ -111,20 +135,27 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
         console.error('Error fetching dashboard data:', error);
       } finally {
         setIsLoadingStats(false);
-        setIsLoadingProfiles(false);
       }
     };
 
     fetchDashboardData();
   }, [authToken]);
 
+  // Fetch business profiles separately
+  useEffect(() => {
+    refreshBusinessProfiles();
+  }, [refreshBusinessProfiles]);
+
   // Call onProfileCreated when component mounts to register the refresh function
   useEffect(() => {
     if (onProfileCreated) {
-      onProfileCreated(() => refreshBusinessProfiles());
+      onProfileCreated(refreshBusinessProfiles);
     }
   }, [onProfileCreated, refreshBusinessProfiles]);
 
+
+
+  // Update navigation sections with current data
   const navigationSections: NavSection[] = [
     {
       id: 'ai-tools',
@@ -190,7 +221,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                 {section.items.map((item) => (
                   <button
                     key={item.id}
-                    onClick={() => setActiveSection(item.id)}
+                    onClick={() => {
+                      setActiveSection(item.id);
+                    }}
                     className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                       activeSection === item.id
                         ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600'
@@ -201,7 +234,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                     {!sidebarCollapsed && (
                       <>
                         <span className="flex-1 text-left">{item.label}</span>
-                        {item.count && (
+                        {item.count !== undefined && item.count !== null && (
                           <span className="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full">
                             {item.count}
                           </span>
@@ -253,6 +286,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                     <Building2 className="w-4 h-4 text-gray-600" />
                     <span className="text-sm font-medium text-gray-900">Loading...</span>
                   </div>
+                ) : isTokenExpired ? (
+                  <div className="flex items-center space-x-2 px-4 py-2 bg-red-50 rounded-lg text-red-700">
+                    <Building2 className="w-4 h-4" />
+                    <span className="text-sm font-medium">Authentication expired</span>
+                    <button
+                      onClick={() => window.location.reload()}
+                      className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded"
+                      title="Refresh page to re-authenticate"
+                    >
+                      🔄 Refresh Page
+                    </button>
+                  </div>
                 ) : businessProfiles.length > 0 ? (
                   <select
                     value={selectedBusinessProfile?.id || ''}
@@ -262,7 +307,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                         setSelectedBusinessProfile(selectedProfile);
                       }
                     }}
-                    className="flex items-center space-x-2 px-4 py-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border-0 focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer min-w-[200px]"
+                    className="flex items-center px-4 py-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border-0 focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer min-w-[200px]"
                   >
                     {businessProfiles.map((profile) => (
                       <option key={profile.id} value={profile.id}>
@@ -322,15 +367,30 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
         {/* Dashboard Content */}
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-7xl mx-auto">
-            {/* Welcome Section */}
-            <div className="mb-8">
-              <h2 className="text-3xl font-bold text-gray-900 mb-2">
-                {t('dashboard.welcome')}
-              </h2>
-              <p className="text-lg text-gray-600">
-                {t('dashboard.welcomeDescription')}
-              </p>
-            </div>
+            {/* Render different content based on active section */}
+            {activeSection === 'business-profiles' ? (
+              <BusinessProfiles
+                authToken={authToken}
+                onCreateProfile={() => {
+                  // For now, navigate back to URL input to create new profile
+                  window.location.href = '/';
+                }}
+                onEditProfile={(profile) => {
+                  // For now, show alert - can be enhanced later
+                  alert(`Edit profile: ${profile.name}`);
+                }}
+              />
+            ) : (
+              <>
+                {/* Welcome Section */}
+                <div className="mb-8">
+                  <h2 className="text-3xl font-bold text-gray-900 mb-2">
+                    {t('dashboard.welcome')}
+                  </h2>
+                  <p className="text-lg text-gray-600">
+                    {t('dashboard.welcomeDescription')}
+                  </p>
+                </div>
 
             {/* Stats Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
@@ -422,6 +482,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                 </div>
               </div>
             </div>
+              </>
+            )}
           </div>
         </main>
       </div>

@@ -226,7 +226,7 @@ export const getAgentsCount = async (authToken: string): Promise<{ success: bool
   }
 };
 
-export const getBusinessProfilesCount = async (authToken: string): Promise<{ success: boolean; data?: number; error?: string }> => {
+export const getBusinessProfilesCount = async (authToken: string): Promise<{ success: boolean; data?: number; error?: string; isTokenExpired?: boolean }> => {
   try {
     const response = await api.get('/business-profiles', {
       headers: {
@@ -247,6 +247,39 @@ export const getBusinessProfilesCount = async (authToken: string): Promise<{ suc
     };
   } catch (error: any) {
     console.error('Error fetching business profiles count:', error);
+
+    // Check if token is expired
+    if (error.response?.status === 401 || error.response?.data?.msg === 'Signature verification failed') {
+      // Try to refresh the token first
+      const refreshResult = await refreshAuthToken();
+      
+      if (refreshResult.success && refreshResult.access_token) {
+        // Token refreshed successfully, retry the original request
+        try {
+          const retryResponse = await api.get('/business-profiles', {
+            headers: {
+              'Authorization': `Bearer ${refreshResult.access_token}`
+            }
+          });
+
+          if (retryResponse.data && retryResponse.data.data) {
+            return {
+              success: true,
+              data: retryResponse.data.data.length
+            };
+          }
+        } catch (retryError) {
+          console.error('Retry after token refresh failed:', retryError);
+        }
+      }
+
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+
     return {
       success: false,
       error: error.response?.data?.message || error.message || 'Failed to fetch business profiles count'
@@ -282,7 +315,50 @@ export const getInteractionsCount = async (authToken: string): Promise<{ success
   }
 };
 
-export const getBusinessProfiles = async (authToken: string): Promise<{ success: boolean; data?: any[]; error?: string }> => {
+// Token refresh utility function
+export const refreshAuthToken = async (): Promise<{ success: boolean; access_token?: string; error?: string }> => {
+  try {
+    const refreshToken = localStorage.getItem('refreshToken');
+    if (!refreshToken) {
+      return { success: false, error: 'No refresh token found' };
+    }
+
+    const response = await api.post('/auth/refresh', {}, {
+      headers: {
+        'Authorization': `Bearer ${refreshToken}`
+      }
+    });
+
+    if (response.data && response.data.access_token) {
+      // Update stored access token
+      localStorage.setItem('authToken', response.data.access_token);
+      
+      return {
+        success: true,
+        access_token: response.data.access_token
+      };
+    }
+
+    return {
+      success: false,
+      error: 'Invalid refresh response'
+    };
+  } catch (error: any) {
+    console.error('Token refresh failed:', error);
+    
+    // If refresh fails, clear all tokens
+    localStorage.removeItem('user');
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || 'Token refresh failed'
+    };
+  }
+};
+
+export const getBusinessProfiles = async (authToken: string): Promise<{ success: boolean; data?: any[]; error?: string; isTokenExpired?: boolean }> => {
   try {
     const response = await api.get('/business-profiles', {
       headers: {
@@ -303,6 +379,39 @@ export const getBusinessProfiles = async (authToken: string): Promise<{ success:
     };
   } catch (error: any) {
     console.error('Error fetching business profiles:', error);
+
+    // Check if token is expired
+    if (error.response?.status === 401 || error.response?.data?.msg === 'Signature verification failed') {
+      // Try to refresh the token first
+      const refreshResult = await refreshAuthToken();
+      
+      if (refreshResult.success && refreshResult.access_token) {
+        // Token refreshed successfully, retry the original request
+        try {
+          const retryResponse = await api.get('/business-profiles', {
+            headers: {
+              'Authorization': `Bearer ${refreshResult.access_token}`
+            }
+          });
+
+          if (retryResponse.data && retryResponse.data.data) {
+            return {
+              success: true,
+              data: retryResponse.data.data
+            };
+          }
+        } catch (retryError) {
+          console.error('Retry after token refresh failed:', retryError);
+        }
+      }
+      
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+
     return {
       success: false,
       error: error.response?.data?.message || error.message || 'Failed to fetch business profiles'

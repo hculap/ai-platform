@@ -32,7 +32,8 @@ export enum AppSection {
   FORM = 'FORM',
   SIGNUP = 'SIGNUP',
   SIGNIN = 'SIGNIN',
-  DASHBOARD = 'DASHBOARD'
+  DASHBOARD = 'DASHBOARD',
+  BUSINESS_PROFILES = 'BUSINESS_PROFILES'
 }
 
 export interface LoadingState {
@@ -51,4 +52,5 @@ export interface AuthResponse {
   message: string;
   user: User;
   access_token: string;
+  refresh_token?: string;
 }

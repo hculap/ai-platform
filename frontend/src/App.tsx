@@ -12,6 +12,7 @@ import BusinessForm from './components/BusinessForm';
 import SignupForm from './components/SignupForm';
 import SignInForm from './components/SignInForm';
 import Dashboard from './components/Dashboard';
+import BusinessProfiles from './components/BusinessProfiles';
 
 function App() {
   const { t } = useTranslation();
@@ -206,6 +207,9 @@ function App() {
       // Save to localStorage
       localStorage.setItem('user', JSON.stringify(authData.user));
       localStorage.setItem('authToken', authData.access_token);
+      if (authData.refresh_token) {
+        localStorage.setItem('refreshToken', authData.refresh_token);
+      }
 
       // Create business profile if we have accepted profile data
       if (acceptedProfileData) {
@@ -274,6 +278,9 @@ function App() {
       // Save to localStorage
       localStorage.setItem('user', JSON.stringify(authData.user));
       localStorage.setItem('authToken', authData.access_token);
+      if (authData.refresh_token) {
+        localStorage.setItem('refreshToken', authData.refresh_token);
+      }
 
       // Show success notification
       const successDiv = document.createElement('div');
@@ -317,6 +324,14 @@ function App() {
     setCurrentSection(AppSection.SIGNIN);
   };
 
+  const handleShowBusinessProfiles = () => {
+    setCurrentSection(AppSection.BUSINESS_PROFILES);
+  };
+
+  const handleBackToDashboard = () => {
+    setCurrentSection(AppSection.DASHBOARD);
+  };
+
   const handleLogout = () => {
     setCurrentUser(null);
     setAuthToken(null);
@@ -326,6 +341,7 @@ function App() {
     // Clear localStorage
     localStorage.removeItem('user');
     localStorage.removeItem('authToken');
+    localStorage.removeItem('refreshToken');
   };
 
   // Add keyboard shortcuts
@@ -366,24 +382,59 @@ function App() {
     if (savedUser && savedToken) {
       try {
         const user = JSON.parse(savedUser);
+        
+        // Check if token is expired by trying to decode it
+        try {
+          const tokenPayload = JSON.parse(atob(savedToken.split('.')[1]));
+          const currentTime = Math.floor(Date.now() / 1000);
+          
+          if (tokenPayload.exp && tokenPayload.exp < currentTime) {
+            // Token is expired, clear it
+            console.log('Stored token is expired, clearing authentication');
+            localStorage.removeItem('user');
+            localStorage.removeItem('authToken');
+            localStorage.removeItem('refreshToken');
+            setCurrentSection(AppSection.URL_INPUT);
+            setIsAuthLoaded(true);
+            return;
+          }
+        } catch (tokenError) {
+          // Invalid token format, clear it
+          console.error('Invalid token format:', tokenError);
+          localStorage.removeItem('user');
+          localStorage.removeItem('authToken');
+          localStorage.removeItem('refreshToken');
+          setCurrentSection(AppSection.URL_INPUT);
+          setIsAuthLoaded(true);
+          return;
+        }
+
         setCurrentUser(user);
         setAuthToken(savedToken);
-        setCurrentSection(AppSection.DASHBOARD);
+        // Only set to dashboard if we're not already in an authenticated section
+        if (currentSection === AppSection.URL_INPUT || currentSection === AppSection.LOADING || currentSection === AppSection.FORM || currentSection === AppSection.SIGNUP || currentSection === AppSection.SIGNIN) {
+          setCurrentSection(AppSection.DASHBOARD);
+        }
       } catch (error) {
         console.error('Error parsing saved user data:', error);
         // Clear invalid data
         localStorage.removeItem('user');
         localStorage.removeItem('authToken');
+        localStorage.removeItem('refreshToken');
       }
     }
     
     setIsAuthLoaded(true);
   }, []);
 
-  // Auto-redirect if user is already signed in
+  // Auto-redirect if user is already signed in (but allow navigation to other authenticated sections)
   useEffect(() => {
-    if (currentUser && currentSection !== AppSection.DASHBOARD && isAuthLoaded) {
-      setCurrentSection(AppSection.DASHBOARD);
+    if (currentUser && isAuthLoaded) {
+      // Only redirect to dashboard if user is not in an authenticated section
+      const authenticatedSections = [AppSection.DASHBOARD, AppSection.BUSINESS_PROFILES];
+      if (!authenticatedSections.includes(currentSection)) {
+        setCurrentSection(AppSection.DASHBOARD);
+      }
     }
   }, [currentUser, currentSection, isAuthLoaded]);
 
@@ -401,17 +452,23 @@ function App() {
     );
   }
 
-  // Render dashboard separately without background elements
-  if (currentSection === AppSection.DASHBOARD && currentUser) {
+  // Render dashboard and business profiles with the same layout
+  if ((currentSection === AppSection.DASHBOARD || currentSection === AppSection.BUSINESS_PROFILES) && currentUser) {
     return (
       <Dashboard
         user={currentUser}
         authToken={authToken || ''}
         onLogout={handleLogout}
         onProfileCreated={(refreshFn) => setRefreshBusinessProfiles(() => refreshFn)}
+        onTokenRefreshed={(newToken) => {
+          setAuthToken(newToken);
+          localStorage.setItem('authToken', newToken);
+        }}
       />
     );
   }
+
+
 
   return (
     <div className="min-h-screen bg-gray-50 scroll-smooth flex flex-col">

@@ -29,7 +29,13 @@ def get_business_profiles():
     """Get all business profiles for current user"""
     try:
         user_id = get_jwt_identity()
+        print(f"DEBUG: Getting business profiles for user_id: {user_id}")
+
         profiles = BusinessProfile.query.filter_by(user_id=user_id).all()
+        print(f"DEBUG: Found {len(profiles)} profiles for user {user_id}")
+
+        for profile in profiles:
+            print(f"DEBUG: Profile ID: {profile.id}, Name: {profile.name}, Website: {profile.website_url}")
 
         return jsonify({
             'data': [profile.to_dict() for profile in profiles]

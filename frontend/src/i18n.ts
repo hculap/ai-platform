@@ -337,7 +337,21 @@ const resources = {
       "dashboard.activity.agentsAvailable": "5 agents are available",
       "dashboard.activity.agentsAvailableTime": "This morning",
       "dashboard.activity.systemReady": "System is ready to use",
-      "dashboard.activity.systemReadyTime": "Yesterday"
+      "dashboard.activity.systemReadyTime": "Yesterday",
+
+      // Business Profiles
+      "businessProfiles.title": "Business Profiles",
+      "businessProfiles.subtitle": "Manage your business profiles",
+      "businessProfiles.createNew": "Create New Profile",
+      "businessProfiles.search.placeholder": "Search profiles...",
+      "businessProfiles.loading": "Loading profiles...",
+      "businessProfiles.noProfiles": "No business profiles yet",
+      "businessProfiles.createFirst": "Create your first business profile to get started",
+      "businessProfiles.createFirstProfile": "Create Your First Profile",
+      "businessProfiles.noSearchResults": "No profiles found",
+      "businessProfiles.tryDifferentSearch": "Try adjusting your search terms",
+      "businessProfiles.created": "Created",
+      "businessProfiles.edit": "Edit"
     }
   }
 };

@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt_identity
+from flask_jwt_extended import create_access_token, create_refresh_token, jwt_required, get_jwt_identity, verify_jwt_in_request, get_jwt
 from ..models.user import User
 from .. import db
 from email_validator import validate_email, EmailNotValidError
@@ -72,13 +72,15 @@ def register():
         db.session.add(user)
         db.session.commit()
 
-        # Create access token
+        # Create access and refresh tokens
         access_token = create_access_token(identity=user.id)
+        refresh_token = create_refresh_token(identity=user.id)
 
         return jsonify({
             'message': get_message(AUTH_USER_REGISTERED_SUCCESS),
             'user': user.to_dict(),
-            'access_token': access_token
+            'access_token': access_token,
+            'refresh_token': refresh_token
         }), 201
 
     except Exception as e:
@@ -111,13 +113,15 @@ def login():
                 'message': get_message(AUTH_INVALID_CREDENTIALS)
             }), 401
 
-        # Create access token
+        # Create access and refresh tokens
         access_token = create_access_token(identity=user.id)
+        refresh_token = create_refresh_token(identity=user.id)
 
         return jsonify({
             'message': get_message(AUTH_LOGIN_SUCCESS),
             'user': user.to_dict(),
-            'access_token': access_token
+            'access_token': access_token,
+            'refresh_token': refresh_token
         }), 200
 
     except Exception as e:
@@ -146,4 +150,33 @@ def get_current_user():
         return jsonify({
             'error': ERROR_SERVER_ERROR,
             'message': get_message(AUTH_GET_PROFILE_FAILED)
+        }), 500
+
+@auth_bp.route('/refresh', methods=['POST'])
+@jwt_required(refresh=True)
+def refresh():
+    """Refresh access token using refresh token"""
+    try:
+        current_user_id = get_jwt_identity()
+        
+        # Verify user still exists
+        user = User.query.get(current_user_id)
+        if not user:
+            return jsonify({
+                'error': ERROR_NOT_FOUND,
+                'message': get_message(AUTH_USER_NOT_FOUND)
+            }), 404
+
+        # Create new access token
+        new_access_token = create_access_token(identity=current_user_id)
+
+        return jsonify({
+            'message': 'token_refreshed_success',
+            'access_token': new_access_token
+        }), 200
+
+    except Exception as e:
+        return jsonify({
+            'error': ERROR_SERVER_ERROR,
+            'message': 'token_refresh_failed'
         }), 500
