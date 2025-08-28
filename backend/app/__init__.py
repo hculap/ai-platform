@@ -45,16 +45,19 @@ def create_app(config_name='development'):
     # Register blueprints
     from .routes.auth import auth_bp
     from .routes.business_profiles import business_profiles_bp
+    from .routes.competitions import competitions_bp
     from .routes.agents import agents_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(business_profiles_bp, url_prefix='/api')
+    app.register_blueprint(competitions_bp, url_prefix='/api')
     app.register_blueprint(agents_bp)
 
     # Import models to ensure they are registered with SQLAlchemy
     from .models.user import User
     from .models.business_profile import BusinessProfile
     from .models.interaction import Interaction
+    from .models.competition import Competition
 
     # Initialize agents
     from .agents import initialize_agents

@@ -556,6 +556,325 @@ export const updateBusinessProfile = async (profileId: string, profileData: any,
   }
 };
 
+// Competition API functions
+export interface Competition {
+  id?: string;
+  business_profile_id?: string;
+  name: string;
+  url?: string;
+  description?: string;
+  usp?: string;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export const getCompetitions = async (authToken: string, businessProfileId?: string): Promise<{ success: boolean; data?: Competition[]; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const params = businessProfileId ? { business_profile_id: businessProfileId } : {};
+    const response = await api.get('/competitions', {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      },
+      params
+    });
+
+    if (response.data && response.data.data) {
+      return {
+        success: true,
+        data: response.data.data
+      };
+    }
+
+    return {
+      success: false,
+      error: 'Invalid response format'
+    };
+  } catch (error: any) {
+    console.error('Error fetching competitions:', error);
+
+    // Check if token is expired
+    if (error.response?.status === 401 || error.response?.data?.msg === 'Signature verification failed') {
+      // Try to refresh the token first
+      const refreshResult = await refreshAuthToken();
+
+      if (refreshResult.success && refreshResult.access_token) {
+        // Token refreshed successfully, retry the original request
+        try {
+          const retryResponse = await api.get('/competitions', {
+            headers: {
+              'Authorization': `Bearer ${refreshResult.access_token}`
+            }
+          });
+
+          if (retryResponse.data && retryResponse.data.data) {
+            return {
+              success: true,
+              data: retryResponse.data.data
+            };
+          }
+        } catch (retryError) {
+          console.error('Retry after token refresh failed:', retryError);
+        }
+      }
+
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to fetch competitions'
+    };
+  }
+};
+
+export const getCompetition = async (competitionId: string, authToken: string): Promise<{ success: boolean; data?: Competition; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.get(`/competitions/${competitionId}`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    if (response.data) {
+      return {
+        success: true,
+        data: response.data
+      };
+    }
+
+    return {
+      success: false,
+      error: 'Invalid response format'
+    };
+  } catch (error: any) {
+    console.error('Error fetching competition:', error);
+
+    // Check if token is expired
+    if (error.response?.status === 401 || error.response?.data?.msg === 'Signature verification failed') {
+      // Try to refresh the token first
+      const refreshResult = await refreshAuthToken();
+
+      if (refreshResult.success && refreshResult.access_token) {
+        // Token refreshed successfully, retry the original request
+        try {
+          const retryResponse = await api.get(`/competitions/${competitionId}`, {
+            headers: {
+              'Authorization': `Bearer ${refreshResult.access_token}`
+            }
+          });
+
+          if (retryResponse.data) {
+            return {
+              success: true,
+              data: retryResponse.data
+            };
+          }
+        } catch (retryError) {
+          console.error('Retry after token refresh failed:', retryError);
+        }
+      }
+
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to fetch competition'
+    };
+  }
+};
+
+export const createCompetition = async (businessProfileId: string, competitionData: Omit<Competition, 'id' | 'business_profile_id' | 'created_at' | 'updated_at'>, authToken: string): Promise<{ success: boolean; data?: any; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.post(`/business-profiles/${businessProfileId}/competitions`, competitionData, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    if (response.data) {
+      return {
+        success: true,
+        data: response.data
+      };
+    }
+
+    return {
+      success: false,
+      error: 'Invalid response format'
+    };
+  } catch (error: any) {
+    console.error('Error creating competition:', error);
+
+    // Check if token is expired
+    if (error.response?.status === 401 || error.response?.data?.msg === 'Signature verification failed') {
+      // Try to refresh the token first
+      const refreshResult = await refreshAuthToken();
+
+      if (refreshResult.success && refreshResult.access_token) {
+        // Token refreshed successfully, retry the original request
+        try {
+          const retryResponse = await api.post(`/business-profiles/${businessProfileId}/competitions`, competitionData, {
+            headers: {
+              'Authorization': `Bearer ${refreshResult.access_token}`
+            }
+          });
+
+          if (retryResponse.data) {
+            return {
+              success: true,
+              data: retryResponse.data
+            };
+          }
+        } catch (retryError) {
+          console.error('Retry after token refresh failed:', retryError);
+        }
+      }
+
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to create competition'
+    };
+  }
+};
+
+export const updateCompetition = async (competitionId: string, competitionData: Partial<Omit<Competition, 'id' | 'business_profile_id' | 'created_at' | 'updated_at'>>, authToken: string): Promise<{ success: boolean; data?: any; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.put(`/competitions/${competitionId}`, competitionData, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    if (response.data) {
+      return {
+        success: true,
+        data: response.data
+      };
+    }
+
+    return {
+      success: false,
+      error: 'Invalid response format'
+    };
+  } catch (error: any) {
+    console.error('Error updating competition:', error);
+
+    // Check if token is expired
+    if (error.response?.status === 401 || error.response?.data?.msg === 'Signature verification failed') {
+      // Try to refresh the token first
+      const refreshResult = await refreshAuthToken();
+
+      if (refreshResult.success && refreshResult.access_token) {
+        // Token refreshed successfully, retry the original request
+        try {
+          const retryResponse = await api.put(`/competitions/${competitionId}`, competitionData, {
+            headers: {
+              'Authorization': `Bearer ${refreshResult.access_token}`
+            }
+          });
+
+          if (retryResponse.data) {
+            return {
+              success: true,
+              data: retryResponse.data
+            };
+          }
+        } catch (retryError) {
+          console.error('Retry after token refresh failed:', retryError);
+        }
+      }
+
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to update competition'
+    };
+  }
+};
+
+export const deleteCompetition = async (competitionId: string, authToken: string): Promise<{ success: boolean; data?: any; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.delete(`/competitions/${competitionId}`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    if (response.data) {
+      return {
+        success: true,
+        data: response.data
+      };
+    }
+
+    return {
+      success: false,
+      error: 'Invalid response format'
+    };
+  } catch (error: any) {
+    console.error('Error deleting competition:', error);
+
+    // Check if token is expired
+    if (error.response?.status === 401 || error.response?.data?.msg === 'Signature verification failed') {
+      // Try to refresh the token first
+      const refreshResult = await refreshAuthToken();
+
+      if (refreshResult.success && refreshResult.access_token) {
+        // Token refreshed successfully, retry the original request
+        try {
+          const retryResponse = await api.delete(`/competitions/${competitionId}`, {
+            headers: {
+              'Authorization': `Bearer ${refreshResult.access_token}`
+            }
+          });
+
+          if (retryResponse.data) {
+            return {
+              success: true,
+              data: retryResponse.data
+            };
+          }
+        } catch (retryError) {
+          console.error('Retry after token refresh failed:', retryError);
+        }
+      }
+
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to delete competition'
+    };
+  }
+};
+
 // Agents API functions
 export const getAgents = async (authToken?: string): Promise<{ success: boolean; data?: any[]; error?: string; isTokenExpired?: boolean }> => {
   try {
@@ -680,6 +999,70 @@ export const executeAgent = async (agentSlug: string, inputData: any, authToken?
     return {
       success: false,
       error: error.response?.data?.message || error.message || 'Failed to execute agent'
+    };
+  }
+};
+
+// Competition API functions
+export const getCompetitionsCount = async (authToken: string, businessProfileId?: string): Promise<{ success: boolean; data?: number; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const params = businessProfileId ? { business_profile_id: businessProfileId } : {};
+    const response = await api.get('/competitions/count', {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      },
+      params
+    });
+
+    if (response.data && typeof response.data.count === 'number') {
+      return {
+        success: true,
+        data: response.data.count
+      };
+    }
+
+    return {
+      success: false,
+      error: 'Invalid response format'
+    };
+  } catch (error: any) {
+    console.error('Error fetching competitions count:', error);
+
+    // Check if token is expired
+    if (error.response?.status === 401 || error.response?.data?.msg === 'Signature verification failed') {
+      // Try to refresh the token first
+      const refreshResult = await refreshAuthToken();
+
+      if (refreshResult.success && refreshResult.access_token) {
+        // Token refreshed successfully, retry the original request
+        try {
+          const retryResponse = await api.get('/competitions/count', {
+            headers: {
+              'Authorization': `Bearer ${refreshResult.access_token}`
+            }
+          });
+
+          if (retryResponse.data && typeof retryResponse.data.count === 'number') {
+            return {
+              success: true,
+              data: retryResponse.data.count
+            };
+          }
+        } catch (retryError) {
+          console.error('Retry after token refresh failed:', retryError);
+        }
+      }
+
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to fetch competitions count'
     };
   }
 };

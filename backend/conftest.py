@@ -13,6 +13,7 @@ from app import create_app, db
 from app.models.user import User
 from app.models.business_profile import BusinessProfile
 from app.models.interaction import Interaction
+from app.models.competition import Competition
 
 @pytest.fixture
 def app():
@@ -67,3 +68,40 @@ def test_business_profile(test_user):
     db.session.add(profile)
     db.session.commit()
     return profile
+
+@pytest.fixture
+def test_competition(test_business_profile):
+    """Create a test competition"""
+    competition = Competition(
+        business_profile_id=test_business_profile.id,
+        name='Acme Widget Co',
+        url='https://acmewidget.com',
+        description='Leading supplier of modular widgets for industrial applications.',
+        usp='Largest selection of widget customizations in North America.'
+    )
+    db.session.add(competition)
+    db.session.commit()
+    return competition
+
+@pytest.fixture
+def test_user2(app):
+    """Create a second test user"""
+    with app.app_context():
+        user = User(email='testuser2@gmail.com', password='TestPassword123')
+        db.session.add(user)
+        db.session.commit()
+        return user
+
+@pytest.fixture
+def test_business_profile2(test_user2):
+    """Create a test business profile for second user"""
+    with app.app_context():
+        profile = BusinessProfile(
+            user_id=test_user2.id,
+            website_url='https://example2.com'
+        )
+        profile.name = 'Test Business 2'
+        profile.analysis_status = 'completed'
+        db.session.add(profile)
+        db.session.commit()
+        return profile

@@ -1,14 +1,15 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  User, Building2, BarChart3, Settings, LogOut, ChevronDown, Search, Bell,
+  User, Building2, Settings, LogOut, Search, Bell,
   Bot, Zap, FileText, Video, Target, TrendingUp, Megaphone,
   Users, Activity, Clock, CheckCircle, Plus, Menu
 } from 'lucide-react';
 import { User as UserType } from '../types';
-import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, refreshAuthToken, updateBusinessProfile } from '../services/api';
+import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, refreshAuthToken, updateBusinessProfile, getCompetitionsCount } from '../services/api';
 import BusinessProfiles from './BusinessProfiles';
 import Agents from './Agents';
+import Competition from './Competition';
 
 interface DashboardProps {
   user: UserType;
@@ -47,6 +48,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
   // Real data state
   const [agentsCount, setAgentsCount] = useState<number>(0);
   const [businessProfilesCount, setBusinessProfilesCount] = useState<number>(0);
+  const [competitionsCount, setCompetitionsCount] = useState<number>(0);
   const [interactionsCount, setInteractionsCount] = useState<number>(0);
   const [isLoadingStats, setIsLoadingStats] = useState<boolean>(true);
 
@@ -134,7 +136,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
 
       if (profilesListResult.success && profilesListResult.data) {
         setBusinessProfiles(profilesListResult.data);
-        
+
         // Auto-select the active profile (there should be only one)
         const activeProfile = profilesListResult.data.find(p => p.is_active);
         if (activeProfile) {
@@ -162,6 +164,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     }
   }, [authToken]);
 
+  // Function to refresh competitions count
+  const refreshCompetitionsCount = useCallback(async () => {
+    try {
+      const competitionsResult = await getCompetitionsCount(authToken, selectedBusinessProfile?.id);
+      if (competitionsResult.success && competitionsResult.data !== undefined) {
+        setCompetitionsCount(competitionsResult.data);
+      }
+    } catch (error) {
+      console.error('Error refreshing competitions count:', error);
+    }
+  }, [authToken, selectedBusinessProfile?.id]);
+
   // Fetch real dashboard data
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -173,6 +187,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
         if (agentsResult.success && agentsResult.data !== undefined) {
           setAgentsCount(agentsResult.data);
         }
+
+        // Fetch competitions count (will use selectedBusinessProfile?.id automatically)
+        await refreshCompetitionsCount();
 
         // Fetch interactions count
         const interactionsResult = await getInteractionsCount(authToken);
@@ -201,6 +218,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     }
   }, [onProfileCreated, refreshBusinessProfiles]);
 
+  // Refresh competitions count when component mounts or business profile changes
+  useEffect(() => {
+    refreshCompetitionsCount();
+  }, [refreshCompetitionsCount]);
+
+  // Also refresh competitions count when selectedBusinessProfile changes
+  useEffect(() => {
+    if (selectedBusinessProfile?.id) {
+      refreshCompetitionsCount();
+    }
+  }, [selectedBusinessProfile?.id, authToken, refreshCompetitionsCount]);
+
 
 
   // Update navigation sections with current data
@@ -220,7 +249,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
       title: t('dashboard.nav.business'),
       items: [
         { id: 'business-profiles', label: t('dashboard.nav.businessProfiles'), icon: Building2, count: businessProfilesCount },
-        { id: 'competition', label: t('dashboard.nav.competition'), icon: Target, count: 7 },
+        { id: 'competition', label: t('dashboard.nav.competition'), icon: Target, count: competitionsCount },
         { id: 'campaigns', label: t('dashboard.nav.campaigns'), icon: TrendingUp, count: 4 },
         { id: 'ads', label: t('dashboard.nav.ads'), icon: Megaphone, count: 15 },
       ]
@@ -438,6 +467,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                 onNavigateToBusinessProfiles={() => setActiveSection('business-profiles')}
                 onProfileCreated={refreshBusinessProfiles}
                 onProfilesChanged={refreshBusinessProfiles}
+              />
+            ) : activeSection === 'competition' ? (
+              <Competition
+                businessProfileId={selectedBusinessProfile?.id}
+                authToken={authToken}
+                onTokenRefreshed={onTokenRefreshed}
+                onCompetitionsChanged={refreshCompetitionsCount}
               />
             ) : (
               <>
