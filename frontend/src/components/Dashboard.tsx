@@ -8,6 +8,7 @@ import {
 import { User as UserType } from '../types';
 import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, refreshAuthToken, updateBusinessProfile } from '../services/api';
 import BusinessProfiles from './BusinessProfiles';
+import Agents from './Agents';
 
 interface DashboardProps {
   user: UserType;
@@ -428,6 +429,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                   alert(`Edit profile: ${profile.name}`);
                 }}
                 onTokenRefreshed={onTokenRefreshed}
+                onProfilesChanged={refreshBusinessProfiles}
+              />
+            ) : activeSection === 'agents' ? (
+              <Agents
+                authToken={authToken}
+                onTokenRefreshed={onTokenRefreshed}
+                onNavigateToBusinessProfiles={() => setActiveSection('business-profiles')}
+                onProfileCreated={refreshBusinessProfiles}
                 onProfilesChanged={refreshBusinessProfiles}
               />
             ) : (

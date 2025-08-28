@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { BusinessProfile, AnalysisResult, AuthResponse } from '../types';
+import { BusinessProfile, BusinessProfileApi, AnalysisResult, AuthResponse } from '../types';
 
 // API Configuration
 const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
@@ -52,9 +52,9 @@ export const checkAnalysisStatus = async (openaiResponseId: string): Promise<{
       input: { openai_response_id: openaiResponseId }
     });
 
-    if (response.data.status === 'completed' && response.data.data) {
+    if (response.data && response.data.data) {
       const analysisData = response.data.data;
-      
+
       if (analysisData.status === 'completed' && analysisData.business_profile) {
         return {
           status: 'completed',
@@ -434,7 +434,7 @@ export const deleteBusinessProfile = async (profileId: string, authToken: string
   }
 };
 
-export const createBusinessProfile = async (profileData: any, authToken: string): Promise<{ success: boolean; data?: any; error?: string; isTokenExpired?: boolean }> => {
+export const createBusinessProfile = async (profileData: BusinessProfileApi, authToken: string): Promise<{ success: boolean; data?: any; error?: string; isTokenExpired?: boolean }> => {
   try {
     const response = await api.post('/business-profiles', profileData, {
       headers: {
@@ -552,6 +552,134 @@ export const updateBusinessProfile = async (profileId: string, profileData: any,
     return {
       success: false,
       error: error.response?.data?.message || error.message || 'Failed to update business profile'
+    };
+  }
+};
+
+// Agents API functions
+export const getAgents = async (authToken?: string): Promise<{ success: boolean; data?: any[]; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const headers: any = {};
+    if (authToken) {
+      headers.Authorization = `Bearer ${authToken}`;
+    }
+
+    const response = await api.get('/agents', { headers });
+
+    if (response.data && response.data.data) {
+      return {
+        success: true,
+        data: response.data.data
+      };
+    }
+
+    return {
+      success: false,
+      error: 'Invalid response format'
+    };
+  } catch (error: any) {
+    console.error('Error fetching agents:', error);
+
+    // Check if token is expired (if using auth)
+    if (authToken && (error.response?.status === 401 || error.response?.data?.msg === 'Signature verification failed')) {
+      // Try to refresh the token first
+      const refreshResult = await refreshAuthToken();
+
+      if (refreshResult.success && refreshResult.access_token) {
+        // Token refreshed successfully, retry the original request
+        try {
+          const retryResponse = await api.get('/agents', {
+            headers: {
+              'Authorization': `Bearer ${refreshResult.access_token}`
+            }
+          });
+
+          if (retryResponse.data && retryResponse.data.data) {
+            return {
+              success: true,
+              data: retryResponse.data.data
+            };
+          }
+        } catch (retryError) {
+          console.error('Retry after token refresh failed:', retryError);
+        }
+      }
+
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to fetch agents'
+    };
+  }
+};
+
+export const executeAgent = async (agentSlug: string, inputData: any, authToken?: string): Promise<{ success: boolean; data?: any; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const headers: any = {
+      'Content-Type': 'application/json'
+    };
+    if (authToken) {
+      headers.Authorization = `Bearer ${authToken}`;
+    }
+
+    const response = await api.post(`/agents/${agentSlug}/tools/analyze-website/call`, inputData, { headers });
+
+    if (response.data) {
+      return {
+        success: true,
+        data: response.data
+      };
+    }
+
+    return {
+      success: false,
+      error: 'Invalid response format'
+    };
+  } catch (error: any) {
+    console.error('Error executing agent:', error);
+
+    // Check if token is expired (if using auth)
+    if (authToken && (error.response?.status === 401 || error.response?.data?.msg === 'Signature verification failed')) {
+      // Try to refresh the token first
+      const refreshResult = await refreshAuthToken();
+
+      if (refreshResult.success && refreshResult.access_token) {
+        // Token refreshed successfully, retry the original request
+        try {
+          const retryResponse = await api.post(`/agents/${agentSlug}/tools/analyze-website/call`, inputData, {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${refreshResult.access_token}`
+            }
+          });
+
+          if (retryResponse.data) {
+            return {
+              success: true,
+              data: retryResponse.data
+            };
+          }
+        } catch (retryError) {
+          console.error('Retry after token refresh failed:', retryError);
+        }
+      }
+
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to execute agent'
     };
   }
 };

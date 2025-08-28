@@ -1,4 +1,5 @@
 export interface BusinessProfile {
+  // Frontend internal names (used in forms and components)
   company_name?: string;
   website_url?: string;
   offer?: string;
@@ -7,6 +8,19 @@ export interface BusinessProfile {
   desires?: string;
   tone?: string;
   language?: string;
+}
+
+export interface BusinessProfileApi {
+  // Backend API field names (used for API calls)
+  name?: string;
+  website_url?: string;
+  offer_description?: string;
+  target_customer?: string;
+  problem_solved?: string;
+  customer_desires?: string;
+  brand_tone?: string;
+  communication_language?: string;
+  is_active?: boolean;
 }
 
 export interface AnalysisResult {

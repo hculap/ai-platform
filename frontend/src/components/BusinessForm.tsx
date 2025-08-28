@@ -7,9 +7,12 @@ interface BusinessFormProps {
   initialData?: BusinessProfile | null;
   onReanalyze: () => void;
   onAcceptProfile: (profileData: BusinessProfile) => void;
+  isAgentAnalysis?: boolean;
 }
 
-const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze, onAcceptProfile }) => {
+export type { BusinessFormProps };
+
+const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze, onAcceptProfile, isAgentAnalysis = false }) => {
   const { t } = useTranslation();
   const [formData, setFormData] = useState<FormData>({
     companyName: '',
@@ -98,15 +101,17 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze, o
   };
 
   return (
-    <section className="px-6 py-12">
+    <section className={isAgentAnalysis ? "p-6" : "px-6 py-12"}>
       <div className="max-w-4xl mx-auto">
         <div className="animate-fade-in">
-          <div className="text-center mb-12">
-            <h2 className="text-4xl font-bold text-gray-900 mb-4">{t('form.title')}</h2>
-            <p className="text-lg text-gray-600">{t('form.description')}</p>
-          </div>
+          {!isAgentAnalysis && (
+            <div className="text-center mb-12">
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">{t('form.title')}</h2>
+              <p className="text-lg text-gray-600">{t('form.description')}</p>
+            </div>
+          )}
 
-          <form id="businessForm" onSubmit={handleSubmit} className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
+          <form id="businessForm" onSubmit={handleSubmit} className={isAgentAnalysis ? "bg-transparent" : "bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden"}>
             <div className="p-8">
               <div className="grid md:grid-cols-2 gap-8">
                 {/* Company Name */}
@@ -216,29 +221,33 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze, o
               </div>
 
               {/* Action Buttons */}
-              <div className="flex justify-between items-center pt-8 mt-8 border-t border-gray-100">
-                <button 
-                  type="button" 
-                  onClick={onReanalyze}
-                  className="flex items-center px-6 py-3 text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  {t('form.button.reanalyze')}
-                </button>
-                
-                <div className="flex space-x-4">
-                  <button 
+              <div className={`flex justify-between items-center pt-8 mt-8 border-t border-gray-100 ${isAgentAnalysis ? 'justify-end' : ''}`}>
+                {!isAgentAnalysis && (
+                  <button
                     type="button"
-                    className="px-8 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all duration-200"
+                    onClick={onReanalyze}
+                    className="flex items-center px-6 py-3 text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200"
                   >
-                    {t('form.button.saveAsDraft')}
+                    <ArrowLeft className="w-4 h-4 mr-2" />
+                    {t('form.button.reanalyze')}
                   </button>
-                  <button 
+                )}
+
+                <div className="flex space-x-4">
+                  {!isAgentAnalysis && (
+                    <button
+                      type="button"
+                      className="px-8 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all duration-200"
+                    >
+                      {t('form.button.saveAsDraft')}
+                    </button>
+                  )}
+                  <button
                     type="submit"
                     disabled={isSubmitting}
                     className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                   >
-                    {isSubmitting ? t('form.button.creating') : t('form.button.continueToSignup')}
+                    {isSubmitting ? t('form.button.creating') : (isAgentAnalysis ? t('form.button.createProfile') : t('form.button.continueToSignup'))}
                   </button>
                 </div>
               </div>
