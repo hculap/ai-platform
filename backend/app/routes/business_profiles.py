@@ -78,6 +78,27 @@ def create_business_profile():
 
         # Create new business profile
         profile = BusinessProfile(user_id=user_id, website_url=website_url)
+        
+        # Set additional fields if provided
+        if data.get('name'):
+            profile.name = data['name']
+        if data.get('offer_description'):
+            profile.offer_description = data['offer_description']
+        if data.get('target_customer'):
+            profile.target_customer = data['target_customer']
+        if data.get('problem_solved'):
+            profile.problem_solved = data['problem_solved']
+        if data.get('customer_desires'):
+            profile.customer_desires = data['customer_desires']
+        if data.get('brand_tone'):
+            profile.brand_tone = data['brand_tone']
+        if data.get('communication_language'):
+            profile.communication_language = data['communication_language']
+        
+        # Mark as active since it's manually created
+        profile.is_active = True
+        profile.analysis_status = 'completed'
+        
         db.session.add(profile)
         db.session.commit()
 

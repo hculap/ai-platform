@@ -29,11 +29,25 @@ export interface FormData {
 export enum AppSection {
   URL_INPUT = 'URL_INPUT',
   LOADING = 'LOADING',
-  FORM = 'FORM'
+  FORM = 'FORM',
+  SIGNUP = 'SIGNUP',
+  DASHBOARD = 'DASHBOARD'
 }
 
 export interface LoadingState {
   isLoading: boolean;
   progress: number;
   text: string;
+}
+
+export interface User {
+  id: string;
+  email: string;
+  created_at: string;
+}
+
+export interface AuthResponse {
+  message: string;
+  user: User;
+  access_token: string;
 }

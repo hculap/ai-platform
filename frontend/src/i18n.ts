@@ -59,6 +59,7 @@ const resources = {
       "form.button.saveAsDraft": "Zapisz jako szkic",
       "form.button.createProfile": "Utwórz profil biznesowy",
       "form.button.creating": "Tworzę...",
+      "form.button.continueToSignup": "Przejdź do rejestracji",
       
       // Languages
       "language.en": "Angielski",
@@ -69,13 +70,49 @@ const resources = {
       
       // Notifications
       "notification.success.profileCreated": "Profil biznesowy został pomyślnie utworzony!",
+      "notification.success.accountCreated": "Konto zostało pomyślnie utworzone! Witamy na pokładzie!",
       "notification.error.profileFailed": "Nie udało się utworzyć profilu. Spróbuj ponownie.",
       "notification.error.analysisError": "Analiza nie powiodła się. Spróbuj ponownie.",
+      "notification.error.signupFailed": "Rejestracja nie powiodła się. Spróbuj ponownie.",
       
       // Validation
       "validation.enterUrl": "Wprowadź adres URL strony internetowej",
       "validation.validUrl": "Wprowadź prawidłowy adres URL strony internetowej (np. example.com, website.pl)",
-      "validation.urlRequired": "Wprowadź prawidłowy adres URL strony internetowej"
+      "validation.urlRequired": "Wprowadź prawidłowy adres URL strony internetowej",
+      
+      // Signup Form
+      "signup.title": "Utwórz Swoje Konto",
+      "signup.description": "Dokończ rejestrację, aby rozpocząć",
+      "signup.email": "Adres Email",
+      "signup.email.placeholder": "Wprowadź swój adres email",
+      "signup.password": "Hasło",
+      "signup.password.placeholder": "Utwórz silne hasło",
+      "signup.confirmPassword": "Potwierdź Hasło",
+      "signup.confirmPassword.placeholder": "Potwierdź swoje hasło",
+      "signup.button.back": "Powrót do Profilu",
+      "signup.button.create": "Utwórz Konto",
+      "signup.button.creating": "Tworzę Konto...",
+      "signup.validation.emailRequired": "Email jest wymagany",
+      "signup.validation.emailInvalid": "Wprowadź prawidłowy adres email",
+      "signup.validation.passwordRequired": "Hasło jest wymagane",
+      "signup.validation.passwordTooShort": "Hasło musi mieć co najmniej 8 znaków",
+      "signup.validation.passwordWeak": "Hasło musi zawierać co najmniej jedną wielką literę, jedną małą literę i jedną cyfrę",
+      "signup.validation.confirmPasswordRequired": "Potwierdź swoje hasło",
+      "signup.validation.passwordsNotMatch": "Hasła nie są identyczne",
+      
+      // Dashboard
+      "dashboard.welcome": "Witaj na swoim Panelu!",
+      "dashboard.welcomeDescription": "Twój profil biznesowy został pomyślnie utworzony. Jesteś gotowy do pracy!",
+      "dashboard.stats.businessProfile": "Profil Biznesowy",
+      "dashboard.stats.businessProfile.status": "Aktywny i gotowy",
+      "dashboard.stats.analytics": "Analityka",
+      "dashboard.stats.analytics.status": "Wkrótce dostępne",
+      "dashboard.stats.settings": "Ustawienia",
+      "dashboard.stats.settings.status": "Personalizuj swoje doświadczenie",
+      "dashboard.activity.title": "Ostatnia Aktywność",
+      "dashboard.activity.profileReady": "Twój profil biznesowy jest gotowy!",
+      "dashboard.activity.description": "Pomyślnie ukończyłeś proces konfiguracji. Twój asystent biznesowy napędzany przez AI jest teraz skonfigurowany i gotowy, aby pomóc Ci rozwijać Twój biznes.",
+      "dashboard.logout": "Wyloguj"
     }
   },
   en: {
@@ -133,6 +170,7 @@ const resources = {
       "form.button.saveAsDraft": "Save as Draft",
       "form.button.createProfile": "Create Business Profile",
       "form.button.creating": "Creating...",
+      "form.button.continueToSignup": "Continue to Signup",
       
       // Languages
       "language.en": "English",
@@ -143,13 +181,49 @@ const resources = {
       
       // Notifications
       "notification.success.profileCreated": "Business profile created successfully!",
+      "notification.success.accountCreated": "Account created successfully! Welcome aboard!",
       "notification.error.profileFailed": "Failed to create profile. Please try again.",
       "notification.error.analysisError": "Analysis failed. Please try again.",
+      "notification.error.signupFailed": "Signup failed. Please try again.",
       
       // Validation
       "validation.enterUrl": "Please enter a website URL",
       "validation.validUrl": "Please enter a valid website URL (e.g., example.com, website.pl)",
-      "validation.urlRequired": "Please enter a valid website URL"
+      "validation.urlRequired": "Please enter a valid website URL",
+      
+      // Signup Form
+      "signup.title": "Create Your Account",
+      "signup.description": "Complete your registration to get started",
+      "signup.email": "Email Address",
+      "signup.email.placeholder": "Enter your email address",
+      "signup.password": "Password",
+      "signup.password.placeholder": "Create a strong password",
+      "signup.confirmPassword": "Confirm Password",
+      "signup.confirmPassword.placeholder": "Confirm your password",
+      "signup.button.back": "Back to Profile",
+      "signup.button.create": "Create Account",
+      "signup.button.creating": "Creating Account...",
+      "signup.validation.emailRequired": "Email is required",
+      "signup.validation.emailInvalid": "Please enter a valid email address",
+      "signup.validation.passwordRequired": "Password is required",
+      "signup.validation.passwordTooShort": "Password must be at least 8 characters long",
+      "signup.validation.passwordWeak": "Password must contain at least one uppercase letter, one lowercase letter, and one number",
+      "signup.validation.confirmPasswordRequired": "Please confirm your password",
+      "signup.validation.passwordsNotMatch": "Passwords do not match",
+      
+      // Dashboard
+      "dashboard.welcome": "Welcome to your Dashboard!",
+      "dashboard.welcomeDescription": "Your business profile has been created successfully. You're all set to get started!",
+      "dashboard.stats.businessProfile": "Business Profile",
+      "dashboard.stats.businessProfile.status": "Active and ready",
+      "dashboard.stats.analytics": "Analytics",
+      "dashboard.stats.analytics.status": "Coming soon",
+      "dashboard.stats.settings": "Settings",
+      "dashboard.stats.settings.status": "Customize your experience",
+      "dashboard.activity.title": "Recent Activity",
+      "dashboard.activity.profileReady": "Your business profile is ready!",
+      "dashboard.activity.description": "You've successfully completed the setup process. Your AI-powered business assistant is now configured and ready to help you grow your business.",
+      "dashboard.logout": "Logout"
     }
   }
 };

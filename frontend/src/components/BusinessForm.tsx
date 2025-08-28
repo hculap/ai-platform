@@ -1,15 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FormData, BusinessProfile } from '../types';
-import { createBusinessProfile } from '../services/api';
 import { ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
 
 interface BusinessFormProps {
   initialData?: BusinessProfile | null;
   onReanalyze: () => void;
+  onAcceptProfile: (profileData: BusinessProfile) => void;
 }
 
-const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze }) => {
+const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze, onAcceptProfile }) => {
   const { t } = useTranslation();
   const [formData, setFormData] = useState<FormData>({
     companyName: '',
@@ -75,25 +75,11 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze })
         language: formData.communicationLanguage
       };
 
-      const result = await createBusinessProfile(profileData);
+      // Store profile data and proceed to signup
+      onAcceptProfile(profileData);
       
-      if (result.success) {
-        // Show success notification
-        const successDiv = document.createElement('div');
-        successDiv.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-xl shadow-lg z-50 animate-slide-up';
-        successDiv.innerHTML = `
-          <div class="flex items-center space-x-2">
-            <div class="w-5 h-5">✓</div>
-            <span>${t('notification.success.profileCreated')}</span>
-          </div>
-        `;
-        document.body.appendChild(successDiv);
-        setTimeout(() => successDiv.remove(), 5000);
-      } else {
-        throw new Error(result.error || 'Failed to create profile');
-      }
     } catch (error) {
-      console.error('Profile creation error:', error);
+      console.error('Profile validation error:', error);
       
       // Show error notification
       const errorDiv = document.createElement('div');
@@ -101,7 +87,7 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze })
       errorDiv.innerHTML = `
         <div class="flex items-center space-x-2">
           <div class="w-5 h-5">⚠</div>
-          <span>${t('notification.error.profileFailed')}</span>
+          <span>Please check your profile information</span>
         </div>
       `;
       document.body.appendChild(errorDiv);
@@ -252,7 +238,7 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze })
                     disabled={isSubmitting}
                     className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                   >
-                    {isSubmitting ? t('form.button.creating') : t('form.button.createProfile')}
+                    {isSubmitting ? t('form.button.creating') : t('form.button.continueToSignup')}
                   </button>
                 </div>
               </div>

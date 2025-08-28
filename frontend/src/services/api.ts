@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { BusinessProfile, AnalysisResult } from '../types';
+import { BusinessProfile, AnalysisResult, AuthResponse } from '../types';
 
 // API Configuration
 const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
@@ -119,16 +119,60 @@ export const analyzeWebsite = async (url: string): Promise<AnalysisResult> => {
   }
 };
 
-export const createBusinessProfile = async (profileData: BusinessProfile): Promise<{ success: boolean; error?: string }> => {
+// User Authentication
+export const registerUser = async (email: string, password: string): Promise<{ success: boolean; data?: AuthResponse; error?: string }> => {
   try {
-    // This would be implemented when the backend endpoint is available
-    console.log('Creating business profile:', profileData);
-    return { success: true };
-  } catch (error) {
+    const response = await api.post('/auth/register', {
+      email,
+      password
+    });
+
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error: any) {
+    console.error('Registration error:', error);
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Registration failed'
+    };
+  }
+};
+
+export const createBusinessProfile = async (profileData: BusinessProfile, authToken?: string): Promise<{ success: boolean; profileId?: string; error?: string }> => {
+  try {
+    const headers: any = {
+      'Content-Type': 'application/json'
+    };
+    
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+    }
+
+    // Map frontend BusinessProfile to backend expected format
+    const backendProfileData = {
+      website_url: profileData.website_url,
+      name: profileData.company_name,
+      offer_description: profileData.offer,
+      target_customer: profileData.target_customer,
+      problem_solved: profileData.problems,
+      customer_desires: profileData.desires,
+      brand_tone: profileData.tone,
+      communication_language: profileData.language
+    };
+
+    const response = await api.post('/business-profiles', backendProfileData, { headers });
+
+    return {
+      success: true,
+      profileId: response.data.id
+    };
+  } catch (error: any) {
     console.error('Profile creation error:', error);
     return {
       success: false,
-      error: error instanceof Error ? error.message : 'Profile creation failed'
+      error: error.response?.data?.message || error.message || 'Profile creation failed'
     };
   }
 };

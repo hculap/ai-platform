@@ -45,7 +45,7 @@ def register():
 
         # Validate email
         try:
-            validate_email(email)
+            validate_email(email, check_deliverability=False)
         except EmailNotValidError:
             return jsonify({
                 'error': ERROR_VALIDATION_ERROR,

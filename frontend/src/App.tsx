@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AppSection, LoadingState, BusinessProfile } from './types';
-import { startBackgroundAnalysis, checkAnalysisStatus } from './services/api';
+import { AppSection, LoadingState, BusinessProfile, User, AuthResponse } from './types';
+import { startBackgroundAnalysis, checkAnalysisStatus, registerUser, createBusinessProfile } from './services/api';
 
 // Components
 import BackgroundElements from './components/BackgroundElements';
@@ -9,6 +9,8 @@ import Header from './components/Header';
 import URLSection from './components/URLSection';
 import LoadingSection from './components/LoadingSection';
 import BusinessForm from './components/BusinessForm';
+import SignupForm from './components/SignupForm';
+import Dashboard from './components/Dashboard';
 
 function App() {
   const { t } = useTranslation();
@@ -21,6 +23,10 @@ function App() {
     progress: 0,
     text: t('loading.steps.structure')
   });
+  const [acceptedProfileData, setAcceptedProfileData] = useState<BusinessProfile | null>(null);
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [authToken, setAuthToken] = useState<string | null>(null);
+  const [isSigningUp, setIsSigningUp] = useState(false);
 
   const handleAnalyze = async (url: string) => {
     setIsAnalyzing(true);
@@ -166,6 +172,82 @@ function App() {
     setCurrentSection(AppSection.URL_INPUT);
     setAnalysisData(null);
     setOpenaiResponseId(null);
+    setAcceptedProfileData(null);
+  };
+
+  const handleAcceptProfile = (profileData: BusinessProfile) => {
+    setAcceptedProfileData(profileData);
+    setCurrentSection(AppSection.SIGNUP);
+  };
+
+  const handleBackToProfile = () => {
+    setCurrentSection(AppSection.FORM);
+  };
+
+  const handleSignup = async (email: string, password: string) => {
+    setIsSigningUp(true);
+    
+    try {
+      // Register user
+      const registerResult = await registerUser(email, password);
+      
+      if (!registerResult.success || !registerResult.data) {
+        throw new Error(registerResult.error || 'Registration failed');
+      }
+
+      const authData = registerResult.data;
+      setCurrentUser(authData.user);
+      setAuthToken(authData.access_token);
+
+      // Create business profile if we have accepted profile data
+      if (acceptedProfileData) {
+        const profileResult = await createBusinessProfile(acceptedProfileData, authData.access_token);
+        
+        if (!profileResult.success) {
+          console.error('Profile creation failed:', profileResult.error);
+          // Still proceed to dashboard even if profile creation fails
+        }
+      }
+
+      // Show success notification
+      const successDiv = document.createElement('div');
+      successDiv.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-xl shadow-lg z-50 animate-slide-up';
+      successDiv.innerHTML = `
+        <div class="flex items-center space-x-2">
+          <div class="w-5 h-5">✓</div>
+          <span>${t('notification.success.accountCreated')}</span>
+        </div>
+      `;
+      document.body.appendChild(successDiv);
+      setTimeout(() => successDiv.remove(), 5000);
+
+      // Redirect to dashboard
+      setCurrentSection(AppSection.DASHBOARD);
+      
+    } catch (error) {
+      console.error('Signup error:', error);
+      
+      // Show error notification
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-4 rounded-xl shadow-lg z-50 animate-slide-up';
+      errorDiv.innerHTML = `
+        <div class="flex items-center space-x-2">
+          <div class="w-5 h-5">⚠</div>
+          <span>${error instanceof Error ? error.message : t('notification.error.signupFailed')}</span>
+        </div>
+      `;
+      document.body.appendChild(errorDiv);
+      setTimeout(() => errorDiv.remove(), 5000);
+    } finally {
+      setIsSigningUp(false);
+    }
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    setAuthToken(null);
+    setAcceptedProfileData(null);
+    setCurrentSection(AppSection.URL_INPUT);
   };
 
   // Add keyboard shortcuts
@@ -186,6 +268,8 @@ function App() {
         } else if (currentSection === AppSection.LOADING) {
           setCurrentSection(AppSection.URL_INPUT);
           setIsAnalyzing(false);
+        } else if (currentSection === AppSection.SIGNUP) {
+          setCurrentSection(AppSection.FORM);
         }
       }
     };
@@ -193,6 +277,16 @@ function App() {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [currentSection]);
+
+  // Render dashboard separately without background elements
+  if (currentSection === AppSection.DASHBOARD && currentUser) {
+    return (
+      <Dashboard 
+        user={currentUser}
+        onLogout={handleLogout}
+      />
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 scroll-smooth flex flex-col">
@@ -213,7 +307,6 @@ function App() {
             {currentSection === AppSection.LOADING && (
               <LoadingSection 
                 loadingState={loadingState}
-                debugInfo={openaiResponseId ? `ID: ${openaiResponseId.slice(-8)}` : undefined}
               />
             )}
             
@@ -221,6 +314,15 @@ function App() {
               <BusinessForm 
                 initialData={analysisData}
                 onReanalyze={handleReanalyze}
+                onAcceptProfile={handleAcceptProfile}
+              />
+            )}
+
+            {currentSection === AppSection.SIGNUP && (
+              <SignupForm 
+                onBack={handleBackToProfile}
+                onSignup={handleSignup}
+                isSubmitting={isSigningUp}
               />
             )}
           </div>
