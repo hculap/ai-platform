@@ -120,18 +120,56 @@ const resources = {
       "signin.validation.passwordRequired": "Hasło jest wymagane",
       
       // Dashboard
+      "dashboard.title": "Panel Główny",
       "dashboard.welcome": "Witaj na swoim Panelu!",
       "dashboard.welcomeDescription": "Twój profil biznesowy został pomyślnie utworzony. Jesteś gotowy do pracy!",
-      "dashboard.stats.businessProfile": "Profil Biznesowy",
-      "dashboard.stats.businessProfile.status": "Aktywny i gotowy",
-      "dashboard.stats.analytics": "Analityka",
-      "dashboard.stats.analytics.status": "Wkrótce dostępne",
-      "dashboard.stats.settings": "Ustawienia",
-      "dashboard.stats.settings.status": "Personalizuj swoje doświadczenie",
+      "dashboard.logout": "Wyloguj",
+      
+      // Navigation
+      "dashboard.nav.aiTools": "Narzędzia AI",
+      "dashboard.nav.business": "Biznes",
+      "dashboard.nav.agents": "Agenci",
+      "dashboard.nav.automations": "Automatyzacje",
+      "dashboard.nav.prompts": "Prompty",
+      "dashboard.nav.videos": "Filmy",
+      "dashboard.nav.businessProfiles": "Profile Biznesowe",
+      "dashboard.nav.competition": "Konkurencja",
+      "dashboard.nav.campaigns": "Kampanie",
+      "dashboard.nav.ads": "Reklamy",
+      "dashboard.nav.settings": "Ustawienia",
+      "dashboard.nav.profile": "Profil",
+      
+      // Stats
+      "dashboard.stats.totalAgents": "Łączna liczba agentów",
+      "dashboard.stats.totalAutomations": "Łączna liczba automatyzacji",
+      "dashboard.stats.totalPrompts": "Łączna liczba promptów",
+      "dashboard.stats.activeCampaigns": "Aktywne kampanie",
+      "dashboard.stats.totalUsers": "Łączna liczba użytkowników",
+      "dashboard.stats.todayActivity": "Dzisiejsza aktywność",
+      
+      // Header
+      "dashboard.search.placeholder": "Szukaj...",
+      "dashboard.userRole.admin": "Administrator",
+      
+      // Quick Actions
+      "dashboard.quickActions.title": "Szybkie Akcje",
+      "dashboard.quickActions.createAgent": "Stwórz Agenta",
+      "dashboard.quickActions.createAgentDesc": "Nowy AI agent dla Twojego biznesu",
+      "dashboard.quickActions.createAutomation": "Stwórz Automatyzację",
+      "dashboard.quickActions.createAutomationDesc": "Zautomatyzuj swoje procesy",
+      "dashboard.quickActions.createCampaign": "Stwórz Kampanię",
+      "dashboard.quickActions.createCampaignDesc": "Nowa kampania marketingowa",
+      "dashboard.quickActions.createPrompt": "Stwórz Prompt",
+      "dashboard.quickActions.createPromptDesc": "Szablon dla AI",
+      
+      // Activity
       "dashboard.activity.title": "Ostatnia Aktywność",
-      "dashboard.activity.profileReady": "Twój profil biznesowy jest gotowy!",
-      "dashboard.activity.description": "Pomyślnie ukończyłeś proces konfiguracji. Twój asystent biznesowy napędzany przez AI jest teraz skonfigurowany i gotowy, aby pomóc Ci rozwijać Twój biznes.",
-      "dashboard.logout": "Wyloguj"
+      "dashboard.activity.profileCreated": "Profil biznesowy został utworzony",
+      "dashboard.activity.profileCreatedTime": "2 godziny temu",
+      "dashboard.activity.agentsAvailable": "5 agentów jest dostępnych",
+      "dashboard.activity.agentsAvailableTime": "Dziś rano",
+      "dashboard.activity.systemReady": "System jest gotowy do użycia",
+      "dashboard.activity.systemReadyTime": "Wczoraj"
     }
   },
   en: {
@@ -250,18 +288,56 @@ const resources = {
       "signin.validation.passwordRequired": "Password is required",
       
       // Dashboard
+      "dashboard.title": "Dashboard",
       "dashboard.welcome": "Welcome to your Dashboard!",
       "dashboard.welcomeDescription": "Your business profile has been created successfully. You're all set to get started!",
-      "dashboard.stats.businessProfile": "Business Profile",
-      "dashboard.stats.businessProfile.status": "Active and ready",
-      "dashboard.stats.analytics": "Analytics",
-      "dashboard.stats.analytics.status": "Coming soon",
-      "dashboard.stats.settings": "Settings",
-      "dashboard.stats.settings.status": "Customize your experience",
+      "dashboard.logout": "Logout",
+      
+      // Navigation
+      "dashboard.nav.aiTools": "AI Tools",
+      "dashboard.nav.business": "Business",
+      "dashboard.nav.agents": "Agents",
+      "dashboard.nav.automations": "Automations",
+      "dashboard.nav.prompts": "Prompts",
+      "dashboard.nav.videos": "Videos",
+      "dashboard.nav.businessProfiles": "Business Profiles",
+      "dashboard.nav.competition": "Competition",
+      "dashboard.nav.campaigns": "Campaigns",
+      "dashboard.nav.ads": "Ads",
+      "dashboard.nav.settings": "Settings",
+      "dashboard.nav.profile": "Profile",
+      
+      // Stats
+      "dashboard.stats.totalAgents": "Total Agents",
+      "dashboard.stats.totalAutomations": "Total Automations",
+      "dashboard.stats.totalPrompts": "Total Prompts",
+      "dashboard.stats.activeCampaigns": "Active Campaigns",
+      "dashboard.stats.totalUsers": "Total Users",
+      "dashboard.stats.todayActivity": "Today's Activity",
+      
+      // Header
+      "dashboard.search.placeholder": "Search...",
+      "dashboard.userRole.admin": "Administrator",
+      
+      // Quick Actions
+      "dashboard.quickActions.title": "Quick Actions",
+      "dashboard.quickActions.createAgent": "Create Agent",
+      "dashboard.quickActions.createAgentDesc": "New AI agent for your business",
+      "dashboard.quickActions.createAutomation": "Create Automation",
+      "dashboard.quickActions.createAutomationDesc": "Automate your processes",
+      "dashboard.quickActions.createCampaign": "Create Campaign",
+      "dashboard.quickActions.createCampaignDesc": "New marketing campaign",
+      "dashboard.quickActions.createPrompt": "Create Prompt",
+      "dashboard.quickActions.createPromptDesc": "Template for AI",
+      
+      // Activity
       "dashboard.activity.title": "Recent Activity",
-      "dashboard.activity.profileReady": "Your business profile is ready!",
-      "dashboard.activity.description": "You've successfully completed the setup process. Your AI-powered business assistant is now configured and ready to help you grow your business.",
-      "dashboard.logout": "Logout"
+      "dashboard.activity.profileCreated": "Business profile was created",
+      "dashboard.activity.profileCreatedTime": "2 hours ago",
+      "dashboard.activity.agentsAvailable": "5 agents are available",
+      "dashboard.activity.agentsAvailableTime": "This morning",
+      "dashboard.activity.systemReady": "System is ready to use",
+      "dashboard.activity.systemReadyTime": "Yesterday"
     }
   }
 };
