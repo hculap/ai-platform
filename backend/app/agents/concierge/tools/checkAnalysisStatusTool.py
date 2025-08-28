@@ -124,9 +124,16 @@ class CheckAnalysisStatusTool(BaseTool):
     def _parse_business_profile(self, content: str) -> Dict[str, Any]:
         """Parse business profile from OpenAI response content."""
         from app.agents.concierge.tools.analyzewebsiteTool import BusinessProfileParser
+        from app.agents.shared.business_profile_utils import BusinessProfileFieldMappings
         
         parser = BusinessProfileParser()
-        return parser.parse(content)
+        result = parser.parse(content)
+        
+        # Ensure field mappings are applied (double-check)
+        if isinstance(result, dict) and 'business_profile' in result:
+            BusinessProfileFieldMappings.normalize_fields(result['business_profile'])
+        
+        return result
     
 
 
