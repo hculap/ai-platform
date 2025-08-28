@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppSection, LoadingState, BusinessProfile, User, AuthResponse } from './types';
-import { startBackgroundAnalysis, checkAnalysisStatus, registerUser, createBusinessProfile } from './services/api';
+import { startBackgroundAnalysis, checkAnalysisStatus, registerUser, loginUser, createBusinessProfile } from './services/api';
 
 // Components
 import BackgroundElements from './components/BackgroundElements';
@@ -10,6 +10,7 @@ import URLSection from './components/URLSection';
 import LoadingSection from './components/LoadingSection';
 import BusinessForm from './components/BusinessForm';
 import SignupForm from './components/SignupForm';
+import SignInForm from './components/SignInForm';
 import Dashboard from './components/Dashboard';
 
 function App() {
@@ -27,6 +28,7 @@ function App() {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [authToken, setAuthToken] = useState<string | null>(null);
   const [isSigningUp, setIsSigningUp] = useState(false);
+  const [isSigningIn, setIsSigningIn] = useState(false);
 
   const handleAnalyze = async (url: string) => {
     setIsAnalyzing(true);
@@ -243,6 +245,63 @@ function App() {
     }
   };
 
+  const handleSignIn = async (email: string, password: string) => {
+    setIsSigningIn(true);
+    
+    try {
+      // Login user
+      const loginResult = await loginUser(email, password);
+      
+      if (!loginResult.success || !loginResult.data) {
+        throw new Error(loginResult.error || 'Login failed');
+      }
+
+      const authData = loginResult.data;
+      setCurrentUser(authData.user);
+      setAuthToken(authData.access_token);
+
+      // Show success notification
+      const successDiv = document.createElement('div');
+      successDiv.className = 'fixed top-4 right-4 bg-green-500 text-white px-6 py-4 rounded-xl shadow-lg z-50 animate-slide-up';
+      successDiv.innerHTML = `
+        <div class="flex items-center space-x-2">
+          <div class="w-5 h-5">✓</div>
+          <span>${t('notification.success.signedIn')}</span>
+        </div>
+      `;
+      document.body.appendChild(successDiv);
+      setTimeout(() => successDiv.remove(), 5000);
+
+      // Redirect to dashboard
+      setCurrentSection(AppSection.DASHBOARD);
+      
+    } catch (error) {
+      console.error('Sign in error:', error);
+      
+      // Show error notification
+      const errorDiv = document.createElement('div');
+      errorDiv.className = 'fixed top-4 right-4 bg-red-500 text-white px-6 py-4 rounded-xl shadow-lg z-50 animate-slide-up';
+      errorDiv.innerHTML = `
+        <div class="flex items-center space-x-2">
+          <div class="w-5 h-5">⚠</div>
+          <span>${error instanceof Error ? error.message : t('notification.error.signinFailed')}</span>
+        </div>
+      `;
+      document.body.appendChild(errorDiv);
+      setTimeout(() => errorDiv.remove(), 5000);
+    } finally {
+      setIsSigningIn(false);
+    }
+  };
+
+  const handleBackToMain = () => {
+    setCurrentSection(AppSection.URL_INPUT);
+  };
+
+  const handleShowSignIn = () => {
+    setCurrentSection(AppSection.SIGNIN);
+  };
+
   const handleLogout = () => {
     setCurrentUser(null);
     setAuthToken(null);
@@ -270,6 +329,8 @@ function App() {
           setIsAnalyzing(false);
         } else if (currentSection === AppSection.SIGNUP) {
           setCurrentSection(AppSection.FORM);
+        } else if (currentSection === AppSection.SIGNIN) {
+          setCurrentSection(AppSection.URL_INPUT);
         }
       }
     };
@@ -277,6 +338,13 @@ function App() {
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [currentSection]);
+
+  // Auto-redirect if user is already signed in
+  useEffect(() => {
+    if (currentUser && currentSection !== AppSection.DASHBOARD) {
+      setCurrentSection(AppSection.DASHBOARD);
+    }
+  }, [currentUser, currentSection]);
 
   // Render dashboard separately without background elements
   if (currentSection === AppSection.DASHBOARD && currentUser) {
@@ -293,13 +361,14 @@ function App() {
       <BackgroundElements />
       
       <div className="relative z-10 flex flex-col min-h-screen">
-        <Header onSkipToForm={handleSkipToForm} />
+        <Header onSignIn={handleShowSignIn} />
         
         <div className="flex-1 flex items-center justify-center">
           <div className="w-full">
             {currentSection === AppSection.URL_INPUT && (
               <URLSection 
                 onAnalyze={handleAnalyze}
+                onSkipToForm={handleSkipToForm}
                 isAnalyzing={isAnalyzing}
               />
             )}
@@ -323,6 +392,14 @@ function App() {
                 onBack={handleBackToProfile}
                 onSignup={handleSignup}
                 isSubmitting={isSigningUp}
+              />
+            )}
+
+            {currentSection === AppSection.SIGNIN && (
+              <SignInForm 
+                onBack={handleBackToMain}
+                onSignIn={handleSignIn}
+                isSubmitting={isSigningIn}
               />
             )}
           </div>

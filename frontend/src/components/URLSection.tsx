@@ -4,10 +4,11 @@ import { Globe, ArrowRight, Lightbulb, Zap, CheckCircle } from 'lucide-react';
 
 interface URLSectionProps {
   onAnalyze: (url: string) => void;
+  onSkipToForm: () => void;
   isAnalyzing: boolean;
 }
 
-const URLSection: React.FC<URLSectionProps> = ({ onAnalyze, isAnalyzing }) => {
+const URLSection: React.FC<URLSectionProps> = ({ onAnalyze, onSkipToForm, isAnalyzing }) => {
   const { t } = useTranslation();
   const [url, setUrl] = useState('');
 
@@ -99,14 +100,27 @@ const URLSection: React.FC<URLSectionProps> = ({ onAnalyze, isAnalyzing }) => {
                 </div>
               </div>
               
-              <button 
-                type="submit" 
-                disabled={isAnalyzing}
-                className="mt-8 px-12 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-lg font-semibold rounded-2xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-              >
-                {isAnalyzing ? t('url.button.analyzing') : t('url.button.analyze')}
-                <ArrowRight className="inline-block ml-2 w-5 h-5" />
-              </button>
+              <div className="mt-8 space-y-4">
+                <button 
+                  type="submit" 
+                  disabled={isAnalyzing}
+                  className="px-12 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-lg font-semibold rounded-2xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                  {isAnalyzing ? t('url.button.analyzing') : t('url.button.analyze')}
+                  <ArrowRight className="inline-block ml-2 w-5 h-5" />
+                </button>
+                
+                <div className="flex items-center justify-center space-x-2 text-gray-500">
+                  <span>{t('url.or')}</span>
+                  <button
+                    type="button"
+                    onClick={onSkipToForm}
+                    className="text-blue-600 hover:text-blue-700 font-medium hover:underline transition-colors"
+                  >
+                    {t('url.skipToForm')}
+                  </button>
+                </div>
+              </div>
             </form>
           </div>
         </div>

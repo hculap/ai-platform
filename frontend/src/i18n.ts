@@ -9,6 +9,7 @@ const resources = {
       // Header
       "header.title": "Analizator Biznesowy AI",
       "header.skipToForm": "Przejdź do formularza",
+      "header.signIn": "Zaloguj się",
       
       // URL Section
       "url.title.analyze": "Analizuj Swój",
@@ -17,6 +18,8 @@ const resources = {
       "url.placeholder": "Wprowadź swoją stronę internetową (np. example.com, website.pl, mysite.org)",
       "url.button.analyze": "Analizuj stronę",
       "url.button.analyzing": "Analizuję...",
+      "url.or": "lub",
+      "url.skipToForm": "przejdź do formularza",
       
       // URL Section - Features
       "features.ai.title": "Analiza oparta na AI",
@@ -71,9 +74,11 @@ const resources = {
       // Notifications
       "notification.success.profileCreated": "Profil biznesowy został pomyślnie utworzony!",
       "notification.success.accountCreated": "Konto zostało pomyślnie utworzone! Witamy na pokładzie!",
+      "notification.success.signedIn": "Pomyślnie zalogowano! Witamy z powrotem!",
       "notification.error.profileFailed": "Nie udało się utworzyć profilu. Spróbuj ponownie.",
       "notification.error.analysisError": "Analiza nie powiodła się. Spróbuj ponownie.",
       "notification.error.signupFailed": "Rejestracja nie powiodła się. Spróbuj ponownie.",
+      "notification.error.signinFailed": "Logowanie nie powiodło się. Spróbuj ponownie.",
       
       // Validation
       "validation.enterUrl": "Wprowadź adres URL strony internetowej",
@@ -100,6 +105,20 @@ const resources = {
       "signup.validation.confirmPasswordRequired": "Potwierdź swoje hasło",
       "signup.validation.passwordsNotMatch": "Hasła nie są identyczne",
       
+      // Sign In Form
+      "signin.title": "Zaloguj się",
+      "signin.description": "Zaloguj się do swojego konta",
+      "signin.email": "Adres Email",
+      "signin.email.placeholder": "Wprowadź swój adres email",
+      "signin.password": "Hasło",
+      "signin.password.placeholder": "Wprowadź swoje hasło",
+      "signin.button.back": "Powrót",
+      "signin.button.signIn": "Zaloguj się",
+      "signin.button.signingIn": "Loguję...",
+      "signin.validation.emailRequired": "Email jest wymagany",
+      "signin.validation.emailInvalid": "Wprowadź prawidłowy adres email",
+      "signin.validation.passwordRequired": "Hasło jest wymagane",
+      
       // Dashboard
       "dashboard.welcome": "Witaj na swoim Panelu!",
       "dashboard.welcomeDescription": "Twój profil biznesowy został pomyślnie utworzony. Jesteś gotowy do pracy!",
@@ -120,6 +139,7 @@ const resources = {
       // Header
       "header.title": "AI Business Analyzer",
       "header.skipToForm": "Skip to Manual Form",
+      "header.signIn": "Sign In",
       
       // URL Section
       "url.title.analyze": "Analyze Your",
@@ -128,6 +148,8 @@ const resources = {
       "url.placeholder": "Enter your website (e.g., example.com, website.pl, mysite.org)",
       "url.button.analyze": "Analyze Website",
       "url.button.analyzing": "Analyzing...",
+      "url.or": "or",
+      "url.skipToForm": "skip to manual form",
       
       // URL Section - Features
       "features.ai.title": "AI-Powered Analysis",
@@ -182,9 +204,11 @@ const resources = {
       // Notifications
       "notification.success.profileCreated": "Business profile created successfully!",
       "notification.success.accountCreated": "Account created successfully! Welcome aboard!",
+      "notification.success.signedIn": "Successfully signed in! Welcome back!",
       "notification.error.profileFailed": "Failed to create profile. Please try again.",
       "notification.error.analysisError": "Analysis failed. Please try again.",
       "notification.error.signupFailed": "Signup failed. Please try again.",
+      "notification.error.signinFailed": "Sign in failed. Please try again.",
       
       // Validation
       "validation.enterUrl": "Please enter a website URL",
@@ -210,6 +234,20 @@ const resources = {
       "signup.validation.passwordWeak": "Password must contain at least one uppercase letter, one lowercase letter, and one number",
       "signup.validation.confirmPasswordRequired": "Please confirm your password",
       "signup.validation.passwordsNotMatch": "Passwords do not match",
+      
+      // Sign In Form
+      "signin.title": "Sign In",
+      "signin.description": "Sign in to your account",
+      "signin.email": "Email Address",
+      "signin.email.placeholder": "Enter your email address",
+      "signin.password": "Password",
+      "signin.password.placeholder": "Enter your password",
+      "signin.button.back": "Back",
+      "signin.button.signIn": "Sign In",
+      "signin.button.signingIn": "Signing In...",
+      "signin.validation.emailRequired": "Email is required",
+      "signin.validation.emailInvalid": "Please enter a valid email address",
+      "signin.validation.passwordRequired": "Password is required",
       
       // Dashboard
       "dashboard.welcome": "Welcome to your Dashboard!",

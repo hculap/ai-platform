@@ -4,10 +4,10 @@ import { Zap } from 'lucide-react';
 import LanguageSwitcher from './LanguageSwitcher';
 
 interface HeaderProps {
-  onSkipToForm: () => void;
+  onSignIn: () => void;
 }
 
-const Header: React.FC<HeaderProps> = ({ onSkipToForm }) => {
+const Header: React.FC<HeaderProps> = ({ onSignIn }) => {
   const { t } = useTranslation();
 
   return (
@@ -25,10 +25,10 @@ const Header: React.FC<HeaderProps> = ({ onSkipToForm }) => {
         <div className="flex items-center space-x-4">
           <LanguageSwitcher />
           <button 
-            onClick={onSkipToForm}
+            onClick={onSignIn}
             className="px-6 py-3 text-sm font-medium text-gray-600 hover:text-gray-900 bg-white hover:bg-gray-50 border border-gray-200 rounded-full transition-all duration-200 hover:shadow-md"
           >
-            {t('header.skipToForm')}
+            {t('header.signIn')}
           </button>
         </div>
       </nav>

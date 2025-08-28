@@ -31,6 +31,7 @@ export enum AppSection {
   LOADING = 'LOADING',
   FORM = 'FORM',
   SIGNUP = 'SIGNUP',
+  SIGNIN = 'SIGNIN',
   DASHBOARD = 'DASHBOARD'
 }
 

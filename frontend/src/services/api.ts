@@ -140,6 +140,26 @@ export const registerUser = async (email: string, password: string): Promise<{ s
   }
 };
 
+export const loginUser = async (email: string, password: string): Promise<{ success: boolean; data?: AuthResponse; error?: string }> => {
+  try {
+    const response = await api.post('/auth/login', {
+      email,
+      password
+    });
+
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error: any) {
+    console.error('Login error:', error);
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Login failed'
+    };
+  }
+};
+
 export const createBusinessProfile = async (profileData: BusinessProfile, authToken?: string): Promise<{ success: boolean; profileId?: string; error?: string }> => {
   try {
     const headers: any = {
