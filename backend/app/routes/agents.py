@@ -250,7 +250,7 @@ def execute_tool(slug: str, tool_slug: str):
             )
 
             # Check for background mode
-            background_mode = data.get('background', False) and tool_slug == 'analyze-website'
+            background_mode = data.get('background', False) and tool_slug in ['analyze-website', 'find-competitors']
             
             # Execute tool synchronously
             import asyncio

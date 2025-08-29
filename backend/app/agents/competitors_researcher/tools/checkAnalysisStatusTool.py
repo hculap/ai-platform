@@ -30,7 +30,10 @@ class CheckAnalysisStatusTool(BaseTool):
         """
         try:
             openai_response_id = input_data.get_parameter('openai_response_id')
+            logger.info(f"Checking competitor research status - OpenAI Response ID: {openai_response_id}")
+            
             if not openai_response_id:
+                logger.error("Missing openai_response_id parameter in status check request")
                 return ToolOutput(
                     success=False,
                     error="openai_response_id is required",
@@ -38,6 +41,7 @@ class CheckAnalysisStatusTool(BaseTool):
                 )
 
             # Check status with OpenAI directly
+            logger.debug(f"Querying OpenAI client for response status: {openai_response_id}")
             openai_client = OpenAIClientFactory.get_client()
             openai_response = openai_client.get_response_status(openai_response_id)
 
@@ -51,15 +55,18 @@ class CheckAnalysisStatusTool(BaseTool):
 
             # Process response based on OpenAI status values
             status = getattr(openai_response, 'status', 'unknown')
+            logger.info(f"OpenAI response status: {status} for request ID: {openai_response_id}")
 
             if status == 'completed':
                 # Extract content from the completed response
                 content = getattr(openai_response, 'content', None)
+                logger.debug(f"OpenAI response completed with content length: {len(str(content)) if content else 0}")
 
                 if content:
                     # Parse the competitors from OpenAI response
                     try:
                         competitors = self._parse_competitors(content)
+                        logger.info(f"Successfully parsed {len(competitors)} competitors from OpenAI response")
                         return ToolOutput(
                             success=True,
                             data={
@@ -69,6 +76,7 @@ class CheckAnalysisStatusTool(BaseTool):
                         )
                     except Exception as e:
                         # Return error status instead of failing
+                        logger.error(f"Failed to parse competitor research result: {str(e)}")
                         return ToolOutput(
                             success=True,
                             data={
@@ -78,6 +86,7 @@ class CheckAnalysisStatusTool(BaseTool):
                         )
                 else:
                     # This can happen with invalid API keys or failed OpenAI requests
+                    logger.warning(f"OpenAI analysis completed but no content generated for request ID: {openai_response_id}")
                     return ToolOutput(
                         success=True,
                         data={
@@ -87,6 +96,7 @@ class CheckAnalysisStatusTool(BaseTool):
                     )
             elif status in ['failed', 'canceled']:
                 error_msg = getattr(openai_response, 'error', None) or f"OpenAI analysis {status}"
+                logger.error(f"OpenAI analysis failed with status '{status}': {error_msg}")
                 return ToolOutput(
                     success=False,
                     error=error_msg,
@@ -94,6 +104,7 @@ class CheckAnalysisStatusTool(BaseTool):
                 )
             elif status in ['pending', 'queued', 'in_progress']:  # Handle all possible processing statuses
                 # Still processing - use OpenAI status directly
+                logger.debug(f"OpenAI analysis still processing with status: {status}")
                 return ToolOutput(
                     success=True,
                     data={
@@ -102,6 +113,7 @@ class CheckAnalysisStatusTool(BaseTool):
                 )
             else:
                 # Unknown status - use OpenAI status directly
+                logger.warning(f"Unknown OpenAI status received: {status} for request ID: {openai_response_id}")
                 return ToolOutput(
                     success=True,
                     data={
@@ -112,6 +124,7 @@ class CheckAnalysisStatusTool(BaseTool):
 
         except Exception as e:
             # Always return a safe fallback response
+            logger.error(f"Exception in status check for OpenAI response ID {openai_response_id}: {str(e)}")
             return ToolOutput(
                 success=True,
                 data={

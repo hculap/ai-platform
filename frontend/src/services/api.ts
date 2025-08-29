@@ -955,10 +955,9 @@ export const startBackgroundCompetitorResearch = async (businessProfileId: strin
 
     const response = await api.post('/agents/competitors-researcher/tools/find-competitors/call', {
       input: {
-        business_profile_id: businessProfileId,
-        action: 'find-competitors',
-        background: true
-      }
+        business_profile_id: businessProfileId
+      },
+      background: true
     }, { headers });
 
     if (response.data?.data?.status === 'pending' && response.data.data?.openai_response_id) {
@@ -1004,7 +1003,9 @@ export const checkCompetitorResearchStatus = async (openaiResponseId: string, au
     }
 
     const response = await api.post('/agents/competitors-researcher/tools/check-analysis-status/call', {
-      input: { openai_response_id: openaiResponseId }
+      input: { 
+        openai_response_id: openaiResponseId 
+      }
     }, { headers });
 
     if (response.data && response.data.data) {

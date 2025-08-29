@@ -5,6 +5,7 @@ Uses OpenAI to analyze business profile and find competitors.
 
 import time
 import json
+import logging
 from typing import Dict, Any, Optional, Union
 
 from ...shared.base_tool import (
@@ -20,6 +21,9 @@ from ....utils.messages import (
 )
 from ....models.business_profile import BusinessProfile
 from ....models.competition import Competition
+
+# Create logger for this module
+logger = logging.getLogger('app.agents.competitors_researcher.findCompetitors')
 
 
 class CompetitorsParser:
@@ -102,6 +106,9 @@ class FindCompetitorsTool(BaseTool):
             ToolOutput: Research results or error
         """
         start_time = time.time()
+        
+        logger.info(f"Starting competitor research - Background: {background}, User: {input_data.user_id}")
+        logger.debug(f"Input parameters: {input_data.parameters}")
 
         try:
             # Validate input
@@ -113,6 +120,7 @@ class FindCompetitorsTool(BaseTool):
                 )
 
             business_profile_id = validation_result['business_profile_id']
+            logger.info(f"Validated input - Business Profile ID: {business_profile_id}")
 
             # Fetch business profile data from database
             business_profile = BusinessProfile.query.filter_by(
@@ -121,10 +129,13 @@ class FindCompetitorsTool(BaseTool):
             ).first()
 
             if not business_profile:
+                logger.error(f"Business profile not found - ID: {business_profile_id}, User: {input_data.user_id}")
                 return self._create_error_output(
                     f"Business profile not found: {business_profile_id}",
                     start_time
                 )
+                
+            logger.info(f"Found business profile: {business_profile.name} for user {input_data.user_id}")
 
             # Fetch existing competitors for this business profile
             existing_competitors = Competition.query.filter_by(
@@ -132,8 +143,10 @@ class FindCompetitorsTool(BaseTool):
             ).all()
 
             existing_competitors_data = [comp.to_dict() for comp in existing_competitors]
+            logger.info(f"Found {len(existing_competitors_data)} existing competitors for business profile {business_profile_id}")
 
             # Call OpenAI API with real data
+            logger.info(f"Calling OpenAI API - Background mode: {background}")
             openai_result = await self._find_competitors(
                 business_profile.to_dict(),
                 existing_competitors_data,
@@ -141,6 +154,7 @@ class FindCompetitorsTool(BaseTool):
             )
 
             if not openai_result.get('success'):
+                logger.error(f"OpenAI API error: {openai_result.get('error', 'Unknown error')}")
                 return self._create_error_output(
                     f"OpenAI API error: {openai_result.get('error', 'Unknown error')}",
                     start_time
@@ -148,11 +162,13 @@ class FindCompetitorsTool(BaseTool):
 
             # Handle background mode
             if background:
+                response_id = openai_result.get('response_id')
+                logger.info(f"Background mode - OpenAI response ID: {response_id}")
                 # Return OpenAI response_id directly - frontend will poll with this
                 return ToolOutput(
                     success=True,
                     data={
-                        'openai_response_id': openai_result.get('response_id'),
+                        'openai_response_id': response_id,
                         'status': 'pending',
                         'business_profile_id': business_profile_id,
                         'message': 'Competitor research started in background. Use openai_response_id to check status.'
