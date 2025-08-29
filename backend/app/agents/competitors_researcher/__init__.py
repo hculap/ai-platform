@@ -21,10 +21,17 @@ class CompetitorsResearcherAgent(BaseAgent):
         """Initialize the Competitors Researcher Agent."""
         # Initialize tools
         find_competitors_tool = FindCompetitorsTool()
+        from .tools.checkAnalysisStatusTool import TOOL_CONFIG as CHECK_STATUS_TOOL_CONFIG, OPENAI_CONFIG as CHECK_STATUS_OPENAI_CONFIG
+        from .tools.checkAnalysisStatusTool import CheckAnalysisStatusTool
+        check_status_tool = CheckAnalysisStatusTool(
+            tool_config=CHECK_STATUS_TOOL_CONFIG,
+            openai_config=CHECK_STATUS_OPENAI_CONFIG
+        )
 
         capabilities = AgentCapabilities(
             tools={
-                'find-competitors': find_competitors_tool
+                'find-competitors': find_competitors_tool,
+                'check-analysis-status': check_status_tool
             },
             resources={},
             prompts={},

@@ -989,9 +989,9 @@ export const startBackgroundCompetitorResearch = async (businessProfileId: strin
 };
 
 // Check competitor research status
-export const checkCompetitorResearchStatus = async (openaiResponseId: string, authToken: string): Promise<{ 
-  status: 'pending' | 'queued' | 'in_progress' | 'completed' | 'failed' | 'canceled' | 'error'; 
-  data?: any; 
+export const checkCompetitorResearchStatus = async (openaiResponseId: string, authToken: string): Promise<{
+  status: 'pending' | 'queued' | 'in_progress' | 'completed' | 'failed' | 'canceled' | 'error';
+  data?: any;
   error?: string;
   isTokenExpired?: boolean;
 }> => {
@@ -1003,7 +1003,7 @@ export const checkCompetitorResearchStatus = async (openaiResponseId: string, au
       headers.Authorization = `Bearer ${authToken}`;
     }
 
-    const response = await api.post('/agents/business-concierge/tools/check-analysis-status/call', {
+    const response = await api.post('/agents/competitors-researcher/tools/check-analysis-status/call', {
       input: { openai_response_id: openaiResponseId }
     }, { headers });
 
