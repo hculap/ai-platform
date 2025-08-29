@@ -1,67 +1,22 @@
 """
 FindCompetitorsTool - A tool for finding competitors using OpenAI.
-Uses OpenAI to analyze business profile and find competitors.
+Uses OpenAI to analyze business profile and find competitors using factory patterns.
 """
 
-import time
-import json
-import logging
-from typing import Dict, Any, Optional, Union
+from typing import Dict, Any, Optional
 
-from ...shared.base_tool import (
-    BaseTool,
-    ToolInput,
-    ToolOutput,
-    ToolConfig,
-    OpenAIConfig,
-    OpenAIMode
-)
-from ....utils.messages import (
-    get_message, TOOL_EXECUTION_FAILED
-)
+from ...shared.tool_factory import PromptBasedTool
+from ...shared.parsers import competitors_parser
+from ...shared.validators import ParametersValidator, create_business_profile_validator
 from ....models.business_profile import BusinessProfile
 from ....models.competition import Competition
-
+import logging
 
 # Create logger for this module
 logger = logging.getLogger('app.agents.competitors_researcher.findCompetitors')
 
 
-class CompetitorsParser:
-    """Simple parser for competitors data from OpenAI."""
-    
-    def parse(self, content: Union[str, Dict, None]) -> Dict[str, Any]:
-        """
-        Parse competitors from OpenAI response.
-        
-        Args:
-            content: Response content from OpenAI
-            
-        Returns:
-            Parsed competitors data
-        """
-        if content is None:
-            raise ValueError("Content cannot be None")
-        
-        # If it's already a dict, use it directly
-        if isinstance(content, dict):
-            competitors_data = content
-        else:
-            # Try to parse as JSON
-            try:
-                competitors_data = json.loads(str(content))
-            except json.JSONDecodeError:
-                # If not JSON, return empty list
-                competitors_data = []
-        
-        # Ensure it's a list
-        if not isinstance(competitors_data, list):
-            return {'competitors': []}
-        else:
-            return {'competitors': competitors_data}
-
-
-class FindCompetitorsTool(BaseTool):
+class FindCompetitorsTool(PromptBasedTool):
     """
     Tool for finding competitors using AI analysis.
     Uses pre-registered OpenAI prompt to analyze business profile and find competitors.
@@ -72,183 +27,52 @@ class FindCompetitorsTool(BaseTool):
     VERSION = '1.0.0'
 
     def __init__(self):
-        # Create tool configuration
-        tool_config = ToolConfig(
+        # Create validator for business profile ID
+        validator = ParametersValidator().add_required_field(
+            'business_profile_id', 
+            create_business_profile_validator()
+        )
+        
+        # Initialize using factory pattern
+        super().__init__(
             name='Find Competitors',
             slug='find-competitors',
             description='Find competitors for a business using AI analysis',
-            version=self.VERSION
+            prompt_id=self.PROMPT_ID,
+            version=self.VERSION,
+            parser=competitors_parser,
+            validator=validator
         )
 
-        # Create OpenAI configuration using pre-registered prompt
-        openai_config = OpenAIConfig(
-            mode=OpenAIMode.PROMPT_ID,
-            prompt_id=self.PROMPT_ID
-        )
+    async def _prepare_openai_message(self, validated_params: Dict[str, Any], input_data) -> str:
+        """Prepare the comprehensive user message for OpenAI."""
+        business_profile_id = validated_params['business_profile_id']
+        logger.info(f"Preparing message for business profile ID: {business_profile_id}")
 
-        # Initialize parent class
-        super().__init__(
-            config=tool_config,
-            openai_config=openai_config
-        )
+        # Fetch business profile data from database
+        business_profile = BusinessProfile.query.filter_by(
+            id=business_profile_id,
+            user_id=input_data.user_id
+        ).first()
 
-        # Initialize helper classes
-        self.competitors_parser = CompetitorsParser()
-
-    async def execute(self, input_data: ToolInput, background: bool = False) -> ToolOutput:
-        """
-        Execute competitor research using OpenAI.
-
-        Args:
-            input_data: Tool input containing parameters and user info
-            background: Whether to run in background mode (returns request_id instead of waiting)
-
-        Returns:
-            ToolOutput: Research results or error
-        """
-        start_time = time.time()
-        
-        logger.info(f"Starting competitor research - Background: {background}, User: {input_data.user_id}")
-        logger.debug(f"Input parameters: {input_data.parameters}")
-
-        try:
-            # Validate input
-            validation_result = self._validate_input(input_data.parameters)
-            if not validation_result['valid']:
-                return self._create_error_output(
-                    validation_result['error'],
-                    start_time
-                )
-
-            business_profile_id = validation_result['business_profile_id']
-            logger.info(f"Validated input - Business Profile ID: {business_profile_id}")
-
-            # Fetch business profile data from database
-            business_profile = BusinessProfile.query.filter_by(
-                id=business_profile_id,
-                user_id=input_data.user_id
-            ).first()
-
-            if not business_profile:
-                logger.error(f"Business profile not found - ID: {business_profile_id}, User: {input_data.user_id}")
-                return self._create_error_output(
-                    f"Business profile not found: {business_profile_id}",
-                    start_time
-                )
-                
-            logger.info(f"Found business profile: {business_profile.name} for user {input_data.user_id}")
-
-            # Fetch existing competitors for this business profile
-            existing_competitors = Competition.query.filter_by(
-                business_profile_id=business_profile_id
-            ).all()
-
-            existing_competitors_data = [comp.to_dict() for comp in existing_competitors]
-            logger.info(f"Found {len(existing_competitors_data)} existing competitors for business profile {business_profile_id}")
-
-            # Call OpenAI API with real data
-            logger.info(f"Calling OpenAI API - Background mode: {background}")
-            openai_result = await self._find_competitors(
-                business_profile.to_dict(),
-                existing_competitors_data,
-                background=background
-            )
-
-            if not openai_result.get('success'):
-                logger.error(f"OpenAI API error: {openai_result.get('error', 'Unknown error')}")
-                return self._create_error_output(
-                    f"OpenAI API error: {openai_result.get('error', 'Unknown error')}",
-                    start_time
-                )
-
-            # Handle background mode
-            if background:
-                response_id = openai_result.get('response_id')
-                logger.info(f"Background mode - OpenAI response ID: {response_id}")
-                # Return OpenAI response_id directly - frontend will poll with this
-                return ToolOutput(
-                    success=True,
-                    data={
-                        'openai_response_id': response_id,
-                        'status': 'pending',
-                        'business_profile_id': business_profile_id,
-                        'message': 'Competitor research started in background. Use openai_response_id to check status.'
-                    },
-                    metadata=self.create_metadata(time.time() - start_time)
-                )
-
-            # Process and return results for synchronous mode
-            response_data = self._process_research_result(
-                openai_result.get('content'),
-                business_profile_id,
-                existing_competitors_data,
-                openai_result,
-                input_data.user_id
-            )
-
-            return ToolOutput(
-                success=True,
-                data=response_data,
-                metadata=self.create_metadata(time.time() - start_time)
-            )
-
-        except Exception as error:
-            print(f'FindCompetitorsTool execution error: {error}')
-            return self._create_error_output(
-                get_message(TOOL_EXECUTION_FAILED),
-                start_time
-            )
-
-    def _validate_input(self, parameters: Dict) -> Dict[str, Any]:
-        """
-        Validate input parameters.
-        
-        Args:
-            parameters: Input parameters dictionary
+        if not business_profile:
+            raise ValueError(f"Business profile not found: {business_profile_id}")
             
-        Returns:
-            Validation result with 'valid' flag and either data or 'error'
-        """
-        if 'business_profile_id' not in parameters:
-            return {
-                'valid': False,
-                'error': 'Business profile ID is required'
-            }
-        
-        return {
-            'valid': True,
-            'business_profile_id': parameters['business_profile_id']
-        }
+        logger.info(f"Found business profile: {business_profile.name} for user {input_data.user_id}")
 
-    async def _find_competitors(self, business_profile_data: Dict[str, Any], existing_competitors: list, background: bool = False) -> Dict[str, Any]:
-        """
-        Find competitors using OpenAI.
-        
-        Args:
-            business_profile_data: Complete business profile data from database
-            existing_competitors: List of existing competitors from database
-            background: Whether to run in background mode
-            
-        Returns:
-            OpenAI API response
-        """
-        # Create comprehensive user message with business profile and existing competitors
-        user_message = self._create_user_message(business_profile_data, existing_competitors)
-        
-        # Call OpenAI with the complete context
-        return await self.call_openai(user_message, background=background)
+        # Fetch existing competitors for this business profile
+        existing_competitors = Competition.query.filter_by(
+            business_profile_id=business_profile_id
+        ).all()
 
+        existing_competitors_data = [comp.to_dict() for comp in existing_competitors]
+        logger.info(f"Found {len(existing_competitors_data)} existing competitors")
+
+        # Create comprehensive user message
+        return self._create_user_message(business_profile.to_dict(), existing_competitors_data)
+    
     def _create_user_message(self, business_profile_data: Dict[str, Any], existing_competitors: list) -> str:
-        """
-        Create a comprehensive user message for the OpenAI prompt.
-        
-        Args:
-            business_profile_data: Complete business profile data
-            existing_competitors: List of existing competitors
-            
-        Returns:
-            Formatted user message string
-        """
+        """Create a comprehensive user message for the OpenAI prompt."""
         message_parts = []
         
         # Business Profile Information
@@ -284,18 +108,17 @@ class FindCompetitorsTool(BaseTool):
         
         return "\n".join(message_parts)
 
-    def _process_research_result(
+    async def _process_openai_result(
         self,
         content: Any,
-        business_profile_id: str,
-        existing_competitors: list,
+        validated_params: Dict[str, Any],
         openai_result: Dict[str, Any],
         user_id: Optional[str]
     ) -> Dict[str, Any]:
         """Process OpenAI research result into competitors list."""
         try:
-            # Parse the content
-            parsed_data = self.competitors_parser.parse(content)
+            # Parse the content using shared parser
+            parsed_data = self.parser.parse(content)
             
             # Extract competitors
             if 'competitors' in parsed_data:
@@ -309,144 +132,29 @@ class FindCompetitorsTool(BaseTool):
             
             return {
                 'competitors': competitors,
-                'business_profile_id': business_profile_id,
-                'existing_competitors_count': len(existing_competitors),
+                'business_profile_id': validated_params['business_profile_id'],
                 'new_competitors_count': len(competitors)
             }
             
         except Exception as parse_error:
             return {
                 'competitors': [],
-                'business_profile_id': business_profile_id,
+                'business_profile_id': validated_params['business_profile_id'],
                 'error': f"Failed to parse research result: {str(parse_error)}"
             }
 
-
-    async def get_status(self, job_id: str, user_id: Optional[str] = None) -> ToolOutput:
-        """
-        Get the status of a background competitors research request.
-        Override the base class method to provide custom competitors parsing.
-        
-        Args:
-            job_id: The OpenAI response ID to check status for
-            user_id: Optional user ID for authorization
-            
-        Returns:
-            ToolOutput with status information and results if completed
-        """
+    async def _parse_status_content(self, content: Any) -> Dict[str, Any]:
+        """Parse content from status checking."""
         try:
-            # Import here to avoid circular imports
-            from ....services.openai_client import OpenAIClientFactory
+            parsed_content = self.parser.parse(content)
             
-            openai_client = OpenAIClientFactory.get_client()
-            openai_response = openai_client.get_response_status(job_id)
-
-            if not openai_response.success:
-                logger.error(f"Failed to check OpenAI status: {openai_response.error}")
-                return ToolOutput(
-                    success=False,
-                    error=f"Failed to check status: {openai_response.error}",
-                    data=None
-                )
+            # Handle different response formats
+            competitors = []
+            if parsed_content.get('competitors'):
+                competitors = parsed_content['competitors']
+            elif isinstance(parsed_content, list):
+                competitors = parsed_content
             
-            # Process response based on OpenAI status values
-            status = getattr(openai_response, 'status', 'unknown')
-            
-            if status == 'completed':
-                # Extract content from the completed response
-                content = getattr(openai_response, 'content', None)
-                
-                if content:
-                    try:
-                        # Parse the competitors from OpenAI response
-                        parsed_content = self._parse_competitors_for_status(content)
-                        
-                        # Handle different response formats
-                        competitors = []
-                        if parsed_content.get('competitors'):
-                            competitors = parsed_content['competitors']
-                        elif isinstance(parsed_content, list):
-                            competitors = parsed_content
-                        
-                        return ToolOutput(
-                            success=True,
-                            data={
-                                'status': 'completed',
-                                'competitors': competitors
-                            }
-                        )
-                    except Exception as e:
-                        # Return error status instead of failing
-                        return ToolOutput(
-                            success=True,
-                            data={
-                                'status': 'error',
-                                'message': f'Failed to parse research result: {str(e)}'
-                            }
-                        )
-                else:
-                    # This can happen with invalid API keys or failed OpenAI requests
-                    return ToolOutput(
-                        success=True,
-                        data={
-                            'status': 'error',
-                            'message': 'Research completed but no content was generated. Please check OpenAI API key configuration.'
-                        }
-                    )
-            elif status in ['failed', 'canceled']:
-                error_msg = getattr(openai_response, 'error', None) or f"OpenAI research {status}"
-                return ToolOutput(
-                    success=False,
-                    error=error_msg,
-                    data=None
-                )
-            elif status in ['pending', 'queued', 'in_progress']:  # Handle all possible processing statuses
-                # Still processing - use OpenAI status directly
-                return ToolOutput(
-                    success=True,
-                    data={
-                        'status': status  # Return actual OpenAI status
-                    }
-                )
-            else:
-                # Unknown status - use OpenAI status directly
-                return ToolOutput(
-                    success=True,
-                    data={
-                        'status': status,
-                        'message': f'Unknown OpenAI status: {status}'
-                    }
-                )
-            
+            return {'competitors': competitors}
         except Exception as e:
-            # Always return a safe fallback response
-            return ToolOutput(
-                success=True,
-                data={
-                    'status': 'error',
-                    'message': f'Status check failed: {str(e)}',
-                    'openai_response_id': job_id
-                }
-            )
-
-    def _parse_competitors_for_status(self, content: str) -> Dict[str, Any]:
-        """Parse competitors from OpenAI response content for status checking."""
-        result = self.competitors_parser.parse(content)
-        return result
-
-    def _create_error_output(self, error_message: str, start_time: float) -> ToolOutput:
-        """
-        Create an error ToolOutput.
-        
-        Args:
-            error_message: Error message
-            start_time: Processing start time
-            
-        Returns:
-            ToolOutput with error
-        """
-        return ToolOutput(
-            success=False,
-            error=error_message,
-            metadata=self.create_metadata(time.time() - start_time)
-        )
+            raise Exception(f"Failed to parse research result: {str(e)}")

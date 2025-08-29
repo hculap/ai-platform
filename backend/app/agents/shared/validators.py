@@ -120,34 +120,36 @@ class URLValidator(BaseValidator):
 
 
 class BusinessProfileIdValidator(BaseValidator):
-    """Validator for business profile ID."""
+    """Validator for business profile ID (UUID string)."""
     
     def __init__(self, field_name: str = "business_profile_id"):
         self.field_name = field_name
     
     def validate(self, value: Any, context: Optional[Dict[str, Any]] = None) -> ValidationResult:
-        """Validate business profile ID."""
+        """Validate business profile ID as a UUID string."""
         result = ValidationResult(is_valid=True)
         
         if value is None:
             result.add_error(f"{self.field_name} is required")
             return result
         
-        # Convert to int if it's a string
-        if isinstance(value, str):
-            try:
-                value = int(value)
-            except ValueError:
-                result.add_error(f"{self.field_name} must be a valid integer")
-                return result
+        # Ensure it's a string
+        if not isinstance(value, str):
+            result.add_error(f"{self.field_name} must be a string")
+            return result
+            
+        # Validate as UUID format (simple check for 36 character string with dashes)
+        if len(value) != 36:
+            result.add_error(f"{self.field_name} must be a valid UUID (36 characters)")
+            return result
+            
+        # Check UUID format (8-4-4-4-12)
+        uuid_pattern = r'^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$'
+        if not re.match(uuid_pattern, value):
+            result.add_error(f"{self.field_name} must be a valid UUID format")
+            return result
         
-        if not isinstance(value, int):
-            result.add_error(f"{self.field_name} must be an integer")
-        elif value <= 0:
-            result.add_error(f"{self.field_name} must be a positive integer")
-        else:
-            result.set_validated_value(self.field_name, value)
-        
+        result.set_validated_value(self.field_name, value)
         return result
 
 

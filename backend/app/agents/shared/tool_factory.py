@@ -154,7 +154,7 @@ class OpenAITool(BaseTool):
         """
         try:
             # Import here to avoid circular imports
-            from ....services.openai_client import OpenAIClientFactory
+            from ...services.openai_client import OpenAIClientFactory
             
             openai_client = OpenAIClientFactory.get_client()
             openai_response = openai_client.get_response_status(job_id)
