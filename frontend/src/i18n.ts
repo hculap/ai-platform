@@ -309,7 +309,15 @@ const resources = {
       "dashboard.activity.agentsAvailable": "5 agentów jest dostępnych",
       "dashboard.activity.agentsAvailableTime": "Dziś rano",
       "dashboard.activity.systemReady": "System jest gotowy do użycia",
-      "dashboard.activity.systemReadyTime": "Wczoraj"
+      "dashboard.activity.systemReadyTime": "Wczoraj",
+
+      // Dashboard Sections - Coming Soon
+      "dashboard.sections.automations.comingSoon": "Sekcja Automatyzacji już wkrótce",
+      "dashboard.sections.prompts.comingSoon": "Sekcja Promptów już wkrótce", 
+      "dashboard.sections.campaigns.comingSoon": "Sekcja Kampanii już wkrótce",
+      "dashboard.sections.ads.comingSoon": "Sekcja Reklam już wkrótce",
+      "dashboard.sections.settings.comingSoon": "Sekcja Ustawień już wkrótce",
+      "dashboard.sections.profile.comingSoon": "Sekcja Profilu już wkrótce"
     }
   },
   en: {
@@ -682,7 +690,15 @@ const resources = {
 
       // Business Profile Modal
       "businessProfile.modalTitle": "Review Business Profile",
-      "businessProfile.modalSubtitle": "The agent analyzed your website and created a business profile"
+      "businessProfile.modalSubtitle": "The agent analyzed your website and created a business profile",
+
+      // Dashboard Sections - Coming Soon
+      "dashboard.sections.automations.comingSoon": "Automations section coming soon",
+      "dashboard.sections.prompts.comingSoon": "Prompts section coming soon",
+      "dashboard.sections.campaigns.comingSoon": "Campaigns section coming soon", 
+      "dashboard.sections.ads.comingSoon": "Ads section coming soon",
+      "dashboard.sections.settings.comingSoon": "Settings section coming soon",
+      "dashboard.sections.profile.comingSoon": "Profile section coming soon"
     }
   }
 };

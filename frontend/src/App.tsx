@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { AppSection, LoadingState, BusinessProfile, User, AuthResponse } from './types';
+import { LoadingState, BusinessProfile, User, AuthResponse } from './types';
 import { startBackgroundAnalysis, checkAnalysisStatus, registerUser, loginUser, createBusinessProfile } from './services/api';
 import { tokenManager } from './services/tokenManager';
 
@@ -13,11 +14,13 @@ import BusinessForm from './components/BusinessForm';
 import SignupForm from './components/SignupForm';
 import SignInForm from './components/SignInForm';
 import Dashboard from './components/Dashboard';
-import BusinessProfiles from './components/BusinessProfiles';
+import ProtectedRoute from './components/ProtectedRoute';
 
-function App() {
+// Create a separate component for the app content that can use router hooks
+function AppContent() {
   const { t } = useTranslation();
-  const [currentSection, setCurrentSection] = useState<AppSection>(AppSection.URL_INPUT);
+  const navigate = useNavigate();
+  const location = useLocation();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisData, setAnalysisData] = useState<BusinessProfile | null>(null);
   const [openaiResponseId, setOpenaiResponseId] = useState<string | null>(null);
@@ -36,7 +39,7 @@ function App() {
 
   const handleAnalyze = async (url: string) => {
     setIsAnalyzing(true);
-    setCurrentSection(AppSection.LOADING);
+    navigate('/loading');
     
     try {
       // Start background analysis
@@ -69,7 +72,7 @@ function App() {
       document.body.appendChild(errorDiv);
       setTimeout(() => errorDiv.remove(), 5000);
       
-      setCurrentSection(AppSection.URL_INPUT);
+      navigate('/');
       setIsAnalyzing(false);
     }
   };
@@ -114,7 +117,7 @@ function App() {
         if (statusResult.status === 'completed' && statusResult.data) {
           setAnalysisData(statusResult.data);
           setTimeout(() => {
-            setCurrentSection(AppSection.FORM);
+            navigate('/form');
             setIsAnalyzing(false);
           }, 1000);
         } else if (statusResult.status === 'failed' || statusResult.status === 'canceled') {
@@ -156,7 +159,7 @@ function App() {
         document.body.appendChild(errorDiv);
         setTimeout(() => errorDiv.remove(), 5000);
         
-        setCurrentSection(AppSection.URL_INPUT);
+        navigate('/');
         setIsAnalyzing(false);
         setLoadingState({
           isLoading: false,
@@ -171,11 +174,11 @@ function App() {
   };
 
   const handleSkipToForm = () => {
-    setCurrentSection(AppSection.FORM);
+    navigate('/form');
   };
 
   const handleReanalyze = () => {
-    setCurrentSection(AppSection.URL_INPUT);
+    navigate('/');
     setAnalysisData(null);
     setOpenaiResponseId(null);
     setAcceptedProfileData(null);
@@ -183,11 +186,11 @@ function App() {
 
   const handleAcceptProfile = (profileData: BusinessProfile) => {
     setAcceptedProfileData(profileData);
-    setCurrentSection(AppSection.SIGNUP);
+    navigate('/signup');
   };
 
   const handleBackToProfile = () => {
-    setCurrentSection(AppSection.FORM);
+    navigate('/form');
   };
 
   const handleSignup = async (email: string, password: string) => {
@@ -240,7 +243,7 @@ function App() {
       setTimeout(() => successDiv.remove(), 5000);
 
       // Redirect to dashboard
-      setCurrentSection(AppSection.DASHBOARD);
+      navigate('/dashboard');
       
     } catch (error) {
       console.error('Signup error:', error);
@@ -296,7 +299,7 @@ function App() {
       setTimeout(() => successDiv.remove(), 5000);
 
       // Redirect to dashboard
-      setCurrentSection(AppSection.DASHBOARD);
+      navigate('/dashboard');
       
     } catch (error) {
       console.error('Sign in error:', error);
@@ -318,26 +321,19 @@ function App() {
   };
 
   const handleBackToMain = () => {
-    setCurrentSection(AppSection.URL_INPUT);
+    navigate('/');
   };
 
   const handleShowSignIn = () => {
-    setCurrentSection(AppSection.SIGNIN);
+    navigate('/signin');
   };
 
-  const handleShowBusinessProfiles = () => {
-    setCurrentSection(AppSection.BUSINESS_PROFILES);
-  };
-
-  const handleBackToDashboard = () => {
-    setCurrentSection(AppSection.DASHBOARD);
-  };
 
   const handleLogout = () => {
     setCurrentUser(null);
     setAuthToken(null);
     setAcceptedProfileData(null);
-    setCurrentSection(AppSection.URL_INPUT);
+    navigate('/');
     
     // Use token manager for logout
     tokenManager.logout();
@@ -356,22 +352,23 @@ function App() {
       
       // Escape to go back
       if (e.key === 'Escape') {
-        if (currentSection === AppSection.FORM) {
+        const path = location.pathname;
+        if (path === '/form') {
           handleReanalyze();
-        } else if (currentSection === AppSection.LOADING) {
-          setCurrentSection(AppSection.URL_INPUT);
+        } else if (path === '/loading') {
+          navigate('/');
           setIsAnalyzing(false);
-        } else if (currentSection === AppSection.SIGNUP) {
-          setCurrentSection(AppSection.FORM);
-        } else if (currentSection === AppSection.SIGNIN) {
-          setCurrentSection(AppSection.URL_INPUT);
+        } else if (path === '/signup') {
+          navigate('/form');
+        } else if (path === '/signin') {
+          navigate('/');
         }
       }
     };
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [currentSection]);
+  }, [location.pathname, navigate, handleReanalyze]);
 
   // Initialize token management and load authentication state
   useEffect(() => {
@@ -386,7 +383,7 @@ function App() {
         setCurrentUser(null);
         setAuthToken(null);
         setAcceptedProfileData(null);
-        setCurrentSection(AppSection.URL_INPUT);
+        navigate('/');
       }
     );
 
@@ -405,12 +402,9 @@ function App() {
           setAuthToken(savedToken);
           
           // Only set to dashboard if we're not already in an authenticated section
-          if (currentSection === AppSection.URL_INPUT || 
-              currentSection === AppSection.LOADING || 
-              currentSection === AppSection.FORM || 
-              currentSection === AppSection.SIGNUP || 
-              currentSection === AppSection.SIGNIN) {
-            setCurrentSection(AppSection.DASHBOARD);
+          const publicPaths = ['/', '/loading', '/form', '/signup', '/signin'];
+          if (publicPaths.includes(location.pathname)) {
+            navigate('/dashboard');
           }
         } catch (error) {
           console.error('Error parsing saved user data:', error);
@@ -431,12 +425,13 @@ function App() {
   useEffect(() => {
     if (currentUser && isAuthLoaded) {
       // Only redirect to dashboard if user is not in an authenticated section
-      const authenticatedSections = [AppSection.DASHBOARD, AppSection.BUSINESS_PROFILES];
-      if (!authenticatedSections.includes(currentSection)) {
-        setCurrentSection(AppSection.DASHBOARD);
+      const authenticatedPaths = ['/dashboard'];
+      const currentPath = location.pathname;
+      if (!authenticatedPaths.some(path => currentPath.startsWith(path))) {
+        navigate('/dashboard');
       }
     }
-  }, [currentUser, currentSection, isAuthLoaded]);
+  }, [currentUser, isAuthLoaded, location.pathname, navigate]);
 
   // Show loading screen while checking authentication
   if (!isAuthLoaded) {
@@ -452,74 +447,130 @@ function App() {
     );
   }
 
-  // Render dashboard and business profiles with the same layout
-  if ((currentSection === AppSection.DASHBOARD || currentSection === AppSection.BUSINESS_PROFILES) && currentUser) {
-    return (
-      <Dashboard
-        user={currentUser}
-        authToken={authToken || ''}
-        onLogout={handleLogout}
-        onProfileCreated={(refreshFn) => setRefreshBusinessProfiles(() => refreshFn)}
-        onTokenRefreshed={(newToken) => {
-          setAuthToken(newToken);
-          localStorage.setItem('authToken', newToken);
-        }}
-      />
-    );
-  }
-
-
-
   return (
-    <div className="min-h-screen bg-gray-50 scroll-smooth flex flex-col">
-      <BackgroundElements />
+    <Routes>
+      {/* Protected Dashboard Routes */}
+      <Route path="/dashboard/*" element={
+        <ProtectedRoute isAuthenticated={!!currentUser}>
+          <Dashboard
+            user={currentUser!}
+            authToken={authToken || ''}
+            onLogout={handleLogout}
+            onProfileCreated={(refreshFn) => setRefreshBusinessProfiles(() => refreshFn)}
+            onTokenRefreshed={(newToken) => {
+              setAuthToken(newToken);
+              localStorage.setItem('authToken', newToken);
+            }}
+          />
+        </ProtectedRoute>
+      } />
       
-      <div className="relative z-10 flex flex-col min-h-screen">
-        <Header onSignIn={handleShowSignIn} />
-        
-        <div className="flex-1 flex items-center justify-center">
-          <div className="w-full">
-            {currentSection === AppSection.URL_INPUT && (
-              <URLSection 
-                onAnalyze={handleAnalyze}
-                onSkipToForm={handleSkipToForm}
-                isAnalyzing={isAnalyzing}
-              />
-            )}
-            
-            {currentSection === AppSection.LOADING && (
-              <LoadingSection 
-                loadingState={loadingState}
-              />
-            )}
-            
-            {currentSection === AppSection.FORM && (
-              <BusinessForm 
-                initialData={analysisData}
-                onReanalyze={handleReanalyze}
-                onAcceptProfile={handleAcceptProfile}
-              />
-            )}
-
-            {currentSection === AppSection.SIGNUP && (
-              <SignupForm 
-                onBack={handleBackToProfile}
-                onSignup={handleSignup}
-                isSubmitting={isSigningUp}
-              />
-            )}
-
-            {currentSection === AppSection.SIGNIN && (
-              <SignInForm 
-                onBack={handleBackToMain}
-                onSignIn={handleSignIn}
-                isSubmitting={isSigningIn}
-              />
-            )}
+      {/* Public Routes */}
+      <Route path="/" element={
+        <div className="min-h-screen bg-gray-50 scroll-smooth flex flex-col">
+          <BackgroundElements />
+          <div className="relative z-10 flex flex-col min-h-screen">
+            <Header onSignIn={handleShowSignIn} />
+            <div className="flex-1 flex items-center justify-center">
+              <div className="w-full">
+                <URLSection 
+                  onAnalyze={handleAnalyze}
+                  onSkipToForm={handleSkipToForm}
+                  isAnalyzing={isAnalyzing}
+                />
+              </div>
+            </div>
           </div>
         </div>
-      </div>
-    </div>
+      } />
+      
+      <Route path="/loading" element={
+        <div className="min-h-screen bg-gray-50 scroll-smooth flex flex-col">
+          <BackgroundElements />
+          <div className="relative z-10 flex flex-col min-h-screen">
+            <Header onSignIn={handleShowSignIn} />
+            <div className="flex-1 flex items-center justify-center">
+              <div className="w-full">
+                <LoadingSection 
+                  loadingState={loadingState}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      } />
+      
+      <Route path="/form" element={
+        <div className="min-h-screen bg-gray-50 scroll-smooth flex flex-col">
+          <BackgroundElements />
+          <div className="relative z-10 flex flex-col min-h-screen">
+            <Header onSignIn={handleShowSignIn} />
+            <div className="flex-1 flex items-center justify-center">
+              <div className="w-full">
+                <BusinessForm 
+                  initialData={analysisData}
+                  onReanalyze={handleReanalyze}
+                  onAcceptProfile={handleAcceptProfile}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      } />
+      
+      <Route path="/signup" element={
+        <div className="min-h-screen bg-gray-50 scroll-smooth flex flex-col">
+          <BackgroundElements />
+          <div className="relative z-10 flex flex-col min-h-screen">
+            <Header onSignIn={handleShowSignIn} />
+            <div className="flex-1 flex items-center justify-center">
+              <div className="w-full">
+                <SignupForm 
+                  onBack={handleBackToProfile}
+                  onSignup={handleSignup}
+                  isSubmitting={isSigningUp}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      } />
+      
+      <Route path="/signin" element={
+        <div className="min-h-screen bg-gray-50 scroll-smooth flex flex-col">
+          <BackgroundElements />
+          <div className="relative z-10 flex flex-col min-h-screen">
+            <Header onSignIn={handleShowSignIn} />
+            <div className="flex-1 flex items-center justify-center">
+              <div className="w-full">
+                <SignInForm 
+                  onBack={handleBackToMain}
+                  onSignIn={handleSignIn}
+                  isSubmitting={isSigningIn}
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      } />
+      
+      {/* Redirect authenticated users from auth routes */}
+      {currentUser && (
+        <>
+          <Route path="/signin" element={<Navigate to="/dashboard" replace />} />
+          <Route path="/signup" element={<Navigate to="/dashboard" replace />} />
+        </>
+      )}
+    </Routes>
+  );
+}
+
+// Main App component that provides the Router context
+function App() {
+  return (
+    <Router>
+      <AppContent />
+    </Router>
   );
 }
 

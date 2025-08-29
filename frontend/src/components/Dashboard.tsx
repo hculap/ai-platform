@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import {
   User, Building2, Settings, LogOut, Search, Bell,
   Bot, Zap, FileText, Video, Target, TrendingUp, Megaphone,
@@ -42,8 +43,11 @@ interface NavSection {
 
 const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProfileCreated, onTokenRefreshed }) => {
   const { t } = useTranslation();
+  const location = useLocation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
-  const [activeSection, setActiveSection] = useState('dashboard');
+  
+  // Get current active section from URL
+  const activeSection = location.pathname.split('/')[2] || 'overview';
 
   // Real data state
   const [agentsCount, setAgentsCount] = useState<number>(0);
@@ -263,11 +267,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
               )}
               <nav className="space-y-1 px-2">
                 {section.items.map((item) => (
-                  <button
+                  <Link
                     key={item.id}
-                    onClick={() => {
-                      setActiveSection(item.id);
-                    }}
+                    to={`/dashboard/${item.id}`}
                     className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
                       activeSection === item.id
                         ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600'
@@ -285,7 +287,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                         )}
                       </>
                     )}
-                  </button>
+                  </Link>
                 ))}
               </nav>
             </div>
@@ -295,20 +297,20 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
           {!sidebarCollapsed && (
             <div className="mt-auto pt-4 border-t border-gray-200">
               <nav className="space-y-1 px-2">
-                <button
-                  onClick={() => setActiveSection('settings')}
+                <Link
+                  to="/dashboard/settings"
                   className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors"
                 >
                   <Settings className="w-5 h-5 mr-3" />
                   {t('dashboard.nav.settings')}
-                </button>
-                <button
-                  onClick={() => setActiveSection('profile')}
+                </Link>
+                <Link
+                  to="/dashboard/profile"
                   className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors"
                 >
                   <User className="w-5 h-5 mr-3" />
                   {t('dashboard.nav.profile')}
-                </button>
+                </Link>
               </nav>
             </div>
           )}
@@ -400,37 +402,44 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
         {/* Dashboard Content */}
         <main className="flex-1 overflow-y-auto p-6">
           <div className="max-w-7xl mx-auto">
-            {/* Render different content based on active section */}
-            {activeSection === 'business-profiles' ? (
-              <BusinessProfiles
-                authToken={authToken}
-                onCreateProfile={() => {
-                  // For now, navigate back to URL input to create new profile
-                  window.location.href = '/';
-                }}
-                onEditProfile={(profile) => {
-                  // For now, show alert - can be enhanced later
-                  alert(`Edit profile: ${profile.name}`);
-                }}
-                onTokenRefreshed={onTokenRefreshed}
-                onProfilesChanged={refreshBusinessProfiles}
-              />
-            ) : activeSection === 'agents' ? (
-              <Agents
-                authToken={authToken}
-                onTokenRefreshed={onTokenRefreshed}
-                onNavigateToBusinessProfiles={() => setActiveSection('business-profiles')}
-                onProfileCreated={refreshBusinessProfiles}
-                onProfilesChanged={refreshBusinessProfiles}
-              />
-            ) : activeSection === 'competition' ? (
-              <Competition
-                businessProfileId={selectedBusinessProfile?.id}
-                authToken={authToken}
-                onTokenRefreshed={onTokenRefreshed}
-                onCompetitionsChanged={refreshCompetitionsCount}
-              />
-            ) : (
+            {/* Render different content based on routes */}
+            <Routes>
+              <Route path="business-profiles" element={
+                <BusinessProfiles
+                  authToken={authToken}
+                  onCreateProfile={() => {
+                    // For now, navigate back to URL input to create new profile
+                    window.location.href = '/';
+                  }}
+                  onEditProfile={(profile) => {
+                    // For now, show alert - can be enhanced later
+                    alert(`Edit profile: ${profile.name}`);
+                  }}
+                  onTokenRefreshed={onTokenRefreshed}
+                  onProfilesChanged={refreshBusinessProfiles}
+                />
+              } />
+              
+              <Route path="agents" element={
+                <Agents
+                  authToken={authToken}
+                  onTokenRefreshed={onTokenRefreshed}
+                  onNavigateToBusinessProfiles={() => window.location.href = '/dashboard/business-profiles'}
+                  onProfileCreated={refreshBusinessProfiles}
+                  onProfilesChanged={refreshBusinessProfiles}
+                />
+              } />
+              
+              <Route path="competition" element={
+                <Competition
+                  businessProfileId={selectedBusinessProfile?.id}
+                  authToken={authToken}
+                  onTokenRefreshed={onTokenRefreshed}
+                  onCompetitionsChanged={refreshCompetitionsCount}
+                />
+              } />
+              
+              <Route path="overview" element={
               <>
                 {/* Welcome Section */}
                 <div className="mb-8">
@@ -533,7 +542,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
               </div>
             </div>
               </>
-            )}
+              } />
+              
+              {/* Default route - redirect to overview */}
+              <Route path="" element={<Navigate to="overview" replace />} />
+              
+              {/* Placeholder routes for other sections */}
+              <Route path="automations" element={<div className="text-center py-12"><p>{t('dashboard.sections.automations.comingSoon', 'Sekcja Automatyzacji już wkrótce')}</p></div>} />
+              <Route path="prompts" element={<div className="text-center py-12"><p>{t('dashboard.sections.prompts.comingSoon', 'Sekcja Promptów już wkrótce')}</p></div>} />
+              <Route path="campaigns" element={<div className="text-center py-12"><p>{t('dashboard.sections.campaigns.comingSoon', 'Sekcja Kampanii już wkrótce')}</p></div>} />
+              <Route path="ads" element={<div className="text-center py-12"><p>{t('dashboard.sections.ads.comingSoon', 'Sekcja Reklam już wkrótce')}</p></div>} />
+              <Route path="settings" element={<div className="text-center py-12"><p>{t('dashboard.sections.settings.comingSoon', 'Sekcja Ustawień już wkrótce')}</p></div>} />
+              <Route path="profile" element={<div className="text-center py-12"><p>{t('dashboard.sections.profile.comingSoon', 'Sekcja Profilu już wkrótce')}</p></div>} />
+            </Routes>
           </div>
         </main>
       </div>
