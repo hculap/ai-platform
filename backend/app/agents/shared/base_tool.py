@@ -438,6 +438,70 @@ class BaseTool(ABC):
         """
         pass
     
+    async def get_status(self, job_id: str, user_id: Optional[Union[int, str]] = None) -> ToolOutput:
+        """
+        Get the status of a background job.
+        
+        This method can be overridden by subclasses to provide custom status checking logic.
+        Default implementation uses OpenAI response ID for status checking.
+        
+        Args:
+            job_id: The job ID (typically OpenAI response ID) to check status for
+            user_id: Optional user ID for authorization
+            
+        Returns:
+            ToolOutput with status information and results if completed
+        """
+        if not self.openai_client:
+            return ToolOutput.error_response("No OpenAI configuration for status checking")
+        
+        try:
+            # Import here to avoid circular imports
+            from ...services.openai_client import OpenAIClientFactory
+            
+            openai_client = OpenAIClientFactory.get_client()
+            openai_response = openai_client.get_response_status(job_id)
+
+            if not openai_response.success:
+                logger.error(f"Failed to check OpenAI status: {openai_response.error}")
+                return ToolOutput.error_response(f"Failed to check status: {openai_response.error}")
+            
+            # Process response based on OpenAI status values
+            status = getattr(openai_response, 'status', 'unknown')
+            
+            if status == 'completed':
+                # Extract content from the completed response
+                content = getattr(openai_response, 'content', None)
+                
+                if content:
+                    return ToolOutput.success_response({
+                        'status': 'completed',
+                        'content': content
+                    })
+                else:
+                    return ToolOutput.success_response({
+                        'status': 'error',
+                        'message': 'Analysis completed but no content was generated. Please check OpenAI API key configuration.'
+                    })
+            elif status in ['failed', 'canceled']:
+                error_msg = getattr(openai_response, 'error', None) or f"OpenAI analysis {status}"
+                return ToolOutput.error_response(error_msg)
+            elif status in ['pending', 'queued', 'in_progress']:
+                return ToolOutput.success_response({'status': status})
+            else:
+                return ToolOutput.success_response({
+                    'status': status,
+                    'message': f'Unknown OpenAI status: {status}'
+                })
+            
+        except Exception as e:
+            logger.exception(f"Status check failed for job {job_id}: {e}")
+            return ToolOutput.success_response({
+                'status': 'error',
+                'message': f'Status check failed: {str(e)}',
+                'job_id': job_id
+            })
+    
     def validate_input(self, input_data: ToolInput) -> ToolValidationResult:
         """
         Validate input parameters before execution.

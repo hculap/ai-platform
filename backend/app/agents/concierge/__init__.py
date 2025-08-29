@@ -9,7 +9,6 @@ from typing import Any, Dict, Optional
 
 from ..base import BaseAgent, AgentInput, AgentOutput, AgentMetadata, create_agent_metadata, AgentCapabilities
 from .tools.analyzewebsiteTool import AnalyzeWebsiteTool
-from .tools.checkAnalysisStatusTool import CheckAnalysisStatusTool
 from ...utils.messages import (
     get_message, AGENT_ACTION_PARAMETER_REQUIRED, AGENT_UNKNOWN_ACTION,
     AGENT_EXECUTION_FAILED, AGENT_UNKNOWN_ERROR
@@ -21,18 +20,12 @@ class ConciergeAgent(BaseAgent):
     
     def __init__(self):
         """Initialize the Concierge Agent."""
-        # Initialize tools
+        # Initialize unified analyze website tool (handles both execution and status checking)
         analyze_website_tool = AnalyzeWebsiteTool()
-        from .tools.checkAnalysisStatusTool import TOOL_CONFIG as CHECK_STATUS_TOOL_CONFIG, OPENAI_CONFIG as CHECK_STATUS_OPENAI_CONFIG
-        check_status_tool = CheckAnalysisStatusTool(
-            tool_config=CHECK_STATUS_TOOL_CONFIG,
-            openai_config=CHECK_STATUS_OPENAI_CONFIG
-        )
 
         capabilities = AgentCapabilities(
             tools={
-                'analyze-website': analyze_website_tool,
-                'check-analysis-status': check_status_tool
+                'analyze-website': analyze_website_tool
             },
             resources={},
             prompts={},

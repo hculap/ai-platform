@@ -5,8 +5,11 @@ Creates business profiles from website analysis.
 
 import time
 import json
+import logging
 from typing import Dict, Any, Optional, Union
 from urllib.parse import urlparse
+
+logger = logging.getLogger(__name__)
 
 from ...shared.base_tool import (
     BaseTool, 
@@ -267,6 +270,116 @@ class AnalyzeWebsiteTool(BaseTool):
     
 
     
+    async def get_status(self, job_id: str, user_id: Optional[str] = None) -> ToolOutput:
+        """
+        Get the status of a background analysis request.
+        Override the base class method to provide custom business profile parsing.
+        
+        Args:
+            job_id: The OpenAI response ID to check status for
+            user_id: Optional user ID for authorization
+            
+        Returns:
+            ToolOutput with status information and results if completed
+        """
+        try:
+            # Import here to avoid circular imports
+            from ....services.openai_client import OpenAIClientFactory
+            
+            openai_client = OpenAIClientFactory.get_client()
+            openai_response = openai_client.get_response_status(job_id)
+
+            if not openai_response.success:
+                logger.error(f"Failed to check OpenAI status: {openai_response.error}")
+                return ToolOutput(
+                    success=False,
+                    error=f"Failed to check status: {openai_response.error}",
+                    data=None
+                )
+            
+            # Process response based on OpenAI status values
+            status = getattr(openai_response, 'status', 'unknown')
+            
+            if status == 'completed':
+                # Extract content from the completed response
+                content = getattr(openai_response, 'content', None)
+                
+                if content:
+                    # Parse the business profile from OpenAI response
+                    try:
+                        parsed_content = self._parse_business_profile_for_status(content)
+                        return ToolOutput(
+                            success=True,
+                            data={
+                                'status': 'completed',
+                                'business_profile': parsed_content['business_profile']
+                            }
+                        )
+                    except Exception as e:
+                        # Return error status instead of failing
+                        return ToolOutput(
+                            success=True,
+                            data={
+                                'status': 'error',
+                                'message': f'Failed to parse analysis result: {str(e)}'
+                            }
+                        )
+                else:
+                    # This can happen with invalid API keys or failed OpenAI requests
+                    return ToolOutput(
+                        success=True,
+                        data={
+                            'status': 'error',
+                            'message': 'Analysis completed but no content was generated. Please check OpenAI API key configuration.'
+                        }
+                    )
+            elif status in ['failed', 'canceled']:
+                error_msg = getattr(openai_response, 'error', None) or f"OpenAI analysis {status}"
+                return ToolOutput(
+                    success=False,
+                    error=error_msg,
+                    data=None
+                )
+            elif status in ['pending', 'queued', 'in_progress']:  # Handle all possible processing statuses
+                # Still processing - use OpenAI status directly
+                return ToolOutput(
+                    success=True,
+                    data={
+                        'status': status  # Return actual OpenAI status
+                    }
+                )
+            else:
+                # Unknown status - use OpenAI status directly
+                return ToolOutput(
+                    success=True,
+                    data={
+                        'status': status,
+                        'message': f'Unknown OpenAI status: {status}'
+                    }
+                )
+            
+        except Exception as e:
+            # Always return a safe fallback response
+            return ToolOutput(
+                success=True,
+                data={
+                    'status': 'error',
+                    'message': f'Status check failed: {str(e)}',
+                    'openai_response_id': job_id
+                }
+            )
+
+    def _parse_business_profile_for_status(self, content: str) -> Dict[str, Any]:
+        """Parse business profile from OpenAI response content for status checking."""
+        result = self.profile_parser.parse(content)
+        
+        # Ensure field mappings are applied
+        from ....agents.shared.business_profile_utils import BusinessProfileFieldMappings
+        if isinstance(result, dict) and 'business_profile' in result:
+            BusinessProfileFieldMappings.normalize_fields(result['business_profile'])
+        
+        return result
+
     def _create_error_output(self, error_message: str, start_time: float) -> ToolOutput:
         """
         Create an error ToolOutput.

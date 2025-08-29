@@ -177,12 +177,17 @@ def get_agent_tools(slug: str):
         }), 500
 
 
-@agents_bp.route('/<string:slug>/tools/<string:tool_slug>/call/', methods=['POST'])
-@agents_bp.route('/<string:slug>/tools/<string:tool_slug>/call', methods=['POST'])
+@agents_bp.route('/<string:slug>/tools/<string:tool_slug>/call/', methods=['POST', 'GET'])
+@agents_bp.route('/<string:slug>/tools/<string:tool_slug>/call', methods=['POST', 'GET'])
 @conditional_auth
 def execute_tool(slug: str, tool_slug: str):
-    """Execute a specific tool and create interaction record as specified in API_SCHEMA.md."""
+    """Execute a specific tool or check status as specified in unified API design."""
     try:
+        # Handle GET requests for status checking
+        if request.method == 'GET':
+            return handle_tool_status_check(slug, tool_slug)
+        
+        # Handle POST requests for tool execution
         data = request.get_json() or {}
 
         # Get current user (may be None for public agents)
@@ -355,6 +360,88 @@ def execute_tool(slug: str, tool_slug: str):
     except Exception as error:
         from .. import log_exception
         log_exception(logger, error, f"Execute tool endpoint error - Agent: {slug}, Tool: {tool_slug}")
+        return jsonify({
+            'error': ERROR_SERVER_ERROR,
+            'message': get_message(ERROR_SERVER_ERROR)
+        }), 500
+
+
+def handle_tool_status_check(slug: str, tool_slug: str):
+    """Handle GET requests for checking tool execution status."""
+    try:
+        # Get job_id parameter from query string
+        job_id = request.args.get('job_id')
+        if not job_id:
+            return jsonify({
+                'error': ERROR_VALIDATION_ERROR,
+                'message': 'job_id parameter is required for status checking'
+            }), 400
+
+        # Get current user (may be None for public agents)
+        current_user_id = None
+        auth_header = request.headers.get('Authorization')
+        if auth_header:
+            try:
+                verify_jwt_in_request()
+                current_user_id = get_jwt_identity()
+            except Exception:
+                pass  # Keep current_user_id as None if JWT verification fails
+
+        # Get agent from registry
+        agent = AgentRegistry.get(slug)
+        if not agent:
+            return jsonify({
+                'error': ERROR_NOT_FOUND,
+                'message': get_message(ERROR_NOT_FOUND)
+            }), 404
+
+        # Check if tool exists
+        if tool_slug not in agent.capabilities.tools:
+            return jsonify({
+                'error': ERROR_NOT_FOUND,
+                'message': get_message(ERROR_NOT_FOUND)
+            }), 404
+
+        tool = agent.capabilities.tools[tool_slug]
+
+        # Execute status check asynchronously
+        start_time = time.time()
+
+        try:
+            import asyncio
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+            try:
+                result = loop.run_until_complete(tool.get_status(job_id, current_user_id))
+            finally:
+                loop.close()
+            
+            execution_time = time.time() - start_time
+
+            if result.success:
+                response_data = {
+                    'status': 'completed',
+                    'data': result.data
+                }
+                return jsonify(response_data)
+            else:
+                return jsonify({
+                    'error': ERROR_SERVER_ERROR,
+                    'message': result.error or get_message(ERROR_SERVER_ERROR)
+                }), 500
+
+        except Exception as tool_error:
+            execution_time = time.time() - start_time
+            from .. import log_exception
+            log_exception(logger, tool_error, f"Status check failed - Agent: {slug}, Tool: {tool_slug}, Job: {job_id}")
+            return jsonify({
+                'error': ERROR_SERVER_ERROR,
+                'message': get_message(ERROR_SERVER_ERROR)
+            }), 500
+
+    except Exception as error:
+        from .. import log_exception
+        log_exception(logger, error, f"Status check endpoint error - Agent: {slug}, Tool: {tool_slug}")
         return jsonify({
             'error': ERROR_SERVER_ERROR,
             'message': get_message(ERROR_SERVER_ERROR)
