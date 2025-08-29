@@ -99,9 +99,7 @@ export const checkAnalysisStatus = async (openaiResponseId: string): Promise<{
   error?: string 
 }> => {
   try {
-    const response = await api.post('/agents/business-concierge/tools/check-analysis-status/call', {
-      input: { openai_response_id: openaiResponseId }
-    });
+    const response = await api.get(`/agents/business-concierge/tools/analyze-website/call?job_id=${openaiResponseId}`);
 
     if (response.data && response.data.data) {
       const analysisData = response.data.data;
@@ -1020,18 +1018,12 @@ export const checkCompetitorResearchStatus = async (openaiResponseId: string, au
   isTokenExpired?: boolean;
 }> => {
   try {
-    const headers: any = {
-      'Content-Type': 'application/json'
-    };
+    const headers: any = {};
     if (authToken) {
       headers.Authorization = `Bearer ${authToken}`;
     }
 
-    const response = await api.post('/agents/competitors-researcher/tools/check-analysis-status/call', {
-      input: { 
-        openai_response_id: openaiResponseId 
-      }
-    }, { headers });
+    const response = await api.get(`/agents/competitors-researcher/tools/find-competitors/call?job_id=${openaiResponseId}`, { headers });
 
     if (response.data && response.data.data) {
       const researchData = response.data.data;
