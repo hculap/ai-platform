@@ -16,7 +16,7 @@ import {
   Loader2,
   CheckCircle
 } from 'lucide-react';
-import { getAgents, executeAgent, checkAnalysisStatus, createBusinessProfile, refreshAuthToken } from '../services/api';
+import { getAgents, executeAgent, checkAnalysisStatus, createBusinessProfile } from '../services/api';
 import BusinessForm, { BusinessFormProps } from './BusinessForm';
 import { BusinessProfile, BusinessProfileApi } from '../types';
 
@@ -54,7 +54,6 @@ const Agents: React.FC<AgentsProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [isTokenExpired, setIsTokenExpired] = useState(false);
   
   // Agent execution state
   const [showAgentModal, setShowAgentModal] = useState(false);
@@ -143,14 +142,7 @@ const Agents: React.FC<AgentsProps> = ({
   const fetchAgents = useCallback(async () => {
     try {
       setIsLoading(true);
-      setIsTokenExpired(false);
       const result = await getAgents(authToken);
-
-      if (result.isTokenExpired) {
-        setIsTokenExpired(true);
-        setIsLoading(false);
-        return;
-      }
 
       if (result.success && result.data) {
         setAgents(result.data);
@@ -216,11 +208,6 @@ const Agents: React.FC<AgentsProps> = ({
 
       console.log('📡 Agent execution result:', result);
 
-      if (result.isTokenExpired) {
-        setIsTokenExpired(true);
-        setIsExecuting(false);
-        return;
-      }
 
       if (result.success && result.data) {
         console.log('✅ Agent execution successful, checking response structure...');
@@ -351,42 +338,6 @@ const Agents: React.FC<AgentsProps> = ({
 
       const result = await createBusinessProfile(apiProfileData, authToken);
 
-      if (result.isTokenExpired && onTokenRefreshed) {
-        // Try to refresh the token and retry
-        const refreshResult = await refreshAuthToken();
-        if (refreshResult.success && refreshResult.access_token) {
-          onTokenRefreshed(refreshResult.access_token);
-          // Retry with new token
-          const retryResult = await createBusinessProfile(apiProfileData, refreshResult.access_token);
-          if (retryResult.success) {
-            console.log('Business profile created successfully after token refresh');
-            // Show success notification
-            showNotification('Profil biznesowy został pomyślnie utworzony!', 'success');
-
-            // Refresh business profiles in dashboard header
-            if (onProfileCreated) {
-              await onProfileCreated();
-            }
-
-            // Notify other components that profiles have changed
-            if (onProfilesChanged) {
-              onProfilesChanged();
-            }
-
-            // Close modal and navigate to business profiles
-            setShowBusinessForm(false);
-            setAnalysisResult(null);
-            if (onNavigateToBusinessProfiles) {
-              onNavigateToBusinessProfiles();
-            }
-            return;
-          } else {
-            throw new Error(retryResult.error || 'Failed to create profile');
-          }
-        } else {
-          throw new Error('Authentication token expired. Please log in again.');
-        }
-      }
 
       if (result.success) {
         console.log('Business profile created successfully');
@@ -571,8 +522,9 @@ const Agents: React.FC<AgentsProps> = ({
         
         {/* Content with relative positioning */}
         <div className="relative p-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Top Left - Title and Icon */}
+          {/* Header Section - Title and Available Count */}
+          <div className="flex justify-between items-center mb-8">
+            {/* Left - Title and Icon */}
             <div className="flex items-center gap-4">
               <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg">
                 <Bot className="w-6 h-6 text-white" />
@@ -587,83 +539,76 @@ const Agents: React.FC<AgentsProps> = ({
               </div>
             </div>
 
-            {/* Top Right - Available Count */}
-            <div className="flex justify-end">
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 border border-gray-200/60 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg">
-                    <Sparkles className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-gray-900">
-                      {isLoading ? (
-                        <span className="inline-block w-8 h-5 bg-gray-200 rounded animate-pulse"></span>
-                      ) : (
-                        `${filteredAgents.length}`
-                      )}
-                    </p>
-                    <p className="text-xs text-gray-500">{t('agents.available', 'Dostępnych agentów')}</p>
-                  </div>
+            {/* Right - Available Count */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 border border-gray-200/60 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg">
+                  <Sparkles className="w-4 h-4 text-white" />
                 </div>
-              </div>
-            </div>
-
-            {/* Bottom Left - Search */}
-            <div className="space-y-3">
-              <div className="relative">
-                <div className="relative bg-white/90 backdrop-blur-sm rounded-xl border border-gray-200/60 shadow-lg">
-                  <div className="relative">
-                    <Search className="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder={t('agents.search.placeholder', 'Szukaj agentów...')}
-                      value={searchQuery}
-                      onChange={handleSearchChange}
-                      className="w-full pl-12 pr-12 py-3 bg-transparent border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500 font-medium rounded-xl"
-                    />
-                    {searchQuery && (
-                      <button
-                        onClick={() => setSearchQuery('')}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                <div className="text-right">
+                  <p className="text-lg font-bold text-gray-900">
+                    {isLoading ? (
+                      <span className="inline-block w-8 h-5 bg-gray-200 rounded animate-pulse"></span>
+                    ) : (
+                      `${filteredAgents.length}`
                     )}
-                  </div>
+                  </p>
+                  <p className="text-xs text-gray-500">{t('agents.available', 'Dostępnych agentów')}</p>
                 </div>
               </div>
+            </div>
+          </div>
 
-              {/* Search feedback */}
-              <div className="min-h-[20px]">
-                {searchQuery && !debouncedSearchQuery && (
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
-                    <span>{t('agents.searching', 'Szukam...')}</span>
-                  </div>
-                )}
-
-                {debouncedSearchQuery && filteredAgents.length > 0 && (
-                  <div className="flex items-center gap-2 text-sm text-emerald-600">
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                    <span className="font-medium">
-                      {t('agents.searchResults', 'Znaleziono {{count}} {{type}}', {
-                        count: filteredAgents.length,
-                        type: filteredAgents.length === 1 ? 'agenta' : 'agentów'
-                      })}
-                    </span>
-                  </div>
-                )}
+          {/* Search Section */}
+          <div className="flex justify-between items-center gap-4 mb-2">
+            {/* Search Input */}
+            <div className="flex-1 max-w-md">
+              <div className="relative bg-white/90 backdrop-blur-sm rounded-xl border border-gray-200/60 shadow-lg">
+                <div className="relative">
+                  <Search className="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder={t('agents.search.placeholder', 'Szukaj agentów...')}
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    className="w-full pl-12 pr-12 py-3 bg-transparent border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500 font-medium rounded-xl"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Bottom Right - Help Text */}
-            <div className="flex justify-end items-end">
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 border border-gray-200/60 shadow-sm max-w-sm">
-                <p className="text-xs text-gray-600 leading-relaxed">
-                  {t('agents.helpText', 'Wybierz agenta, aby przeanalizować swoją stronę internetową i automatycznie utworzyć profil biznesowy')}
-                </p>
+            {/* Right - Empty for consistent spacing */}
+            <div></div>
+          </div>
+
+          {/* Search feedback */}
+          <div className="min-h-[20px] mb-2">
+            {searchQuery && !debouncedSearchQuery && (
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+                <span>{t('agents.searching', 'Szukam...')}</span>
               </div>
-            </div>
+            )}
+
+            {debouncedSearchQuery && filteredAgents.length > 0 && (
+              <div className="flex items-center gap-2 text-sm text-emerald-600">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                <span className="font-medium">
+                  {t('agents.searchResults', 'Znaleziono {{count}} {{type}}', {
+                    count: filteredAgents.length,
+                    type: filteredAgents.length === 1 ? 'agenta' : 'agentów'
+                  })}
+                </span>
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -678,27 +623,8 @@ const Agents: React.FC<AgentsProps> = ({
           </div>
         )}
 
-        {!isLoading && isTokenExpired && (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gradient-to-r from-red-600 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-              <div className="w-8 h-8 bg-white rounded-full"></div>
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              {t('agents.tokenExpired', 'Sesja wygasła')}
-            </h3>
-            <p className="text-gray-600 mb-6">
-              {t('agents.tokenExpiredDescription', 'Twoja sesja wygasła. Odśwież stronę, aby kontynuować.')}
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="inline-flex items-center px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors"
-            >
-              🔄 {t('agents.refreshPage', 'Odśwież stronę')}
-            </button>
-          </div>
-        )}
 
-        {!isLoading && !isTokenExpired && filteredAgents.length === 0 && (
+        {!isLoading && filteredAgents.length === 0 && (
           <div className="text-center py-16">
             <div className="relative inline-block">
               <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl flex items-center justify-center mx-auto mb-6 transform rotate-3">
@@ -726,7 +652,7 @@ const Agents: React.FC<AgentsProps> = ({
           </div>
         )}
 
-        {!isLoading && !isTokenExpired && filteredAgents.length > 0 && (
+        {!isLoading && filteredAgents.length > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {filteredAgents.map((agent) => (
               <div

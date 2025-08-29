@@ -24,7 +24,6 @@ import {
   deleteCompetition, 
   createCompetition, 
   updateCompetition, 
-  refreshAuthToken, 
   executeAgent, 
   startBackgroundCompetitorResearch,
   checkCompetitorResearchStatus,
@@ -52,7 +51,6 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [debouncedSearchQuery, setDebouncedSearchQuery] = useState('');
   const [isLoading, setIsLoading] = useState(true);
-  const [isTokenExpired, setIsTokenExpired] = useState(false);
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [showCompetitionForm, setShowCompetitionForm] = useState(false);
   const [editingCompetition, setEditingCompetition] = useState<Competition | null>(null);
@@ -114,14 +112,7 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
   const fetchCompetitions = useCallback(async () => {
     try {
       setIsLoading(true);
-      setIsTokenExpired(false);
       const result = await getCompetitions(authToken, businessProfileId);
-
-      if (result.isTokenExpired) {
-        setIsTokenExpired(true);
-        setIsLoading(false);
-        return;
-      }
 
       if (result.success && result.data) {
         setCompetitions(result.data);
@@ -147,19 +138,7 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
       try {
         const statusResult = await checkCompetitorResearchStatus(openaiResponseId, authToken);
         
-        if (statusResult.isTokenExpired && onTokenRefreshed) {
-          const refreshResult = await refreshAuthToken();
-          if (refreshResult.success && refreshResult.access_token) {
-            onTokenRefreshed(refreshResult.access_token);
-            const retryResult = await checkCompetitorResearchStatus(openaiResponseId, refreshResult.access_token);
-            handleStatusResult(retryResult);
-          } else {
-            setResearchStatus('failed');
-            setAiResearchError('Authentication failed');
-          }
-        } else {
-          handleStatusResult(statusResult);
-        }
+        handleStatusResult(statusResult);
       } catch (error) {
         console.error('Error polling research status:', error);
         setResearchStatus('failed');
@@ -171,17 +150,17 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
       if (statusResult.status === 'completed' && statusResult.data) {
         setResearchStatus('completed');
         setFoundCompetitors(Array.isArray(statusResult.data) ? statusResult.data : []);
-        setAiResearchSuccess(`Found ${Array.isArray(statusResult.data) ? statusResult.data.length : 0} potential competitors!`);
+        setAiResearchSuccess(t('competitions.aiResearch.foundPotentialCompetitors', { count: Array.isArray(statusResult.data) ? statusResult.data.length : 0 }));
       } else if (statusResult.status === 'failed' || statusResult.status === 'error') {
         setResearchStatus('failed');
-        setAiResearchError(statusResult.error || 'Research failed');
+        setAiResearchError(statusResult.error || t('competitions.aiResearch.researchFailed'));
       } else {
         setResearchStatus(statusResult.status);
         // Update status message based on current status
         if (statusResult.status === 'in_progress') {
-          setAiResearchSuccess('AI is analyzing your business and finding competitors...');
+          setAiResearchSuccess(t('competitions.aiResearch.aiAnalyzing'));
         } else if (statusResult.status === 'queued') {
-          setAiResearchSuccess('Research request queued, waiting for processing...');
+          setAiResearchSuccess(t('competitions.aiResearch.requestQueued'));
         }
       }
     };
@@ -190,7 +169,7 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
     const interval = setInterval(pollStatus, 3000);
 
     return () => clearInterval(interval);
-  }, [openaiResponseId, researchStatus, authToken, onTokenRefreshed]);
+  }, [openaiResponseId, researchStatus, authToken, onTokenRefreshed, t]);
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -227,19 +206,6 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
     try {
       const result = await deleteCompetition(competitionId, authToken);
 
-      if (result.isTokenExpired && onTokenRefreshed) {
-        // Try to refresh token and retry
-        const refreshResult = await refreshAuthToken();
-        if (refreshResult.success && refreshResult.access_token) {
-          onTokenRefreshed(refreshResult.access_token);
-          const retryResult = await deleteCompetition(competitionId, refreshResult.access_token);
-          if (retryResult.success) {
-            setCompetitions(prev => prev.filter(c => c.id !== competitionId));
-            if (onCompetitionsChanged) onCompetitionsChanged();
-            return;
-          }
-        }
-      }
 
       if (result.success) {
         setCompetitions(prev => prev.filter(c => c.id !== competitionId));
@@ -271,18 +237,6 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
         result = await createCompetition(businessProfileId, competitionData, authToken);
       }
 
-      if (result.isTokenExpired && onTokenRefreshed) {
-        // Try to refresh token and retry
-        const refreshResult = await refreshAuthToken();
-        if (refreshResult.success && refreshResult.access_token) {
-          onTokenRefreshed(refreshResult.access_token);
-          if (editingCompetition && editingCompetition.id) {
-            result = await updateCompetition(editingCompetition.id, competitionData, refreshResult.access_token);
-          } else {
-            result = await createCompetition(businessProfileId, competitionData, refreshResult.access_token);
-          }
-        }
-      }
 
       if (result.success) {
         setShowCompetitionForm(false);
@@ -318,27 +272,7 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
 
       const result = await startBackgroundCompetitorResearch(businessProfileId, authToken);
 
-      if (result.isTokenExpired && onTokenRefreshed) {
-        // Try to refresh token and retry
-        const refreshResult = await refreshAuthToken();
-        if (refreshResult.success && refreshResult.access_token) {
-          onTokenRefreshed(refreshResult.access_token);
-          
-          // Retry with new token
-          const retryResult = await startBackgroundCompetitorResearch(businessProfileId, refreshResult.access_token);
-          if (retryResult.success && retryResult.openaiResponseId) {
-            setOpenaiResponseId(retryResult.openaiResponseId);
-            setResearchStatus('pending');
-            setAiResearchSuccess('Competitor research started in background...');
-          } else {
-            setResearchStatus('failed');
-            setAiResearchError(retryResult.error || 'Failed to start competitor research');
-          }
-        } else {
-          setIsTokenExpired(true);
-          setResearchStatus('failed');
-        }
-      } else if (result.success && result.openaiResponseId) {
+      if (result.success && result.openaiResponseId) {
         setOpenaiResponseId(result.openaiResponseId);
         setResearchStatus('pending');
         setAiResearchSuccess('Competitor research started in background...');
@@ -369,7 +303,7 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
 
   const handleSaveSelectedCompetitors = useCallback(async () => {
     if (selectedCompetitors.size === 0) {
-      alert('Please select at least one competitor to save');
+      alert(t('competitions.aiResearch.selectAtLeastOne'));
       return;
     }
 
@@ -394,21 +328,7 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
 
           const result = await createCompetition(businessProfileId!, competitionData, authToken);
 
-          if (result.isTokenExpired && onTokenRefreshed) {
-            // Try to refresh token and retry
-            const refreshResult = await refreshAuthToken();
-            if (refreshResult.success && refreshResult.access_token) {
-              onTokenRefreshed(refreshResult.access_token);
-              const retryResult = await createCompetition(businessProfileId!, competitionData, refreshResult.access_token);
-              if (retryResult.success) {
-                savedCount++;
-              } else {
-                errorCount++;
-              }
-            } else {
-              errorCount++;
-            }
-          } else if (result.success) {
+          if (result.success) {
             savedCount++;
           } else {
             console.error('Failed to add competitor:', result.error);
@@ -422,7 +342,7 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
 
       // Update UI based on results
       if (savedCount > 0) {
-        setAiResearchSuccess(`Successfully saved ${savedCount} competitor(s)!`);
+        setAiResearchSuccess(t('competitions.aiResearch.savedSuccessfully', { count: savedCount }));
         // Remove saved competitors from the found list
         setFoundCompetitors(prev => prev.filter(competitor => 
           !selectedCompetitors.has(competitor.name)
@@ -442,7 +362,7 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
     } finally {
       setIsAIRearchLoading(false);
     }
-  }, [selectedCompetitors, foundCompetitors, businessProfileId, authToken, onTokenRefreshed, onCompetitionsChanged, fetchCompetitions]);
+  }, [selectedCompetitors, foundCompetitors, businessProfileId, authToken, onTokenRefreshed, onCompetitionsChanged, fetchCompetitions, t]);
 
   const truncateText = (text: string, maxLength: number = 150) => {
     if (text.length <= maxLength) return text;
@@ -501,8 +421,9 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
 
         {/* Content with relative positioning */}
         <div className="relative p-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Top Left - Title and Icon */}
+          {/* Header Section - Title and Count */}
+          <div className="flex justify-between items-center mb-8">
+            {/* Left - Title and Icon */}
             <div className="flex items-center gap-4">
               <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg">
                 <Target className="w-6 h-6 text-white" />
@@ -517,77 +438,54 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
               </div>
             </div>
 
-            {/* Top Right - Available Count */}
-            <div className="flex justify-end">
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 border border-gray-200/60 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg">
-                    <Award className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-gray-900">
-                      {isLoading ? (
-                        <span className="inline-block w-8 h-5 bg-gray-200 rounded animate-pulse"></span>
-                      ) : (
-                        `${filteredCompetitions.length}`
-                      )}
-                    </p>
-                    <p className="text-xs text-gray-500">{t('competitions.available', 'Dostępnych konkurentów')}</p>
-                  </div>
+            {/* Right - Available Count */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 border border-gray-200/60 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg">
+                  <Award className="w-4 h-4 text-white" />
                 </div>
-              </div>
-            </div>
-
-            {/* Bottom Left - Search */}
-            <div className="space-y-3">
-              <div className="relative">
-                <div className="relative bg-white/90 backdrop-blur-sm rounded-xl border border-gray-200/60 shadow-lg">
-                  <div className="relative">
-                    <Search className="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder={t('competitions.search.placeholder', 'Szukaj konkurentów...')}
-                      value={searchQuery}
-                      onChange={handleSearchChange}
-                      className="w-full pl-12 pr-12 py-3 bg-transparent border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500 font-medium rounded-xl"
-                    />
-                    {searchQuery && (
-                      <button
-                        onClick={() => setSearchQuery('')}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                <div className="text-right">
+                  <p className="text-lg font-bold text-gray-900">
+                    {isLoading ? (
+                      <span className="inline-block w-8 h-5 bg-gray-200 rounded animate-pulse"></span>
+                    ) : (
+                      `${filteredCompetitions.length}`
                     )}
-                  </div>
+                  </p>
+                  <p className="text-xs text-gray-500">{t('competitions.available', 'Dostępnych konkurentów')}</p>
                 </div>
               </div>
+            </div>
+          </div>
 
-              {/* Search feedback */}
-              <div className="min-h-[20px]">
-                {searchQuery && !debouncedSearchQuery && (
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
-                    <span>{t('competitions.searching', 'Szukam...')}</span>
-                  </div>
-                )}
-
-                {debouncedSearchQuery && filteredCompetitions.length > 0 && (
-                  <div className="flex items-center gap-2 text-sm text-emerald-600">
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                    <span className="font-medium">
-                      {t('competitions.searchResults', 'Znaleziono {{count}} {{type}}', {
-                        count: filteredCompetitions.length,
-                        type: filteredCompetitions.length === 1 ? 'konkurenta' : 'konkurentów'
-                      })}
-                    </span>
-                  </div>
-                )}
+          {/* Search and Actions Section */}
+          <div className="flex justify-between items-center gap-4 mb-2">
+            {/* Left - Search */}
+            <div className="flex-1 max-w-md">
+              <div className="relative bg-white/90 backdrop-blur-sm rounded-xl border border-gray-200/60 shadow-lg">
+                <div className="relative">
+                  <Search className="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder={t('competitions.search.placeholder', 'Szukaj konkurentów...')}
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    className="w-full pl-12 pr-12 py-3 bg-transparent border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500 font-medium rounded-xl"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
 
-            {/* Bottom Right - Action Buttons */}
-            <div className="flex justify-end items-end gap-3">
+            {/* Right - Action Buttons */}
+            <div className="flex gap-3">
               <button
                 onClick={handleFindCompetitorsWithAI}
                 className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
@@ -604,6 +502,28 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
               </button>
             </div>
           </div>
+
+          {/* Search feedback */}
+          <div className="min-h-[20px] mb-2">
+            {searchQuery && !debouncedSearchQuery && (
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+                <span>{t('competitions.searching', 'Szukam...')}</span>
+              </div>
+            )}
+
+            {debouncedSearchQuery && filteredCompetitions.length > 0 && (
+              <div className="flex items-center gap-2 text-sm text-emerald-600">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                <span className="font-medium">
+                  {t('competitions.searchResults', 'Znaleziono {{count}} {{type}}', {
+                    count: filteredCompetitions.length,
+                    type: filteredCompetitions.length === 1 ? 'konkurenta' : 'konkurentów'
+                  })}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
@@ -617,27 +537,7 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
           </div>
         )}
 
-        {!isLoading && isTokenExpired && (
-          <div className="text-center py-12">
-            <div className="w-16 h-16 bg-gradient-to-r from-red-600 to-red-600 rounded-full flex items-center justify-center mx-auto mb-4 animate-pulse">
-              <div className="w-8 h-8 bg-white rounded-full"></div>
-            </div>
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">
-              {t('competitions.tokenExpired', 'Sesja wygasła')}
-            </h3>
-            <p className="text-gray-600 mb-6">
-              {t('competitions.tokenExpiredDescription', 'Twoja sesja wygasła. Odśwież stronę, aby kontynuować.')}
-            </p>
-            <button
-              onClick={() => window.location.reload()}
-              className="inline-flex items-center px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-semibold rounded-xl transition-colors"
-            >
-              🔄 {t('competitions.refreshPage', 'Odśwież stronę')}
-            </button>
-          </div>
-        )}
-
-        {!isLoading && !isTokenExpired && filteredCompetitions.length === 0 && (
+        {!isLoading && filteredCompetitions.length === 0 && (
           <div className="text-center py-16">
             <div className="relative inline-block">
               <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl flex items-center justify-center mx-auto mb-6 transform rotate-3">
@@ -674,7 +574,7 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
           </div>
         )}
 
-        {!isLoading && !isTokenExpired && filteredCompetitions.length > 0 && (
+        {!isLoading && filteredCompetitions.length > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
             {filteredCompetitions.map((competition) => (
               <div
@@ -974,7 +874,7 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
                     
                     <div className="flex items-center gap-3">
                       <span className="text-sm text-gray-600">
-                        {selectedCompetitors.size} selected
+                        {t('competitions.aiResearch.competitorsSelected', { count: selectedCompetitors.size })}
                       </span>
                       <button
                         onClick={handleSaveSelectedCompetitors}
@@ -982,7 +882,7 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
                         className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
                       >
                         <Save className="w-4 h-4" />
-                        {isAIRearchLoading ? 'Saving...' : `Save Selected (${selectedCompetitors.size})`}
+                        {isAIRearchLoading ? t('competitions.aiResearch.saving') : t('competitions.aiResearch.saveSelectedCount', { count: selectedCompetitors.size })}
                       </button>
                     </div>
                   </div>
@@ -1069,24 +969,24 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
                       </div>
                       
                       <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        {researchStatus === 'starting' && 'Starting AI Research...'}
-                        {researchStatus === 'pending' && 'Research Request Queued...'}
-                        {researchStatus === 'queued' && 'Waiting in Processing Queue...'}
-                        {researchStatus === 'in_progress' && 'AI Analyzing Your Business...'}
+                        {researchStatus === 'starting' && t('competitions.aiResearch.startingResearch')}
+                        {researchStatus === 'pending' && t('competitions.aiResearch.requestQueuedTitle')}
+                        {researchStatus === 'queued' && t('competitions.aiResearch.waitingInQueue')}
+                        {researchStatus === 'in_progress' && t('competitions.aiResearch.aiAnalyzingTitle')}
                       </h3>
                       
                       <p className="text-gray-600 mb-4">
-                        {researchStatus === 'starting' && 'Initializing competitor research system...'}
-                        {researchStatus === 'pending' && 'Your request has been queued for processing...'}
-                        {researchStatus === 'queued' && 'Please wait while we process your request...'}
-                        {researchStatus === 'in_progress' && 'Our AI is analyzing your business profile and finding relevant competitors...'}
+                        {researchStatus === 'starting' && t('competitions.aiResearch.initializingSystem')}
+                        {researchStatus === 'pending' && t('competitions.aiResearch.queuedForProcessing')}
+                        {researchStatus === 'queued' && t('competitions.aiResearch.pleaseWaitProcessing')}
+                        {researchStatus === 'in_progress' && t('competitions.aiResearch.aiAnalyzingProfile')}
                       </p>
 
                       <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 max-w-md mx-auto">
                         <div className="flex items-center gap-2 text-purple-700">
                           <div className="w-2 h-2 bg-purple-600 rounded-full animate-pulse"></div>
                           <span className="text-sm font-medium">
-                            This may take 30-60 seconds to complete
+                            {t('competitions.aiResearch.timeEstimate')}
                           </span>
                         </div>
                       </div>

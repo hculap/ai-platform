@@ -325,8 +325,9 @@ const BusinessProfiles: React.FC<BusinessProfilesProps> = ({
         
         {/* Content with relative positioning */}
         <div className="relative p-8">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            {/* Top Left - Title and Icon */}
+          {/* Header Section - Title and Create Button */}
+          <div className="flex justify-between items-center mb-8">
+            {/* Left - Title and Icon */}
             <div className="flex items-center gap-4">
               <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg">
                 <Building2 className="w-6 h-6 text-white" />
@@ -341,87 +342,86 @@ const BusinessProfiles: React.FC<BusinessProfilesProps> = ({
               </div>
             </div>
 
-            {/* Top Right - Create Button */}
-            <div className="flex justify-end">
+            {/* Right - Profile Count */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 border border-gray-200/60 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg">
+                  <Activity className="w-4 h-4 text-white" />
+                </div>
+                <div className="text-right">
+                  <p className="text-lg font-bold text-gray-900">
+                    {isLoading ? (
+                      <span className="inline-block w-8 h-5 bg-gray-200 rounded animate-pulse"></span>
+                    ) : !debouncedSearchQuery ? (
+                      `${profiles.length}`
+                    ) : (
+                      `${filteredProfiles.length}`
+                    )}
+                  </p>
+                  <p className="text-xs text-gray-500">{t('businessProfiles.totalActive', 'Łącznie aktywnych')}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Search and Actions Section */}
+          <div className="flex justify-between items-center gap-4 mb-2">
+            {/* Left - Search */}
+            <div className="flex-1 max-w-lg">
+              <div className="relative bg-white/90 backdrop-blur-sm rounded-xl border border-gray-200/60 shadow-lg">
+                <div className="relative">
+                  <Search className="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder={t('businessProfiles.search.placeholder', 'Szukaj profili...')}
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    className="w-full pl-12 pr-12 py-3 bg-transparent border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500 font-medium rounded-xl"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Right - Create Button */}
+            <div className="flex gap-3 ml-4">
               <button
                 onClick={handleCreateProfile}
-                className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg transition-all duration-300"
+                className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 whitespace-nowrap"
               >
-                <Plus className="w-4 h-4" />
+                <Plus className="w-5 h-5" />
                 <span>{t('businessProfiles.createNew', 'Utwórz Nowy Profil')}</span>
               </button>
             </div>
+          </div>
 
-            {/* Bottom Left - Search */}
-            <div className="space-y-3">
-              <div className="relative">
-                <div className="relative bg-white/90 backdrop-blur-sm rounded-xl border border-gray-200/60 shadow-lg">
-                  <div className="relative">
-                    <Search className="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder={t('businessProfiles.search.placeholder', 'Szukaj profili...')}
-                      value={searchQuery}
-                      onChange={handleSearchChange}
-                      className="w-full pl-12 pr-12 py-3 bg-transparent border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500 font-medium rounded-xl"
-                    />
-                    {searchQuery && (
-                      <button
-                        onClick={() => setSearchQuery('')}
-                        className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
-                    )}
-                  </div>
-                </div>
+          {/* Search feedback */}
+          <div className="min-h-[20px] mb-2">
+            {searchQuery && !debouncedSearchQuery && (
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+                <span>{t('businessProfiles.searching', 'Szukam...')}</span>
               </div>
+            )}
 
-              {/* Search feedback */}
-              <div className="min-h-[20px]">
-                {searchQuery && !debouncedSearchQuery && (
-                  <div className="flex items-center gap-2 text-sm text-gray-500">
-                    <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
-                    <span>{t('businessProfiles.searching', 'Szukam...')}</span>
-                  </div>
-                )}
-
-                {debouncedSearchQuery && filteredProfiles.length > 0 && (
-                  <div className="flex items-center gap-2 text-sm text-emerald-600">
-                    <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
-                    <span className="font-medium">
-                      {t('businessProfiles.searchResults', 'Znaleziono {{count}} {{type}}', {
-                        count: filteredProfiles.length,
-                        type: filteredProfiles.length === 1 ? 'profil' : 'profili'
-                      })}
-                    </span>
-                  </div>
-                )}
+            {debouncedSearchQuery && filteredProfiles.length > 0 && (
+              <div className="flex items-center gap-2 text-sm text-emerald-600">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                <span className="font-medium">
+                  {t('businessProfiles.searchResults', 'Znaleziono {{count}} {{type}}', {
+                    count: filteredProfiles.length,
+                    type: filteredProfiles.length === 1 ? 'profil' : 'profili'
+                  })}
+                </span>
               </div>
-            </div>
-
-            {/* Bottom Right - Profile Count */}
-            <div className="flex justify-end items-end">
-              <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 border border-gray-200/60 shadow-sm">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-blue-100 rounded-lg">
-                    <Activity className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-medium text-gray-900">
-                      {!debouncedSearchQuery && !isLoading && (
-                        <>{profiles.length} {profiles.length === 1 ? t('businessProfiles.profile', 'Profil') : t('businessProfiles.profiles', 'Profili')}</>
-                      )}
-                      {debouncedSearchQuery && filteredProfiles.length !== profiles.length && (
-                        <>{filteredProfiles.length} {t('businessProfiles.of', 'z')} {profiles.length}</>
-                      )}
-                      {isLoading && <>{t('businessProfiles.loading', 'Ładowanie...')}</>}
-                    </p>
-                    <p className="text-xs text-gray-500">{t('businessProfiles.totalActive', 'Łącznie aktywnych')}</p>
-                  </div>
-                </div>
-              </div>
-            </div>
+            )}
           </div>
         </div>
       </div>

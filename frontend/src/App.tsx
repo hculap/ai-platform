@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AppSection, LoadingState, BusinessProfile, User, AuthResponse } from './types';
 import { startBackgroundAnalysis, checkAnalysisStatus, registerUser, loginUser, createBusinessProfile } from './services/api';
+import { tokenManager } from './services/tokenManager';
 
 // Components
 import BackgroundElements from './components/BackgroundElements';
@@ -338,10 +339,8 @@ function App() {
     setAcceptedProfileData(null);
     setCurrentSection(AppSection.URL_INPUT);
     
-    // Clear localStorage
-    localStorage.removeItem('user');
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('refreshToken');
+    // Use token manager for logout
+    tokenManager.logout();
   };
 
   // Add keyboard shortcuts
@@ -374,57 +373,58 @@ function App() {
     return () => document.removeEventListener('keydown', handleKeyDown);
   }, [currentSection]);
 
-  // Load authentication state from localStorage on app startup
+  // Initialize token management and load authentication state
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    const savedToken = localStorage.getItem('authToken');
-    
-    if (savedUser && savedToken) {
-      try {
-        const user = JSON.parse(savedUser);
-        
-        // Check if token is expired by trying to decode it
-        try {
-          const tokenPayload = JSON.parse(atob(savedToken.split('.')[1]));
-          const currentTime = Math.floor(Date.now() / 1000);
-          
-          if (tokenPayload.exp && tokenPayload.exp < currentTime) {
-            // Token is expired, clear it
-            console.log('Stored token is expired, clearing authentication');
-            localStorage.removeItem('user');
-            localStorage.removeItem('authToken');
-            localStorage.removeItem('refreshToken');
-            setCurrentSection(AppSection.URL_INPUT);
-            setIsAuthLoaded(true);
-            return;
-          }
-        } catch (tokenError) {
-          // Invalid token format, clear it
-          console.error('Invalid token format:', tokenError);
-          localStorage.removeItem('user');
-          localStorage.removeItem('authToken');
-          localStorage.removeItem('refreshToken');
-          setCurrentSection(AppSection.URL_INPUT);
-          setIsAuthLoaded(true);
-          return;
-        }
+    // Set up token manager callbacks
+    tokenManager.setCallbacks(
+      (newToken: string) => {
+        // Token refreshed callback
+        setAuthToken(newToken);
+      },
+      () => {
+        // Logout callback
+        setCurrentUser(null);
+        setAuthToken(null);
+        setAcceptedProfileData(null);
+        setCurrentSection(AppSection.URL_INPUT);
+      }
+    );
 
-        setCurrentUser(user);
-        setAuthToken(savedToken);
-        // Only set to dashboard if we're not already in an authenticated section
-        if (currentSection === AppSection.URL_INPUT || currentSection === AppSection.LOADING || currentSection === AppSection.FORM || currentSection === AppSection.SIGNUP || currentSection === AppSection.SIGNIN) {
-          setCurrentSection(AppSection.DASHBOARD);
+    // Initialize token manager and check for existing auth
+    const isAuthenticated = tokenManager.initialize();
+    
+    if (isAuthenticated) {
+      // Load user from localStorage if token is valid
+      const savedUser = localStorage.getItem('user');
+      const savedToken = tokenManager.getAuthToken();
+      
+      if (savedUser && savedToken) {
+        try {
+          const user = JSON.parse(savedUser);
+          setCurrentUser(user);
+          setAuthToken(savedToken);
+          
+          // Only set to dashboard if we're not already in an authenticated section
+          if (currentSection === AppSection.URL_INPUT || 
+              currentSection === AppSection.LOADING || 
+              currentSection === AppSection.FORM || 
+              currentSection === AppSection.SIGNUP || 
+              currentSection === AppSection.SIGNIN) {
+            setCurrentSection(AppSection.DASHBOARD);
+          }
+        } catch (error) {
+          console.error('Error parsing saved user data:', error);
+          tokenManager.logout();
         }
-      } catch (error) {
-        console.error('Error parsing saved user data:', error);
-        // Clear invalid data
-        localStorage.removeItem('user');
-        localStorage.removeItem('authToken');
-        localStorage.removeItem('refreshToken');
       }
     }
     
     setIsAuthLoaded(true);
+
+    // Cleanup on unmount
+    return () => {
+      tokenManager.stopTokenMonitoring();
+    };
   }, []);
 
   // Auto-redirect if user is already signed in (but allow navigation to other authenticated sections)

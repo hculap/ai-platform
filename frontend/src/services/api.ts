@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { BusinessProfile, BusinessProfileApi, AnalysisResult, AuthResponse } from '../types';
+import { tokenManager } from './tokenManager';
 
 // API Configuration
 const API_BASE_URL = process.env.REACT_APP_API_URL || '/api';
@@ -10,6 +11,56 @@ const api = axios.create({
     'Content-Type': 'application/json',
   },
 });
+
+// Request interceptor to add auth token
+api.interceptors.request.use(
+  async (config) => {
+    try {
+      // Get valid token (auto-refreshes if needed)
+      const token = await tokenManager.getValidToken();
+      if (token) {
+        config.headers.Authorization = `Bearer ${token}`;
+      }
+    } catch (error) {
+      // If token refresh fails, let the request proceed without auth
+      // The response interceptor will handle 401s
+      console.warn('Could not get valid token for request:', error);
+    }
+    return config;
+  },
+  (error) => {
+    return Promise.reject(error);
+  }
+);
+
+// Response interceptor to handle 401s automatically
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+    const originalRequest = error.config;
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
+
+      try {
+        // Try to refresh token
+        const newToken = await tokenManager.refreshToken();
+        
+        // Retry original request with new token
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        return api(originalRequest);
+      } catch (refreshError) {
+        // Refresh failed, logout user
+        tokenManager.logout();
+        return Promise.reject(refreshError);
+      }
+    }
+
+    return Promise.reject(error);
+  }
+);
 
 // API Functions
 
@@ -280,45 +331,19 @@ export const getInteractionsCount = async (authToken: string): Promise<{ success
   }
 };
 
-// Token refresh utility function
+// Legacy token refresh function - now handled by axios interceptors
+// Kept for backwards compatibility, but uses tokenManager internally
 export const refreshAuthToken = async (): Promise<{ success: boolean; access_token?: string; error?: string }> => {
   try {
-    const refreshToken = localStorage.getItem('refreshToken');
-    if (!refreshToken) {
-      return { success: false, error: 'No refresh token found' };
-    }
-
-    const response = await api.post('/auth/refresh', {}, {
-      headers: {
-        'Authorization': `Bearer ${refreshToken}`
-      }
-    });
-
-    if (response.data && response.data.access_token) {
-      // Update stored access token
-      localStorage.setItem('authToken', response.data.access_token);
-      
-      return {
-        success: true,
-        access_token: response.data.access_token
-      };
-    }
-
+    const newToken = await tokenManager.refreshToken();
     return {
-      success: false,
-      error: 'Invalid refresh response'
+      success: true,
+      access_token: newToken
     };
   } catch (error: any) {
-    console.error('Token refresh failed:', error);
-    
-    // If refresh fails, clear all tokens
-    localStorage.removeItem('user');
-    localStorage.removeItem('authToken');
-    localStorage.removeItem('refreshToken');
-    
     return {
       success: false,
-      error: error.response?.data?.message || 'Token refresh failed'
+      error: error.message || 'Token refresh failed'
     };
   }
 };

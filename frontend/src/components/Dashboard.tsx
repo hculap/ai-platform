@@ -6,7 +6,7 @@ import {
   Users, Activity, Clock, CheckCircle, Plus, Menu
 } from 'lucide-react';
 import { User as UserType } from '../types';
-import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, refreshAuthToken, updateBusinessProfile, getCompetitionsCount } from '../services/api';
+import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, updateBusinessProfile, getCompetitionsCount } from '../services/api';
 import BusinessProfiles from './BusinessProfiles';
 import Agents from './Agents';
 import Competition from './Competition';
@@ -56,7 +56,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
   const [businessProfiles, setBusinessProfiles] = useState<BusinessProfile[]>([]);
   const [selectedBusinessProfile, setSelectedBusinessProfile] = useState<BusinessProfile | null>(null);
   const [isLoadingProfiles, setIsLoadingProfiles] = useState<boolean>(true);
-  const [isTokenExpired, setIsTokenExpired] = useState<boolean>(false);
 
   // Function to update active profile (only one can be active at a time)
   const updateActiveProfile = useCallback(async (profileId: string) => {
@@ -71,17 +70,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
         is_active: true
       }, authToken);
 
-      if (result.isTokenExpired && onTokenRefreshed) {
-        const refreshResult = await refreshAuthToken();
-        if (refreshResult.success && refreshResult.access_token) {
-          onTokenRefreshed(refreshResult.access_token);
-          // Retry with new token
-          await updateBusinessProfile(profileId, {
-            ...currentProfile,
-            is_active: true
-          }, refreshResult.access_token);
-        }
-      }
 
       // Update local state immediately
       setBusinessProfiles(prev => prev.map(p => ({
@@ -104,22 +92,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
       // Fetch business profiles count and list
       const profilesResult = await getBusinessProfilesCount(authToken);
 
-      if (profilesResult.isTokenExpired) {
-        // Try to refresh token
-        const refreshResult = await refreshAuthToken();
-        if (refreshResult.success && refreshResult.access_token && onTokenRefreshed) {
-          onTokenRefreshed(refreshResult.access_token);
-          // Retry with new token
-          const retryResult = await getBusinessProfilesCount(refreshResult.access_token);
-          if (retryResult.success && retryResult.data !== undefined) {
-            setBusinessProfilesCount(retryResult.data);
-          }
-        } else {
-          setIsTokenExpired(true);
-          setIsLoadingProfiles(false);
-          return;
-        }
-      }
 
       if (profilesResult.success && profilesResult.data !== undefined) {
         setBusinessProfilesCount(profilesResult.data);
@@ -128,11 +100,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
       // Fetch business profiles list
       const profilesListResult = await getBusinessProfiles(authToken);
 
-      if (profilesListResult.isTokenExpired) {
-        setIsTokenExpired(true);
-        setIsLoadingProfiles(false);
-        return;
-      }
 
       if (profilesListResult.success && profilesListResult.data) {
         setBusinessProfiles(profilesListResult.data);
@@ -362,18 +329,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                   <div className="flex items-center space-x-2 px-4 py-2 bg-gray-50 rounded-lg">
                     <Building2 className="w-4 h-4 text-gray-600" />
                     <span className="text-sm font-medium text-gray-900">Loading...</span>
-                  </div>
-                ) : isTokenExpired ? (
-                  <div className="flex items-center space-x-2 px-4 py-2 bg-red-50 rounded-lg text-red-700">
-                    <Building2 className="w-4 h-4" />
-                    <span className="text-sm font-medium">Authentication expired</span>
-                    <button
-                      onClick={() => window.location.reload()}
-                      className="text-xs bg-red-100 hover:bg-red-200 text-red-700 px-2 py-1 rounded"
-                      title="Refresh page to re-authenticate"
-                    >
-                      🔄 Refresh Page
-                    </button>
                   </div>
                 ) : businessProfiles.length > 0 ? (
                   <select

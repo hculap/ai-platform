@@ -22,6 +22,7 @@ from ....utils.messages import (
 from ....models.business_profile import BusinessProfile
 from ....models.competition import Competition
 
+
 # Create logger for this module
 logger = logging.getLogger('app.agents.competitors_researcher.findCompetitors')
 
