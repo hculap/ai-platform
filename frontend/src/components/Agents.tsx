@@ -204,7 +204,7 @@ const Agents: React.FC<AgentsProps> = ({
       }
 
       console.log('🚀 Starting agent execution...');
-      const result = await executeAgent(selectedAgent.slug, {
+      const result = await executeAgent(selectedAgent.slug, 'analyze-website', {
         input: {
           url: normalizedUrl
         },

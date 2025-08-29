@@ -5,6 +5,7 @@ Registers all available agents and provides exports for the agent system.
 
 from .base import AgentRegistry, BaseAgent, AgentInput, AgentOutput, AgentMetadata
 from .concierge import ConciergeAgent
+from .competitors_researcher import CompetitorsResearcherAgent
 
 
 def initialize_agents() -> None:
@@ -14,6 +15,9 @@ def initialize_agents() -> None:
 
     # Register Business Concierge Agent (uses prompt_id approach)
     AgentRegistry.register('business-concierge', ConciergeAgent())
+
+    # Register Competitors Researcher Agent (uses system message approach)
+    AgentRegistry.register('competitors-researcher', CompetitorsResearcherAgent())
 
     print('✅ Agent system initialized')
     agent_types = [agent_type for agent_type, _ in AgentRegistry.list_agents()]
@@ -31,6 +35,7 @@ __all__ = [
 
     # Individual agents
     'ConciergeAgent',
+    'CompetitorsResearcherAgent',
     'ExampleAgent',
 
     # Initialization function

@@ -10,9 +10,13 @@ import {
   X,
   Target,
   Award,
-  Calendar
+  Calendar,
+  Brain,
+  Loader2,
+  AlertCircle,
+  CheckCircle
 } from 'lucide-react';
-import { getCompetitions, deleteCompetition, createCompetition, updateCompetition, refreshAuthToken, type Competition } from '../services/api';
+import { getCompetitions, deleteCompetition, createCompetition, updateCompetition, refreshAuthToken, executeAgent, type Competition } from '../services/api';
 import CompetitionForm from './CompetitionForm';
 
 interface CompetitionProps {
@@ -39,6 +43,13 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
   const [showDeleteConfirm, setShowDeleteConfirm] = useState<string | null>(null);
   const [showCompetitionForm, setShowCompetitionForm] = useState(false);
   const [editingCompetition, setEditingCompetition] = useState<Competition | null>(null);
+
+  // AI Competitor Research states
+  const [showAIRearchModal, setShowAIRearchModal] = useState(false);
+  const [isAIRearchLoading, setIsAIRearchLoading] = useState(false);
+  const [aiResearchError, setAiResearchError] = useState<string | null>(null);
+  const [aiResearchSuccess, setAiResearchSuccess] = useState<string | null>(null);
+  const [foundCompetitors, setFoundCompetitors] = useState<any[]>([]);
 
   // Debounce search query
   useEffect(() => {
@@ -117,6 +128,20 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
   const handleAddCompetition = useCallback(() => {
     setEditingCompetition(null);
     setShowCompetitionForm(true);
+  }, []);
+
+  const handleFindCompetitorsWithAI = useCallback(() => {
+    setShowAIRearchModal(true);
+    setAiResearchError(null);
+    setAiResearchSuccess(null);
+    setFoundCompetitors([]);
+  }, []);
+
+  const handleCloseAIRearchModal = useCallback(() => {
+    setShowAIRearchModal(false);
+    setAiResearchError(null);
+    setAiResearchSuccess(null);
+    setFoundCompetitors([]);
   }, []);
 
   const handleEditCompetition = useCallback((competition: Competition) => {
@@ -203,6 +228,123 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
     setShowCompetitionForm(false);
     setEditingCompetition(null);
   }, []);
+
+  const handleExecuteAIRearch = useCallback(async () => {
+    if (!businessProfileId) {
+      setAiResearchError('Business profile ID is required');
+      return;
+    }
+
+    try {
+      setIsAIRearchLoading(true);
+      setAiResearchError(null);
+      setAiResearchSuccess(null);
+
+      // Prepare the agent input data for the existing API structure
+      const toolInputData = {
+        input: {
+          business_profile_id: businessProfileId,
+          existing_competitors: competitions
+        }
+      };
+
+      const result = await executeAgent('competitors-researcher', 'find-competitors', toolInputData, authToken);
+
+      if (result.isTokenExpired && onTokenRefreshed) {
+        // Try to refresh token and retry
+        const refreshResult = await fetch('/api/auth/refresh', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${authToken}`
+          }
+        });
+
+        if (refreshResult.ok) {
+          const refreshData = await refreshResult.json();
+          if (refreshData.access_token) {
+            onTokenRefreshed(refreshData.access_token);
+
+            // Retry with new token
+            const retryResult = await executeAgent('competitors-researcher', 'find-competitors', toolInputData, refreshData.access_token);
+            if (retryResult.success && retryResult.data) {
+              handleSuccess(retryResult.data);
+            } else {
+              setAiResearchError(retryResult.error || 'Failed to find competitors');
+            }
+          } else {
+            setIsTokenExpired(true);
+          }
+        } else {
+          setIsTokenExpired(true);
+        }
+      } else if (result.success && result.data) {
+        handleSuccess(result.data);
+      } else {
+        setAiResearchError(result.error || 'Failed to find competitors');
+      }
+    } catch (error) {
+      console.error('Error finding competitors with AI:', error);
+      setAiResearchError('An unexpected error occurred while finding competitors');
+    } finally {
+      setIsAIRearchLoading(false);
+    }
+  }, [businessProfileId, competitions, authToken, onTokenRefreshed]);
+
+  const handleSuccess = (data: any) => {
+    // Handle new response format from the tool
+    if (data && data.competitors && Array.isArray(data.competitors)) {
+      setFoundCompetitors(data.competitors);
+      setAiResearchSuccess(`Found ${data.competitors.length} potential competitors!`);
+    } else if (Array.isArray(data)) {
+      // Fallback for old format
+      setFoundCompetitors(data);
+      setAiResearchSuccess(`Found ${data.length} potential competitors!`);
+    } else {
+      setAiResearchError('Invalid response format from AI analysis');
+    }
+  };
+
+  const handleAddFoundCompetitor = useCallback(async (competitor: any) => {
+    try {
+      // Convert AI competitor format to our Competition format
+      const competitionData = {
+        name: competitor.name,
+        url: competitor.url,
+        description: competitor.description || '',
+        usp: competitor.usp || ''
+      };
+
+      const result = await createCompetition(businessProfileId!, competitionData, authToken);
+
+      if (result.isTokenExpired && onTokenRefreshed) {
+        // Try to refresh token and retry
+        const refreshResult = await refreshAuthToken();
+        if (refreshResult.success && refreshResult.access_token) {
+          onTokenRefreshed(refreshResult.access_token);
+          const retryResult = await createCompetition(businessProfileId!, competitionData, refreshResult.access_token);
+          if (retryResult.success) {
+            // Remove from found competitors list
+            setFoundCompetitors(prev => prev.filter(c => c.name !== competitor.name));
+            // Refresh competitions list
+            fetchCompetitions();
+            if (onCompetitionsChanged) onCompetitionsChanged();
+          }
+        }
+      } else if (result.success) {
+        // Remove from found competitors list
+        setFoundCompetitors(prev => prev.filter(c => c.name !== competitor.name));
+        // Refresh competitions list
+        fetchCompetitions();
+        if (onCompetitionsChanged) onCompetitionsChanged();
+      } else {
+        console.error('Failed to add competitor:', result.error);
+        alert('Failed to add competitor: ' + (result.error || 'Unknown error'));
+      }
+    } catch (error) {
+      console.error('Error adding competitor:', error);
+      alert('An error occurred while adding the competitor');
+    }
+  }, [businessProfileId, authToken, onTokenRefreshed, onCompetitionsChanged, fetchCompetitions]);
 
   const truncateText = (text: string, maxLength: number = 150) => {
     if (text.length <= maxLength) return text;
@@ -346,8 +488,15 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
               </div>
             </div>
 
-            {/* Bottom Right - Add Button */}
-            <div className="flex justify-end items-end">
+            {/* Bottom Right - Action Buttons */}
+            <div className="flex justify-end items-end gap-3">
+              <button
+                onClick={handleFindCompetitorsWithAI}
+                className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+              >
+                <Brain className="w-5 h-5" />
+                <span>{t('competitions.findWithAI', 'Znajdź z AI')}</span>
+              </button>
               <button
                 onClick={handleAddCompetition}
                 className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
@@ -641,6 +790,143 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
                 onSubmit={handleCompetitionFormSubmit}
                 onCancel={handleCancelForm}
               />
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* AI Competitor Research Modal */}
+      {showAIRearchModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black bg-opacity-50">
+          <div className="bg-white rounded-2xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-r from-purple-600 to-pink-600 rounded-xl">
+                  <Brain className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {t('competitions.aiResearch.title', 'Badanie Konkurencji z AI')}
+                  </h2>
+                  <p className="text-gray-600">
+                    {t('competitions.aiResearch.subtitle', 'Znajdź nowych konkurentów za pomocą sztucznej inteligencji')}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={handleCloseAIRearchModal}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+
+            <div className="p-6">
+              {/* Execute Button */}
+              <div className="flex justify-center mb-6">
+                <button
+                  onClick={handleExecuteAIRearch}
+                  disabled={isAIRearchLoading}
+                  className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                >
+                  {isAIRearchLoading ? (
+                    <>
+                      <Loader2 className="w-5 h-5 animate-spin" />
+                      {t('competitions.aiResearch.searching', 'Szukam konkurentów...')}
+                    </>
+                  ) : (
+                    <>
+                      <Brain className="w-5 h-5" />
+                      {t('competitions.aiResearch.findCompetitors', 'Znajdź Konkurentów')}
+                    </>
+                  )}
+                </button>
+              </div>
+
+              {/* Status Messages */}
+              {aiResearchError && (
+                <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
+                    <p className="text-red-800">{aiResearchError}</p>
+                  </div>
+                </div>
+              )}
+
+              {aiResearchSuccess && (
+                <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-xl">
+                  <div className="flex items-center gap-3">
+                    <CheckCircle className="w-5 h-5 text-green-600 flex-shrink-0" />
+                    <p className="text-green-800">{aiResearchSuccess}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Found Competitors */}
+              {foundCompetitors.length > 0 && (
+                <div className="space-y-4">
+                  <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                    <Target className="w-5 h-5 text-purple-600" />
+                    {t('competitions.aiResearch.foundCompetitors', 'Znalezieni Konkurenci')} ({foundCompetitors.length})
+                  </h3>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                    {foundCompetitors.map((competitor, index) => (
+                      <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
+                        <div className="flex items-start justify-between mb-3">
+                          <h4 className="font-semibold text-gray-900 text-lg">{competitor.name}</h4>
+                          <button
+                            onClick={() => handleAddFoundCompetitor(competitor)}
+                            className="p-1.5 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 transition-colors"
+                            title={t('competitions.aiResearch.addCompetitor', 'Dodaj konkurenta')}
+                          >
+                            <Plus className="w-4 h-4" />
+                          </button>
+                        </div>
+
+                        <div className="space-y-2 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Globe className="w-4 h-4 text-gray-500" />
+                            <a
+                              href={competitor.url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 truncate"
+                            >
+                              {competitor.url}
+                            </a>
+                          </div>
+
+                          {competitor.description && (
+                            <p className="text-gray-600">
+                              <strong>{t('competitions.aiResearch.description', 'Opis')}:</strong> {truncateText(competitor.description, 100)}
+                            </p>
+                          )}
+
+                          {competitor.usp && (
+                            <p className="text-gray-600">
+                              <strong>{t('competitions.aiResearch.usp', 'USP')}:</strong> {truncateText(competitor.usp, 80)}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Empty State */}
+              {foundCompetitors.length === 0 && !isAIRearchLoading && !aiResearchError && (
+                <div className="text-center py-12">
+                  <Brain className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    {t('competitions.aiResearch.ready', 'Gotowy do wyszukiwania')}
+                  </h3>
+                  <p className="text-gray-600">
+                    {t('competitions.aiResearch.instruction', 'Kliknij przycisk powyżej, aby znaleźć nowych konkurentów za pomocą AI.')}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

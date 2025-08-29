@@ -938,7 +938,7 @@ export const getAgents = async (authToken?: string): Promise<{ success: boolean;
   }
 };
 
-export const executeAgent = async (agentSlug: string, inputData: any, authToken?: string): Promise<{ success: boolean; data?: any; error?: string; isTokenExpired?: boolean }> => {
+export const executeAgent = async (agentSlug: string, toolSlug: string = 'analyze-website', inputData?: any, authToken?: string): Promise<{ success: boolean; data?: any; error?: string; isTokenExpired?: boolean }> => {
   try {
     const headers: any = {
       'Content-Type': 'application/json'
@@ -947,7 +947,7 @@ export const executeAgent = async (agentSlug: string, inputData: any, authToken?
       headers.Authorization = `Bearer ${authToken}`;
     }
 
-    const response = await api.post(`/agents/${agentSlug}/tools/analyze-website/call`, inputData, { headers });
+    const response = await api.post(`/agents/${agentSlug}/tools/${toolSlug}/call`, inputData || {}, { headers });
 
     if (response.data) {
       return {
@@ -1002,6 +1002,8 @@ export const executeAgent = async (agentSlug: string, inputData: any, authToken?
     };
   }
 };
+
+
 
 // Competition API functions
 export const getCompetitionsCount = async (authToken: string, businessProfileId?: string): Promise<{ success: boolean; data?: number; error?: string; isTokenExpired?: boolean }> => {
