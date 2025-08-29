@@ -4,10 +4,11 @@ Provides REST API endpoints for agents as specified in API_SCHEMA.md.
 """
 
 import time
+import logging
 from typing import Dict, Any, Optional
 from functools import wraps
 
-from flask import Blueprint, request, jsonify, Response
+from flask import Blueprint, request, jsonify, Response, current_app
 from flask_jwt_extended import jwt_required, get_jwt_identity, verify_jwt_in_request
 from werkzeug.exceptions import NotFound, BadRequest
 
@@ -18,6 +19,9 @@ from ..utils.messages import (
     get_message, ERROR_VALIDATION_ERROR, ERROR_UNAUTHORIZED,
     ERROR_NOT_FOUND, ERROR_SERVER_ERROR
 )
+
+# Create logger for this module
+logger = logging.getLogger('app.routes.agents')
 
 
 # Create blueprint for agent routes
@@ -91,7 +95,8 @@ def list_agents():
         return jsonify({'data': agents_list})
 
     except Exception as error:
-        print(f'Error fetching agents: {error}')
+        from .. import log_exception
+        log_exception(logger, error, "Error fetching agents list")
         return jsonify({
             'error': ERROR_SERVER_ERROR,
             'message': get_message(ERROR_SERVER_ERROR)
@@ -340,14 +345,16 @@ def execute_tool(slug: str, tool_slug: str):
                 )
                 db.session.commit()
 
-            print(f'Tool execution error: {tool_error}')
+            from .. import log_exception
+            log_exception(logger, tool_error, f"Tool execution failed - Agent: {slug}, Tool: {tool_slug}")
             return jsonify({
                 'error': ERROR_SERVER_ERROR,
                 'message': get_message(ERROR_SERVER_ERROR)
             }), 500
 
     except Exception as error:
-        print(f'Execute tool error: {error}')
+        from .. import log_exception
+        log_exception(logger, error, f"Execute tool endpoint error - Agent: {slug}, Tool: {tool_slug}")
         return jsonify({
             'error': ERROR_SERVER_ERROR,
             'message': get_message(ERROR_SERVER_ERROR)

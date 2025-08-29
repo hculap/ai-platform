@@ -14,9 +14,22 @@ import {
   Brain,
   Loader2,
   AlertCircle,
-  CheckCircle
+  CheckCircle,
+  Clock,
+  Eye,
+  Save
 } from 'lucide-react';
-import { getCompetitions, deleteCompetition, createCompetition, updateCompetition, refreshAuthToken, executeAgent, type Competition } from '../services/api';
+import { 
+  getCompetitions, 
+  deleteCompetition, 
+  createCompetition, 
+  updateCompetition, 
+  refreshAuthToken, 
+  executeAgent, 
+  startBackgroundCompetitorResearch,
+  checkCompetitorResearchStatus,
+  type Competition 
+} from '../services/api';
 import CompetitionForm from './CompetitionForm';
 
 interface CompetitionProps {
@@ -50,6 +63,9 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
   const [aiResearchError, setAiResearchError] = useState<string | null>(null);
   const [aiResearchSuccess, setAiResearchSuccess] = useState<string | null>(null);
   const [foundCompetitors, setFoundCompetitors] = useState<any[]>([]);
+  const [researchStatus, setResearchStatus] = useState<'idle' | 'starting' | 'pending' | 'queued' | 'in_progress' | 'completed' | 'failed'>('idle');
+  const [openaiResponseId, setOpenaiResponseId] = useState<string | null>(null);
+  const [selectedCompetitors, setSelectedCompetitors] = useState<Set<string>>(new Set());
 
   // Debounce search query
   useEffect(() => {
@@ -121,6 +137,61 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
     fetchCompetitions();
   }, [fetchCompetitions]);
 
+  // Polling for competitor research status
+  useEffect(() => {
+    if (!openaiResponseId || researchStatus === 'completed' || researchStatus === 'failed') {
+      return;
+    }
+
+    const pollStatus = async () => {
+      try {
+        const statusResult = await checkCompetitorResearchStatus(openaiResponseId, authToken);
+        
+        if (statusResult.isTokenExpired && onTokenRefreshed) {
+          const refreshResult = await refreshAuthToken();
+          if (refreshResult.success && refreshResult.access_token) {
+            onTokenRefreshed(refreshResult.access_token);
+            const retryResult = await checkCompetitorResearchStatus(openaiResponseId, refreshResult.access_token);
+            handleStatusResult(retryResult);
+          } else {
+            setResearchStatus('failed');
+            setAiResearchError('Authentication failed');
+          }
+        } else {
+          handleStatusResult(statusResult);
+        }
+      } catch (error) {
+        console.error('Error polling research status:', error);
+        setResearchStatus('failed');
+        setAiResearchError('Failed to check research status');
+      }
+    };
+
+    const handleStatusResult = (statusResult: any) => {
+      if (statusResult.status === 'completed' && statusResult.data) {
+        setResearchStatus('completed');
+        setFoundCompetitors(Array.isArray(statusResult.data) ? statusResult.data : []);
+        setAiResearchSuccess(`Found ${Array.isArray(statusResult.data) ? statusResult.data.length : 0} potential competitors!`);
+      } else if (statusResult.status === 'failed' || statusResult.status === 'error') {
+        setResearchStatus('failed');
+        setAiResearchError(statusResult.error || 'Research failed');
+      } else {
+        setResearchStatus(statusResult.status);
+        // Update status message based on current status
+        if (statusResult.status === 'in_progress') {
+          setAiResearchSuccess('AI is analyzing your business and finding competitors...');
+        } else if (statusResult.status === 'queued') {
+          setAiResearchSuccess('Research request queued, waiting for processing...');
+        }
+      }
+    };
+
+    // Poll every 3 seconds when research is in progress
+    const interval = setInterval(pollStatus, 3000);
+
+    return () => clearInterval(interval);
+  }, [openaiResponseId, researchStatus, authToken, onTokenRefreshed]);
+
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   }, []);
@@ -142,6 +213,9 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
     setAiResearchError(null);
     setAiResearchSuccess(null);
     setFoundCompetitors([]);
+    setResearchStatus('idle');
+    setOpenaiResponseId(null);
+    setSelectedCompetitors(new Set());
   }, []);
 
   const handleEditCompetition = useCallback((competition: Competition) => {
@@ -237,114 +311,138 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
 
     try {
       setIsAIRearchLoading(true);
+      setResearchStatus('starting');
       setAiResearchError(null);
       setAiResearchSuccess(null);
+      setFoundCompetitors([]);
 
-      // Prepare the agent input data for the existing API structure
-      const toolInputData = {
-        input: {
-          business_profile_id: businessProfileId,
-          existing_competitors: competitions
-        }
-      };
-
-      const result = await executeAgent('competitors-researcher', 'find-competitors', toolInputData, authToken);
-
-      if (result.isTokenExpired && onTokenRefreshed) {
-        // Try to refresh token and retry
-        const refreshResult = await fetch('/api/auth/refresh', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${authToken}`
-          }
-        });
-
-        if (refreshResult.ok) {
-          const refreshData = await refreshResult.json();
-          if (refreshData.access_token) {
-            onTokenRefreshed(refreshData.access_token);
-
-            // Retry with new token
-            const retryResult = await executeAgent('competitors-researcher', 'find-competitors', toolInputData, refreshData.access_token);
-            if (retryResult.success && retryResult.data) {
-              handleSuccess(retryResult.data);
-            } else {
-              setAiResearchError(retryResult.error || 'Failed to find competitors');
-            }
-          } else {
-            setIsTokenExpired(true);
-          }
-        } else {
-          setIsTokenExpired(true);
-        }
-      } else if (result.success && result.data) {
-        handleSuccess(result.data);
-      } else {
-        setAiResearchError(result.error || 'Failed to find competitors');
-      }
-    } catch (error) {
-      console.error('Error finding competitors with AI:', error);
-      setAiResearchError('An unexpected error occurred while finding competitors');
-    } finally {
-      setIsAIRearchLoading(false);
-    }
-  }, [businessProfileId, competitions, authToken, onTokenRefreshed]);
-
-  const handleSuccess = (data: any) => {
-    // Handle new response format from the tool
-    if (data && data.competitors && Array.isArray(data.competitors)) {
-      setFoundCompetitors(data.competitors);
-      setAiResearchSuccess(`Found ${data.competitors.length} potential competitors!`);
-    } else if (Array.isArray(data)) {
-      // Fallback for old format
-      setFoundCompetitors(data);
-      setAiResearchSuccess(`Found ${data.length} potential competitors!`);
-    } else {
-      setAiResearchError('Invalid response format from AI analysis');
-    }
-  };
-
-  const handleAddFoundCompetitor = useCallback(async (competitor: any) => {
-    try {
-      // Convert AI competitor format to our Competition format
-      const competitionData = {
-        name: competitor.name,
-        url: competitor.url,
-        description: competitor.description || '',
-        usp: competitor.usp || ''
-      };
-
-      const result = await createCompetition(businessProfileId!, competitionData, authToken);
+      const result = await startBackgroundCompetitorResearch(businessProfileId, authToken);
 
       if (result.isTokenExpired && onTokenRefreshed) {
         // Try to refresh token and retry
         const refreshResult = await refreshAuthToken();
         if (refreshResult.success && refreshResult.access_token) {
           onTokenRefreshed(refreshResult.access_token);
-          const retryResult = await createCompetition(businessProfileId!, competitionData, refreshResult.access_token);
-          if (retryResult.success) {
-            // Remove from found competitors list
-            setFoundCompetitors(prev => prev.filter(c => c.name !== competitor.name));
-            // Refresh competitions list
-            fetchCompetitions();
-            if (onCompetitionsChanged) onCompetitionsChanged();
+          
+          // Retry with new token
+          const retryResult = await startBackgroundCompetitorResearch(businessProfileId, refreshResult.access_token);
+          if (retryResult.success && retryResult.openaiResponseId) {
+            setOpenaiResponseId(retryResult.openaiResponseId);
+            setResearchStatus('pending');
+            setAiResearchSuccess('Competitor research started in background...');
+          } else {
+            setResearchStatus('failed');
+            setAiResearchError(retryResult.error || 'Failed to start competitor research');
           }
+        } else {
+          setIsTokenExpired(true);
+          setResearchStatus('failed');
         }
-      } else if (result.success) {
-        // Remove from found competitors list
-        setFoundCompetitors(prev => prev.filter(c => c.name !== competitor.name));
+      } else if (result.success && result.openaiResponseId) {
+        setOpenaiResponseId(result.openaiResponseId);
+        setResearchStatus('pending');
+        setAiResearchSuccess('Competitor research started in background...');
+      } else {
+        setResearchStatus('failed');
+        setAiResearchError(result.error || 'Failed to start competitor research');
+      }
+    } catch (error) {
+      console.error('Error starting competitor research:', error);
+      setResearchStatus('failed');
+      setAiResearchError('An unexpected error occurred while starting competitor research');
+    } finally {
+      setIsAIRearchLoading(false);
+    }
+  }, [businessProfileId, authToken, onTokenRefreshed]);
+
+  const handleCompetitorSelect = useCallback((competitorName: string, isSelected: boolean) => {
+    setSelectedCompetitors(prev => {
+      const newSet = new Set(prev);
+      if (isSelected) {
+        newSet.add(competitorName);
+      } else {
+        newSet.delete(competitorName);
+      }
+      return newSet;
+    });
+  }, []);
+
+  const handleSaveSelectedCompetitors = useCallback(async () => {
+    if (selectedCompetitors.size === 0) {
+      alert('Please select at least one competitor to save');
+      return;
+    }
+
+    try {
+      setIsAIRearchLoading(true);
+      const competitorsToSave = foundCompetitors.filter(competitor => 
+        selectedCompetitors.has(competitor.name)
+      );
+
+      let savedCount = 0;
+      let errorCount = 0;
+
+      for (const competitor of competitorsToSave) {
+        try {
+          // Convert AI competitor format to our Competition format
+          const competitionData = {
+            name: competitor.name,
+            url: competitor.url,
+            description: competitor.description || '',
+            usp: competitor.usp || ''
+          };
+
+          const result = await createCompetition(businessProfileId!, competitionData, authToken);
+
+          if (result.isTokenExpired && onTokenRefreshed) {
+            // Try to refresh token and retry
+            const refreshResult = await refreshAuthToken();
+            if (refreshResult.success && refreshResult.access_token) {
+              onTokenRefreshed(refreshResult.access_token);
+              const retryResult = await createCompetition(businessProfileId!, competitionData, refreshResult.access_token);
+              if (retryResult.success) {
+                savedCount++;
+              } else {
+                errorCount++;
+              }
+            } else {
+              errorCount++;
+            }
+          } else if (result.success) {
+            savedCount++;
+          } else {
+            console.error('Failed to add competitor:', result.error);
+            errorCount++;
+          }
+        } catch (error) {
+          console.error('Error adding competitor:', error);
+          errorCount++;
+        }
+      }
+
+      // Update UI based on results
+      if (savedCount > 0) {
+        setAiResearchSuccess(`Successfully saved ${savedCount} competitor(s)!`);
+        // Remove saved competitors from the found list
+        setFoundCompetitors(prev => prev.filter(competitor => 
+          !selectedCompetitors.has(competitor.name)
+        ));
+        setSelectedCompetitors(new Set());
         // Refresh competitions list
         fetchCompetitions();
         if (onCompetitionsChanged) onCompetitionsChanged();
-      } else {
-        console.error('Failed to add competitor:', result.error);
-        alert('Failed to add competitor: ' + (result.error || 'Unknown error'));
+      }
+
+      if (errorCount > 0) {
+        setAiResearchError(`Failed to save ${errorCount} competitor(s). Please try again.`);
       }
     } catch (error) {
-      console.error('Error adding competitor:', error);
-      alert('An error occurred while adding the competitor');
+      console.error('Error saving competitors:', error);
+      setAiResearchError('An error occurred while saving competitors');
+    } finally {
+      setIsAIRearchLoading(false);
     }
-  }, [businessProfileId, authToken, onTokenRefreshed, onCompetitionsChanged, fetchCompetitions]);
+  }, [selectedCompetitors, foundCompetitors, businessProfileId, authToken, onTokenRefreshed, onCompetitionsChanged, fetchCompetitions]);
 
   const truncateText = (text: string, maxLength: number = 150) => {
     if (text.length <= maxLength) return text;
@@ -826,13 +924,16 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
               <div className="flex justify-center mb-6">
                 <button
                   onClick={handleExecuteAIRearch}
-                  disabled={isAIRearchLoading}
+                  disabled={isAIRearchLoading || (researchStatus !== 'idle' && researchStatus !== 'completed' && researchStatus !== 'failed')}
                   className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
                 >
-                  {isAIRearchLoading ? (
+                  {isAIRearchLoading || (researchStatus !== 'idle' && researchStatus !== 'completed' && researchStatus !== 'failed') ? (
                     <>
                       <Loader2 className="w-5 h-5 animate-spin" />
-                      {t('competitions.aiResearch.searching', 'Szukam konkurentów...')}
+                      {researchStatus === 'starting' && t('competitions.aiResearch.starting', 'Starting research...')}
+                      {researchStatus === 'pending' && t('competitions.aiResearch.pending', 'Queuing request...')}
+                      {researchStatus === 'queued' && t('competitions.aiResearch.queued', 'Waiting in queue...')}
+                      {researchStatus === 'in_progress' && t('competitions.aiResearch.searching', 'Analyzing business...')}
                     </>
                   ) : (
                     <>
@@ -865,26 +966,56 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
               {/* Found Competitors */}
               {foundCompetitors.length > 0 && (
                 <div className="space-y-4">
-                  <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
-                    <Target className="w-5 h-5 text-purple-600" />
-                    {t('competitions.aiResearch.foundCompetitors', 'Znalezieni Konkurenci')} ({foundCompetitors.length})
-                  </h3>
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                      <Target className="w-5 h-5 text-purple-600" />
+                      {t('competitions.aiResearch.foundCompetitors', 'Znalezieni Konkurenci')} ({foundCompetitors.length})
+                    </h3>
+                    
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-gray-600">
+                        {selectedCompetitors.size} selected
+                      </span>
+                      <button
+                        onClick={handleSaveSelectedCompetitors}
+                        disabled={selectedCompetitors.size === 0 || isAIRearchLoading}
+                        className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+                      >
+                        <Save className="w-4 h-4" />
+                        {isAIRearchLoading ? 'Saving...' : `Save Selected (${selectedCompetitors.size})`}
+                      </button>
+                    </div>
+                  </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
                     {foundCompetitors.map((competitor, index) => (
-                      <div key={index} className="bg-gray-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow">
+                      <div key={index} className={`bg-gray-50 rounded-lg p-4 border transition-all ${
+                        selectedCompetitors.has(competitor.name) 
+                          ? 'border-purple-300 bg-purple-50 shadow-md' 
+                          : 'border-gray-200 hover:shadow-md'
+                      }`}>
                         <div className="flex items-start justify-between mb-3">
-                          <h4 className="font-semibold text-gray-900 text-lg">{competitor.name}</h4>
+                          <div className="flex items-start gap-3 flex-1">
+                            <input
+                              type="checkbox"
+                              checked={selectedCompetitors.has(competitor.name)}
+                              onChange={(e) => handleCompetitorSelect(competitor.name, e.target.checked)}
+                              className="mt-1 w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+                            />
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-gray-900 text-lg">{competitor.name}</h4>
+                            </div>
+                          </div>
                           <button
-                            onClick={() => handleAddFoundCompetitor(competitor)}
-                            className="p-1.5 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 transition-colors"
-                            title={t('competitions.aiResearch.addCompetitor', 'Dodaj konkurenta')}
+                            onClick={() => window.open(competitor.url, '_blank')}
+                            className="p-1.5 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                            title="Visit website"
                           >
-                            <Plus className="w-4 h-4" />
+                            <Eye className="w-4 h-4" />
                           </button>
                         </div>
 
-                        <div className="space-y-2 text-sm">
+                        <div className="space-y-2 text-sm ml-7">
                           <div className="flex items-center gap-2">
                             <Globe className="w-4 h-4 text-gray-500" />
                             <a
@@ -915,16 +1046,52 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
                 </div>
               )}
 
-              {/* Empty State */}
-              {foundCompetitors.length === 0 && !isAIRearchLoading && !aiResearchError && (
+              {/* Empty State / Progress State */}
+              {foundCompetitors.length === 0 && (
                 <div className="text-center py-12">
-                  <Brain className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    {t('competitions.aiResearch.ready', 'Gotowy do wyszukiwania')}
-                  </h3>
-                  <p className="text-gray-600">
-                    {t('competitions.aiResearch.instruction', 'Kliknij przycisk powyżej, aby znaleźć nowych konkurentów za pomocą AI.')}
-                  </p>
+                  {researchStatus === 'idle' || researchStatus === 'failed' ? (
+                    <>
+                      <Brain className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        {t('competitions.aiResearch.ready', 'Gotowy do wyszukiwania')}
+                      </h3>
+                      <p className="text-gray-600">
+                        {t('competitions.aiResearch.instruction', 'Kliknij przycisk powyżej, aby znaleźć nowych konkurentów za pomocą AI.')}
+                      </p>
+                    </>
+                  ) : (
+                    <>
+                      <div className="relative mb-6">
+                        <div className="w-16 h-16 mx-auto">
+                          <div className="w-16 h-16 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin"></div>
+                        </div>
+                        <Clock className="w-6 h-6 text-purple-600 absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2" />
+                      </div>
+                      
+                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                        {researchStatus === 'starting' && 'Starting AI Research...'}
+                        {researchStatus === 'pending' && 'Research Request Queued...'}
+                        {researchStatus === 'queued' && 'Waiting in Processing Queue...'}
+                        {researchStatus === 'in_progress' && 'AI Analyzing Your Business...'}
+                      </h3>
+                      
+                      <p className="text-gray-600 mb-4">
+                        {researchStatus === 'starting' && 'Initializing competitor research system...'}
+                        {researchStatus === 'pending' && 'Your request has been queued for processing...'}
+                        {researchStatus === 'queued' && 'Please wait while we process your request...'}
+                        {researchStatus === 'in_progress' && 'Our AI is analyzing your business profile and finding relevant competitors...'}
+                      </p>
+
+                      <div className="bg-purple-50 border border-purple-200 rounded-lg p-4 max-w-md mx-auto">
+                        <div className="flex items-center gap-2 text-purple-700">
+                          <div className="w-2 h-2 bg-purple-600 rounded-full animate-pulse"></div>
+                          <span className="text-sm font-medium">
+                            This may take 30-60 seconds to complete
+                          </span>
+                        </div>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>

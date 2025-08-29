@@ -938,6 +938,130 @@ export const getAgents = async (authToken?: string): Promise<{ success: boolean;
   }
 };
 
+// Background competitor research
+export const startBackgroundCompetitorResearch = async (businessProfileId: string, authToken: string): Promise<{ 
+  success: boolean; 
+  openaiResponseId?: string; 
+  error?: string;
+  isTokenExpired?: boolean;
+}> => {
+  try {
+    const headers: any = {
+      'Content-Type': 'application/json'
+    };
+    if (authToken) {
+      headers.Authorization = `Bearer ${authToken}`;
+    }
+
+    const response = await api.post('/agents/competitors-researcher/tools/find-competitors/call', {
+      input: {
+        business_profile_id: businessProfileId,
+        action: 'find-competitors',
+        background: true
+      }
+    }, { headers });
+
+    if (response.data?.data?.status === 'pending' && response.data.data?.openai_response_id) {
+      return {
+        success: true,
+        openaiResponseId: response.data.data.openai_response_id
+      };
+    } else {
+      return {
+        success: false,
+        error: response.data?.error || 'Failed to start competitor research'
+      };
+    }
+  } catch (error: any) {
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        isTokenExpired: true,
+        error: 'Token expired'
+      };
+    }
+    console.error('Competitor research start error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to start competitor research'
+    };
+  }
+};
+
+// Check competitor research status
+export const checkCompetitorResearchStatus = async (openaiResponseId: string, authToken: string): Promise<{ 
+  status: 'pending' | 'queued' | 'in_progress' | 'completed' | 'failed' | 'canceled' | 'error'; 
+  data?: any; 
+  error?: string;
+  isTokenExpired?: boolean;
+}> => {
+  try {
+    const headers: any = {
+      'Content-Type': 'application/json'
+    };
+    if (authToken) {
+      headers.Authorization = `Bearer ${authToken}`;
+    }
+
+    const response = await api.post('/agents/business-concierge/tools/check-analysis-status/call', {
+      input: { openai_response_id: openaiResponseId }
+    }, { headers });
+
+    if (response.data && response.data.data) {
+      const researchData = response.data.data;
+
+      if (researchData.status === 'completed') {
+        // Handle different response formats
+        let competitors = [];
+        if (researchData.competitors) {
+          competitors = researchData.competitors;
+        } else if (researchData.content && researchData.content.competitors) {
+          competitors = researchData.content.competitors;
+        } else if (Array.isArray(researchData.content)) {
+          competitors = researchData.content;
+        }
+
+        return {
+          status: 'completed',
+          data: competitors
+        };
+      } else if (researchData.status === 'pending' || researchData.status === 'queued' || researchData.status === 'in_progress') {
+        return {
+          status: researchData.status
+        };
+      } else {
+        return {
+          status: 'error',
+          error: researchData.error || researchData.message || 'Unknown status'
+        };
+      }
+    } else if (response.data?.error) {
+      return {
+        status: 'failed',
+        error: response.data.error || 'Research failed'
+      };
+    } else {
+      return {
+        status: 'error',
+        error: 'Failed to check research status'
+      };
+    }
+  } catch (error: any) {
+    if (error.response?.status === 401) {
+      return {
+        status: 'error',
+        isTokenExpired: true,
+        error: 'Token expired'
+      };
+    }
+    console.error('Research status check error:', error);
+    return {
+      status: 'error',
+      error: error instanceof Error ? error.message : 'Failed to check research status'
+    };
+  }
+};
+
 export const executeAgent = async (agentSlug: string, toolSlug: string = 'analyze-website', inputData?: any, authToken?: string): Promise<{ success: boolean; data?: any; error?: string; isTokenExpired?: boolean }> => {
   try {
     const headers: any = {

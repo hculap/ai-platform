@@ -1,6 +1,6 @@
 """
 FindCompetitorsTool - A tool for finding competitors using OpenAI.
-Uses pre-registered prompt to analyze business profile and find competitors.
+Uses OpenAI to analyze business profile and find competitors.
 """
 
 import time
@@ -16,29 +16,28 @@ from ...shared.base_tool import (
     OpenAIMode
 )
 from ....utils.messages import (
-    get_message, TOOL_EXECUTION_FAILED, TOOL_ANALYSIS_FAILED
+    get_message, TOOL_EXECUTION_FAILED
 )
 from ....models.business_profile import BusinessProfile
 from ....models.competition import Competition
-from .... import db
 
 
 class CompetitorsParser:
     """Simple parser for competitors data from OpenAI."""
-
+    
     def parse(self, content: Union[str, Dict, None]) -> Dict[str, Any]:
         """
         Parse competitors from OpenAI response.
-
+        
         Args:
             content: Response content from OpenAI
-
+            
         Returns:
             Parsed competitors data
         """
         if content is None:
             raise ValueError("Content cannot be None")
-
+        
         # If it's already a dict, use it directly
         if isinstance(content, dict):
             competitors_data = content
@@ -49,7 +48,7 @@ class CompetitorsParser:
             except json.JSONDecodeError:
                 # If not JSON, return empty list
                 competitors_data = []
-
+        
         # Ensure it's a list
         if not isinstance(competitors_data, list):
             return {'competitors': []}
@@ -186,10 +185,10 @@ class FindCompetitorsTool(BaseTool):
     def _validate_input(self, parameters: Dict) -> Dict[str, Any]:
         """
         Validate input parameters.
-
+        
         Args:
             parameters: Input parameters dictionary
-
+            
         Returns:
             Validation result with 'valid' flag and either data or 'error'
         """
@@ -198,47 +197,43 @@ class FindCompetitorsTool(BaseTool):
                 'valid': False,
                 'error': 'Business profile ID is required'
             }
-
-        business_profile_id = parameters['business_profile_id']
-        existing_competitors = parameters.get('existing_competitors', [])
-
+        
         return {
             'valid': True,
-            'business_profile_id': business_profile_id,
-            'existing_competitors': existing_competitors
+            'business_profile_id': parameters['business_profile_id']
         }
 
     async def _find_competitors(self, business_profile_data: Dict[str, Any], existing_competitors: list, background: bool = False) -> Dict[str, Any]:
         """
         Find competitors using OpenAI.
-
+        
         Args:
             business_profile_data: Complete business profile data from database
             existing_competitors: List of existing competitors from database
             background: Whether to run in background mode
-
+            
         Returns:
             OpenAI API response
         """
         # Create comprehensive user message with business profile and existing competitors
         user_message = self._create_user_message(business_profile_data, existing_competitors)
-
+        
         # Call OpenAI with the complete context
         return await self.call_openai(user_message, background=background)
 
     def _create_user_message(self, business_profile_data: Dict[str, Any], existing_competitors: list) -> str:
         """
         Create a comprehensive user message for the OpenAI prompt.
-
+        
         Args:
             business_profile_data: Complete business profile data
             existing_competitors: List of existing competitors
-
+            
         Returns:
             Formatted user message string
         """
         message_parts = []
-
+        
         # Business Profile Information
         message_parts.append("=== BUSINESS PROFILE ===")
         message_parts.append(f"Business Name: {business_profile_data.get('name', 'N/A')}")
@@ -249,7 +244,7 @@ class FindCompetitorsTool(BaseTool):
         message_parts.append(f"Customer Desires: {business_profile_data.get('customer_desires', 'N/A')}")
         message_parts.append(f"Brand Tone: {business_profile_data.get('brand_tone', 'N/A')}")
         message_parts.append(f"Language: {business_profile_data.get('communication_language', 'N/A')}")
-
+        
         # Existing Competitors
         message_parts.append("\n=== EXISTING COMPETITORS ===")
         if existing_competitors:
@@ -264,12 +259,12 @@ class FindCompetitorsTool(BaseTool):
                 message_parts.append("")  # Empty line between competitors
         else:
             message_parts.append("No existing competitors found.")
-
+        
         # Final instruction
         message_parts.append("\n=== INSTRUCTION ===")
         message_parts.append("Please find 8-12 new competitors for this business based on the profile above.")
         message_parts.append("Avoid duplicating any existing competitors listed above.")
-
+        
         return "\n".join(message_parts)
 
     def _process_research_result(
@@ -284,24 +279,24 @@ class FindCompetitorsTool(BaseTool):
         try:
             # Parse the content
             parsed_data = self.competitors_parser.parse(content)
-
+            
             # Extract competitors
             if 'competitors' in parsed_data:
                 competitors = parsed_data['competitors']
             else:
                 competitors = parsed_data if isinstance(parsed_data, list) else []
-
+            
             # Ensure it's a list and add metadata
             if not isinstance(competitors, list):
                 competitors = []
-
+            
             return {
                 'competitors': competitors,
                 'business_profile_id': business_profile_id,
                 'existing_competitors_count': len(existing_competitors),
                 'new_competitors_count': len(competitors)
             }
-
+            
         except Exception as parse_error:
             return {
                 'competitors': [],
@@ -313,11 +308,11 @@ class FindCompetitorsTool(BaseTool):
     def _create_error_output(self, error_message: str, start_time: float) -> ToolOutput:
         """
         Create an error ToolOutput.
-
+        
         Args:
             error_message: Error message
             start_time: Processing start time
-
+            
         Returns:
             ToolOutput with error
         """
