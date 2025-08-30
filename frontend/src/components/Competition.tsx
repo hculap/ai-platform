@@ -27,6 +27,7 @@ import {
   executeAgent, 
   startBackgroundCompetitorResearch,
   checkCompetitorResearchStatus,
+  enrichCompetitor,
   type Competition 
 } from '../services/api';
 import CompetitionForm from './CompetitionForm';
@@ -64,6 +65,11 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
   const [researchStatus, setResearchStatus] = useState<'idle' | 'starting' | 'pending' | 'queued' | 'in_progress' | 'completed' | 'failed'>('idle');
   const [openaiResponseId, setOpenaiResponseId] = useState<string | null>(null);
   const [selectedCompetitors, setSelectedCompetitors] = useState<Set<string>>(new Set());
+
+  // Quick Add states
+  const [quickAddInput, setQuickAddInput] = useState('');
+  const [isEnriching, setIsEnriching] = useState(false);
+  const [enrichError, setEnrichError] = useState<string | null>(null);
 
   // Debounce search query
   useEffect(() => {
@@ -179,6 +185,45 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
     setEditingCompetition(null);
     setShowCompetitionForm(true);
   }, []);
+
+  const handleEnrichCompetitor = useCallback(async () => {
+    if (!quickAddInput.trim()) {
+      setEnrichError('Please enter a company name or URL');
+      return;
+    }
+
+    setIsEnriching(true);
+    setEnrichError(null);
+
+    try {
+      // Determine if input is a URL or company name
+      const isUrl = quickAddInput.trim().match(/^https?:\/\/.+/i);
+      const input = isUrl 
+        ? { url: quickAddInput.trim() }
+        : { name: quickAddInput.trim() };
+
+      const result = await enrichCompetitor(input, authToken);
+
+      if (result.success && result.data) {
+        // Set the enriched data as editing competition and open the form
+        setEditingCompetition(result.data);
+        setShowCompetitionForm(true);
+        setQuickAddInput(''); // Clear the input
+      } else {
+        setEnrichError(result.error || 'Failed to enrich competitor data');
+      }
+
+      // Handle token refresh if needed
+      if (result.isTokenExpired && onTokenRefreshed) {
+        // This will be handled by the API function automatically
+      }
+    } catch (error: any) {
+      console.error('Error enriching competitor:', error);
+      setEnrichError('Failed to enrich competitor data');
+    } finally {
+      setIsEnriching(false);
+    }
+  }, [quickAddInput, authToken, onTokenRefreshed]);
 
   const handleFindCompetitorsWithAI = useCallback(() => {
     setShowAIRearchModal(true);
@@ -499,6 +544,55 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
               >
                 <Plus className="w-5 h-5" />
                 <span>{t('competitions.addNew', 'Dodaj Konkurenta')}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Quick Add Competitor Section */}
+          <div className="bg-white/70 backdrop-blur-sm rounded-xl border border-gray-200/60 p-4 mb-4 shadow-sm">
+            <div className="flex items-center gap-4">
+              <div className="flex-1">
+                <div className="relative">
+                  <input
+                    type="text"
+                    placeholder={t('competitions.quickAdd.placeholder', 'Wprowadź nazwę firmy lub URL strony...')}
+                    value={quickAddInput}
+                    onChange={(e) => {
+                      setQuickAddInput(e.target.value);
+                      if (enrichError) setEnrichError(null);
+                    }}
+                    onKeyPress={(e) => {
+                      if (e.key === 'Enter' && !isEnriching) {
+                        handleEnrichCompetitor();
+                      }
+                    }}
+                    disabled={isEnriching}
+                    className="w-full pl-4 pr-4 py-3 bg-white border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-900 placeholder-gray-500 font-medium rounded-lg disabled:bg-gray-50 disabled:cursor-not-allowed"
+                  />
+                </div>
+                {enrichError && (
+                  <p className="text-sm text-red-600 mt-1 flex items-center gap-1">
+                    <AlertCircle className="w-4 h-4" />
+                    {enrichError}
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={handleEnrichCompetitor}
+                disabled={isEnriching || !quickAddInput.trim()}
+                className="flex items-center gap-2 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 disabled:from-gray-400 disabled:to-gray-500 disabled:cursor-not-allowed text-white font-semibold rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200 disabled:transform-none disabled:shadow-md"
+              >
+                {isEnriching ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>{t('competitions.quickAdd.enriching', 'Wzbogacanie...')}</span>
+                  </>
+                ) : (
+                  <>
+                    <Brain className="w-5 h-5" />
+                    <span>{t('competitions.quickAdd.enrich', 'Wzbogać')}</span>
+                  </>
+                )}
               </button>
             </div>
           </div>

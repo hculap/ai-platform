@@ -1211,4 +1211,123 @@ export const getCompetitionsCount = async (authToken: string, businessProfileId?
   }
 };
 
+export const enrichCompetitor = async (input: {name?: string, url?: string}, authToken: string): Promise<{ 
+  success: boolean; 
+  data?: Competition; 
+  error?: string; 
+  isTokenExpired?: boolean 
+}> => {
+  try {
+    if (!input.name && !input.url) {
+      return {
+        success: false,
+        error: 'Either name or url is required'
+      };
+    }
+
+    const response = await api.post('/agents/competitors-researcher/tools/enrich-competitor/call', {
+      input: input
+    }, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    if (response.data && response.data.data) {
+      const enrichmentData = response.data.data;
+      
+      // Extract the first (and should be only) competitor from the response
+      const competitors = enrichmentData.competitors || [];
+      if (competitors.length > 0) {
+        const enrichedCompetitor = competitors[0];
+        
+        // Map the enriched data to Competition interface
+        const competitionData: Competition = {
+          name: enrichedCompetitor.name || '',
+          url: enrichedCompetitor.url || input.url || '',
+          description: enrichedCompetitor.description || '',
+          usp: enrichedCompetitor.usp || ''
+        };
+
+        return {
+          success: true,
+          data: competitionData
+        };
+      } else {
+        return {
+          success: false,
+          error: 'No competitor data found'
+        };
+      }
+    }
+
+    return {
+      success: false,
+      error: 'Invalid response format'
+    };
+  } catch (error: any) {
+    console.error('Error enriching competitor:', error);
+
+    // Check if token is expired
+    if (error.response?.status === 401 || error.response?.data?.msg === 'Signature verification failed') {
+      // Try to refresh the token first
+      const refreshResult = await refreshAuthToken();
+
+      if (refreshResult.success && refreshResult.access_token) {
+        // Token refreshed successfully, retry the original request
+        try {
+          const retryResponse = await api.post('/agents/competitors-researcher/tools/enrich-competitor/call', {
+            input: input
+          }, {
+            headers: {
+              'Authorization': `Bearer ${refreshResult.access_token}`
+            }
+          });
+
+          if (retryResponse.data && retryResponse.data.data) {
+            const enrichmentData = retryResponse.data.data;
+            
+            // Extract the first competitor from the response
+            const competitors = enrichmentData.competitors || [];
+            if (competitors.length > 0) {
+              const enrichedCompetitor = competitors[0];
+              
+              // Map the enriched data to Competition interface
+              const competitionData: Competition = {
+                name: enrichedCompetitor.name || '',
+                url: enrichedCompetitor.url || input.url || '',
+                description: enrichedCompetitor.description || '',
+                usp: enrichedCompetitor.usp || ''
+              };
+
+              return {
+                success: true,
+                data: competitionData
+              };
+            } else {
+              return {
+                success: false,
+                error: 'No competitor data found'
+              };
+            }
+          }
+        } catch (retryError) {
+          console.error('Retry after token refresh failed:', retryError);
+        }
+      }
+
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to enrich competitor data'
+    };
+  }
+};
+
 export default api;
