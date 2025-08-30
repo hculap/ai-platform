@@ -1211,23 +1211,35 @@ export const getCompetitionsCount = async (authToken: string, businessProfileId?
   }
 };
 
-export const enrichCompetitor = async (input: {name?: string, url?: string}, authToken: string): Promise<{ 
+export const enrichCompetitor = async (
+  input: {name?: string, url?: string}, 
+  authToken: string,
+  businessProfileId?: string
+): Promise<{ 
   success: boolean; 
   data?: Competition; 
   error?: string; 
   isTokenExpired?: boolean 
 }> => {
-  try {
-    if (!input.name && !input.url) {
-      return {
-        success: false,
-        error: 'Either name or url is required'
-      };
-    }
+  if (!input.name && !input.url) {
+    return {
+      success: false,
+      error: 'Either name or url is required'
+    };
+  }
 
-    const response = await api.post('/agents/competitors-researcher/tools/enrich-competitor/call', {
-      input: input
-    }, {
+  const requestPayload: any = {
+    input: input
+  };
+  
+  // Add business profile ID if provided
+  if (businessProfileId) {
+    requestPayload.input.business_profile_id = businessProfileId;
+  }
+
+  try {
+
+    const response = await api.post('/agents/competitors-researcher/tools/enrich-competitor/call', requestPayload, {
       headers: {
         'Authorization': `Bearer ${authToken}`
       }
@@ -1276,9 +1288,7 @@ export const enrichCompetitor = async (input: {name?: string, url?: string}, aut
       if (refreshResult.success && refreshResult.access_token) {
         // Token refreshed successfully, retry the original request
         try {
-          const retryResponse = await api.post('/agents/competitors-researcher/tools/enrich-competitor/call', {
-            input: input
-          }, {
+          const retryResponse = await api.post('/agents/competitors-researcher/tools/enrich-competitor/call', requestPayload, {
             headers: {
               'Authorization': `Bearer ${refreshResult.access_token}`
             }

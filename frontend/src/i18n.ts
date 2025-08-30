@@ -189,6 +189,15 @@ const resources = {
       "competitions.form.errors.urlInvalid": "URL musi zaczynać się od http:// lub https://",
       "competitions.form.errors.descriptionRequired": "Opis jest wymagany",
 
+      // AI Enrichment Form
+      "competitions.form.aiEnrichment.title": "Wzbogacanie AI",
+      "competitions.form.aiEnrichment.subtitle": "Pozwól AI pomóc Ci automatycznie wypełnić szczegóły konkurenta",
+      "competitions.form.aiEnrichment.inputPlaceholder": "Wprowadź nazwę firmy lub URL strony internetowej...",
+      "competitions.form.aiEnrichment.enrich": "Wzbogać z AI",
+      "competitions.form.aiEnrichment.enriching": "Wzbogacam...",
+      "competitions.form.aiMode.title": "Tryb Wzbogacania AI",
+      "competitions.form.aiMode.description": "Użyj sekcji wzbogacania AI powyżej, aby automatycznie wypełnić szczegóły konkurenta",
+
       // AI Competitor Research
       "competitions.aiResearch.title": "Badanie Konkurencji z AI",
       "competitions.aiResearch.subtitle": "Znajdź nowych konkurentów za pomocą sztucznej inteligencji",
@@ -505,6 +514,15 @@ const resources = {
       "competitions.form.errors.urlRequired": "URL is required",
       "competitions.form.errors.urlInvalid": "URL must start with http:// or https://",
       "competitions.form.errors.descriptionRequired": "Description is required",
+
+      // AI Enrichment Form
+      "competitions.form.aiEnrichment.title": "AI Enrichment",
+      "competitions.form.aiEnrichment.subtitle": "Let AI help you fill competitor details automatically",
+      "competitions.form.aiEnrichment.inputPlaceholder": "Enter company name or website URL...",
+      "competitions.form.aiEnrichment.enrich": "Enrich with AI",
+      "competitions.form.aiEnrichment.enriching": "Enriching...",
+      "competitions.form.aiMode.title": "AI Enrichment Mode",
+      "competitions.form.aiMode.description": "Use the AI enrichment section above to automatically fill competitor details",
 
       // AI Competitor Research
       "competitions.aiResearch.title": "AI Competitor Research",
