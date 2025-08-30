@@ -80,37 +80,19 @@ frontend/src/
 #### **Run All Competition Tests**
 ```bash
 cd /Users/szymonpaluch/Projects/AI-Platform/backend
-python3 run_competition_tests.py
+pytest app/tests/test_competition_model.py app/tests/test_competitions_api.py app/tests/test_competition_integration.py -v
 ```
 
 #### **Run Specific Test Files**
 ```bash
 # Model tests
-python3 -c "
-import sys
-sys.path.insert(0, '.')
-from app.tests.test_competition_model import *
-import unittest
-unittest.main(verbosity=2, exit=False)
-"
+pytest app/tests/test_competition_model.py -v
 
-# API tests
-python3 -c "
-import sys
-sys.path.insert(0, '.')
-from app.tests.test_competitions_api import *
-import unittest
-unittest.main(verbosity=2, exit=False)
-"
+# API tests  
+pytest app/tests/test_competitions_api.py -v
 
 # Integration tests
-python3 -c "
-import sys
-sys.path.insert(0, '.')
-from app.tests.test_competition_integration import *
-import unittest
-unittest.main(verbosity=2, exit=False)
-"
+pytest app/tests/test_competition_integration.py -v
 ```
 
 ### **Frontend Tests**
@@ -278,7 +260,7 @@ jobs:
       - name: Run Backend Tests
         run: |
           cd backend
-          python3 run_competition_tests.py
+          pytest app/tests/test_competition_model.py app/tests/test_competitions_api.py app/tests/test_competition_integration.py -v
   test-frontend:
     runs-on: ubuntu-latest
     steps:
