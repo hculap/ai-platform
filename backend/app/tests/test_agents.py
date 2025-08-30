@@ -33,25 +33,24 @@ def test_agent_registry():
     assert len(AgentRegistry.list_agents()) == 0
     assert AgentRegistry.get('nonexistent') is None
 
-    # Register an agent
-    concierge = ConciergeAgent()
-    AgentRegistry.register('test-concierge', concierge)
+    # Register an agent (ConciergeAgent is now an instance, not a class)
+    AgentRegistry.register('test-concierge', ConciergeAgent)
 
     # Test registration
     assert len(AgentRegistry.list_agents()) == 1
-    assert AgentRegistry.get('test-concierge') is concierge
+    assert AgentRegistry.get('test-concierge') is ConciergeAgent
 
     # Test registry listing
     agents = AgentRegistry.list_agents()
     assert len(agents) == 1
     agent_type, agent = agents[0]
     assert agent_type == 'test-concierge'
-    assert agent is concierge
+    assert agent is ConciergeAgent
 
 
 def test_concierge_agent_creation():
     """Test ConciergeAgent creation and properties"""
-    agent = ConciergeAgent()
+    agent = ConciergeAgent
 
     assert agent.name == 'Concierge Agent'
     assert agent.short_description == 'AI-powered business profile generator from website analysis'
@@ -62,7 +61,7 @@ def test_concierge_agent_creation():
 @pytest.mark.asyncio
 async def test_concierge_agent_execute_missing_action():
     """Test ConciergeAgent execution with missing action"""
-    agent = ConciergeAgent()
+    agent = ConciergeAgent
 
     input_data = AgentInput(
         agent_type='business-concierge',
@@ -72,13 +71,13 @@ async def test_concierge_agent_execute_missing_action():
     result = await agent.execute(input_data)
 
     assert result.success is False
-    assert result.error == AGENT_ACTION_PARAMETER_REQUIRED
+    assert result.error == "Action parameter is required"
 
 
 @pytest.mark.asyncio
 async def test_concierge_agent_execute_invalid_action():
-    """Test ConciergeAgent execution with invalid action"""
-    agent = ConciergeAgent()
+    """Test ConciergeAgent execution with invalid action - SingleToolAgent redirects to primary tool"""
+    agent = ConciergeAgent
 
     input_data = AgentInput(
         agent_type='business-concierge',
@@ -87,14 +86,16 @@ async def test_concierge_agent_execute_invalid_action():
 
     result = await agent.execute(input_data)
 
+    # SingleToolAgent redirects invalid actions to primary tool, then validates parameters
+    # analyze-website requires 'url' parameter, so it fails with missing field error
     assert result.success is False
-    assert result.error == AGENT_UNKNOWN_ACTION
+    assert "Required field 'url' is missing" in result.error
 
 
 @pytest.mark.asyncio
 async def test_concierge_agent_execute_analyze_website_missing_url():
     """Test ConciergeAgent analyze-website tool with missing URL"""
-    agent = ConciergeAgent()
+    agent = ConciergeAgent
 
     input_data = AgentInput(
         agent_type='business-concierge',
@@ -104,13 +105,13 @@ async def test_concierge_agent_execute_analyze_website_missing_url():
     result = await agent.execute(input_data)
 
     assert result.success is False
-    assert result.error == TOOL_URL_PARAMETER_REQUIRED
+    assert "Required field 'url' is missing" in result.error
 
 
 @pytest.mark.asyncio
 async def test_concierge_agent_execute_analyze_website_invalid_url():
     """Test ConciergeAgent analyze-website tool with invalid URL"""
-    agent = ConciergeAgent()
+    agent = ConciergeAgent
 
     input_data = AgentInput(
         agent_type='business-concierge',
@@ -123,13 +124,13 @@ async def test_concierge_agent_execute_analyze_website_invalid_url():
     result = await agent.execute(input_data)
 
     assert result.success is False
-    assert result.error == TOOL_INVALID_URL_FORMAT
+    assert "url must have" in result.error.lower()
 
 
 @pytest.mark.asyncio
 async def test_concierge_agent_execute_analyze_website_success():
     """Test ConciergeAgent analyze-website tool success case"""
-    agent = ConciergeAgent()
+    agent = ConciergeAgent
 
     input_data = AgentInput(
         agent_type='business-concierge',
@@ -167,7 +168,7 @@ def test_initialize_agents(setup_agents):
 def test_agent_registry_clear():
     """Test agent registry clear functionality"""
     # Register an agent
-    concierge = ConciergeAgent()
+    concierge = ConciergeAgent
     AgentRegistry.register('test-concierge', concierge)
     assert len(AgentRegistry.list_agents()) == 1
 
@@ -456,7 +457,7 @@ def test_agent_slug_field():
     """Test that agents have proper slug fields"""
     from app.agents.concierge import ConciergeAgent
 
-    agent = ConciergeAgent()
+    agent = ConciergeAgent
     assert hasattr(agent, 'slug')
     assert agent.slug == 'business-concierge'
     assert agent.slug is not None
@@ -469,7 +470,7 @@ def test_agent_public_field():
     from app.agents.base import ExampleAgent
 
     # Concierge agent should be public
-    concierge_agent = ConciergeAgent()
+    concierge_agent = ConciergeAgent
     assert hasattr(concierge_agent, 'is_public')
     assert concierge_agent.is_public is True
 
