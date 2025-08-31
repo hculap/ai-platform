@@ -68,3 +68,16 @@ export interface AuthResponse {
   access_token: string;
   refresh_token?: string;
 }
+
+export interface Offer {
+  id: string;
+  business_profile_id: string;
+  type: 'product' | 'service';
+  name: string;
+  description?: string;
+  unit: string;
+  price: number;
+  status: 'draft' | 'published' | 'archived';
+  created_at: string;
+  updated_at: string;
+}

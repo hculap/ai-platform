@@ -99,11 +99,12 @@ This is an AI-powered business analysis SaaS platform with a Flask backend and R
 
 #### Key Backend Components:
 - **Models** (`app/models/`): SQLAlchemy models for User, BusinessProfile, Competition, Interaction
-- **Routes** (`app/routes/`): API blueprints for auth, business_profiles, competitions, agents
+- **Routes** (`app/routes/`): API blueprints for auth, business_profiles, competitions, agents, offers
 - **Agents System** (`app/agents/`): Modular AI agent architecture
   - `agents/base.py`: Core agent registry and base classes
   - `agents/concierge/`: Business website analysis agent
-  - `agents/competitors_researcher/`: Competitor research agent
+  - `agents/competitors_researcher/`: Competitor research agent  
+  - `agents/offer_assistant/`: AI-powered offer catalog generation agent
   - Each agent has tools in separate directories with standardized structure
 - **Services** (`app/services/`): External service integrations (OpenAI)
 - **Utils** (`app/utils/`): Shared utilities and message constants
@@ -136,6 +137,7 @@ The backend implements a flexible agent system:
 - **users**: Basic user authentication
 - **business_profiles**: Business information and analysis results
 - **competitions**: Competitor data linked to business profiles
+- **offers**: Product/service offerings linked to business profiles
 - **interactions**: Agent execution history
 - **analysis_requests**: Async processing status (via Alembic migrations)
 
@@ -153,6 +155,7 @@ The backend implements a flexible agent system:
 - **Business Profile Analysis**: AI-powered website analysis using OpenAI
 - **Agent Execution**: Standardized tool execution with input validation
 - **Competition Management**: CRUD operations for competitor tracking
+- **Offer Management**: AI-powered offer catalog generation and CRUD operations
 - **Multi-language Support**: Polish as primary language, English secondary
 
 ### Development Workflow

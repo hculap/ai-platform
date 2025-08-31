@@ -187,16 +187,16 @@ class SingleToolAgent(StandardAgent):
         start_time = time.time()
         
         try:
-            parameters = input_data.parameters
+            parameters = input_data.parameters.copy()
             
             # If no action is specified, use the primary tool
             action = parameters.get('action', self.primary_tool.slug)
             
-            # Override action to use primary tool
-            if action != self.primary_tool.slug:
-                # Allow the primary tool slug as action
-                parameters['action'] = self.primary_tool.slug
-                input_data.parameters = parameters
+            # Always ensure the action parameter is set to the primary tool
+            parameters['action'] = self.primary_tool.slug
+            
+            # Update the input data with the corrected parameters
+            input_data.parameters = parameters
             
             # Use standard execution
             return await super().execute(input_data)

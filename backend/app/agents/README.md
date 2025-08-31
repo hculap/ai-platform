@@ -120,6 +120,34 @@ AI-powered agent for analyzing websites and creating business profiles.
 **Tools:**
 - `analyze-website` - Analyze website URLs to create business profiles
 
+### Competitors Researcher Agent
+**Agent Type:** `competitors-researcher`
+
+AI-powered agent for discovering and analyzing business competitors.
+
+**Capabilities:**
+- Competitor discovery and research
+- Market analysis and insights
+- Competitive landscape mapping
+- USP and positioning analysis
+
+**Tools:**
+- `find-competitors` - Discover and analyze competitors based on business profile
+
+### Offer Assistant Agent
+**Agent Type:** `offer-assistant`
+
+AI-powered agent for generating comprehensive offer catalogs based on business profile and competitive landscape.
+
+**Capabilities:**
+- AI-powered offer catalog generation
+- Competitive pricing recommendations
+- Market-aligned product/service offerings
+- Multi-language support (Polish/English)
+
+**Tools:**
+- `generate-offers` - Generate 3-8 tailored offers with pricing and descriptions
+
 ## 🔧 Tool System
 
 ### Shared BaseTool (`agents/shared/base_tool.py`)

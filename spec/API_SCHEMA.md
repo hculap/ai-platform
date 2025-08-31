@@ -57,6 +57,78 @@ Response:
   "id": "uuid",
   "updated_at": "2025-01-15T10:30:00Z"
 }
+Offers
+GET /business-profiles/:id/offers
+json{
+  "data": [
+    {
+      "id": "uuid",
+      "type": "product",
+      "name": "Konsultacje IT",
+      "description": "Profesjonalne doradztwo technologiczne",
+      "unit": "per_hour",
+      "price": 250.00,
+      "status": "published"
+    }
+  ]
+}
+POST /business-profiles/:id/offers
+jsonRequest:
+{
+  "type": "service",
+  "name": "Audit bezpieczeństwa",
+  "description": "Kompleksowy audyt bezpieczeństwa IT",
+  "unit": "per_project",
+  "price": 5000.00,
+  "status": "draft"
+}
+
+Response:
+{
+  "id": "uuid",
+  "message": "Offer created successfully"
+}
+POST /business-profiles/:id/generate-offers
+jsonRequest: {} (no body required)
+
+Response:
+{
+  "message": "Offers generated successfully",
+  "data": {
+    "offers_count": 5,
+    "offers": [
+      {
+        "id": "uuid",
+        "type": "service",
+        "name": "Konsultacje strategiczne IT",
+        "description": "Doradztwo w zakresie strategii technologicznej",
+        "unit": "per_hour",
+        "price": 300.00,
+        "status": "draft"
+      }
+    ]
+  }
+}
+PUT /offers/:id
+jsonRequest:
+{
+  "name": "Updated offer name",
+  "price": 350.00,
+  "status": "published"
+}
+
+Response:
+{
+  "id": "uuid",
+  "updated_at": "2025-01-15T10:30:00Z",
+  "message": "Offer updated successfully"
+}
+DELETE /offers/:id
+jsonResponse:
+{
+  "id": "uuid",
+  "message": "Offer deleted successfully"
+}
 Agents
 GET /api/agents
 json{

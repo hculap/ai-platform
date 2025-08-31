@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { BusinessProfile, BusinessProfileApi, AnalysisResult, AuthResponse } from '../types';
+import { BusinessProfile, BusinessProfileApi, AnalysisResult, AuthResponse, Offer } from '../types';
 import { tokenManager } from './tokenManager';
 
 // API Configuration
@@ -1336,6 +1336,219 @@ export const enrichCompetitor = async (
     return {
       success: false,
       error: error.response?.data?.message || error.message || 'Failed to enrich competitor data'
+    };
+  }
+};
+
+// Offer API functions
+export const getOffers = async (authToken: string, businessProfileId: string): Promise<{ success: boolean; data?: Offer[]; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.get(`/business-profiles/${businessProfileId}/offers`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    return {
+      success: true,
+      data: response.data.data || []
+    };
+  } catch (error: any) {
+    console.error('Error fetching offers:', error);
+
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to fetch offers'
+    };
+  }
+};
+
+export const getOffersCount = async (authToken: string, businessProfileId?: string): Promise<{ success: boolean; data?: number; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const params = businessProfileId ? { business_profile_id: businessProfileId } : {};
+    const response = await api.get('/offers/count', {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      },
+      params
+    });
+
+    return {
+      success: true,
+      data: response.data.count || 0
+    };
+  } catch (error: any) {
+    console.error('Error fetching offers count:', error);
+
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to fetch offers count'
+    };
+  }
+};
+
+export const getOffer = async (offerId: string, authToken: string): Promise<{ success: boolean; data?: Offer; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.get(`/offers/${offerId}`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error: any) {
+    console.error('Error fetching offer:', error);
+
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to fetch offer'
+    };
+  }
+};
+
+export const createOffer = async (businessProfileId: string, offerData: Omit<Offer, 'id' | 'business_profile_id' | 'created_at' | 'updated_at'>, authToken: string): Promise<{ success: boolean; data?: any; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.post(`/business-profiles/${businessProfileId}/offers`, offerData, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error: any) {
+    console.error('Error creating offer:', error);
+
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to create offer'
+    };
+  }
+};
+
+export const updateOffer = async (offerId: string, offerData: Partial<Omit<Offer, 'id' | 'business_profile_id' | 'created_at' | 'updated_at'>>, authToken: string): Promise<{ success: boolean; data?: any; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.put(`/offers/${offerId}`, offerData, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error: any) {
+    console.error('Error updating offer:', error);
+
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to update offer'
+    };
+  }
+};
+
+export const deleteOffer = async (offerId: string, authToken: string): Promise<{ success: boolean; data?: any; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.delete(`/offers/${offerId}`, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error: any) {
+    console.error('Error deleting offer:', error);
+
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to delete offer'
+    };
+  }
+};
+
+export const generateOffers = async (businessProfileId: string, authToken: string): Promise<{ success: boolean; data?: any; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.post(`/business-profiles/${businessProfileId}/generate-offers`, {}, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error: any) {
+    console.error('Error generating offers:', error);
+
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to generate offers'
     };
   }
 };

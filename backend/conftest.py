@@ -14,6 +14,7 @@ from app.models.user import User
 from app.models.business_profile import BusinessProfile
 from app.models.interaction import Interaction
 from app.models.competition import Competition
+from app.models.offer import Offer
 
 @pytest.fixture
 def app():
@@ -86,22 +87,52 @@ def test_competition(test_business_profile):
 @pytest.fixture
 def test_user2(app):
     """Create a second test user"""
-    with app.app_context():
-        user = User(email='testuser2@gmail.com', password='TestPassword123')
-        db.session.add(user)
-        db.session.commit()
-        return user
+    user = User(email='testuser2@gmail.com', password='TestPassword123')
+    db.session.add(user)
+    db.session.commit()
+    return user
 
 @pytest.fixture
 def test_business_profile2(test_user2):
     """Create a test business profile for second user"""
-    with app.app_context():
-        profile = BusinessProfile(
-            user_id=test_user2.id,
-            website_url='https://example2.com'
-        )
-        profile.name = 'Test Business 2'
-        profile.analysis_status = 'completed'
-        db.session.add(profile)
-        db.session.commit()
-        return profile
+    profile = BusinessProfile(
+        user_id=test_user2.id,
+        website_url='https://example2.com'
+    )
+    profile.name = 'Test Business 2'
+    profile.analysis_status = 'completed'
+    db.session.add(profile)
+    db.session.commit()
+    return profile
+
+@pytest.fixture
+def test_offer(test_business_profile):
+    """Create a test offer"""
+    offer = Offer(
+        business_profile_id=test_business_profile.id,
+        type='product',
+        name='Test Product',
+        description='A test product offering',
+        unit='piece',
+        price=99.99,
+        status='draft'
+    )
+    db.session.add(offer)
+    db.session.commit()
+    return offer
+
+@pytest.fixture
+def test_offer_service(test_business_profile):
+    """Create a test service offer"""
+    offer = Offer(
+        business_profile_id=test_business_profile.id,
+        type='service',
+        name='Test Service',
+        description='A test service offering',
+        unit='hour',
+        price=150.00,
+        status='published'
+    )
+    db.session.add(offer)
+    db.session.commit()
+    return offer

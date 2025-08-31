@@ -4,13 +4,14 @@ import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import {
   User, Building2, Settings, LogOut, Search, Bell,
   Bot, Zap, FileText, Video, Target, TrendingUp, Megaphone,
-  Users, Activity, Clock, CheckCircle, Plus, Menu
+  Users, Activity, Clock, CheckCircle, Plus, Menu, Package
 } from 'lucide-react';
 import { User as UserType } from '../types';
-import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, updateBusinessProfile, getCompetitionsCount } from '../services/api';
+import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, updateBusinessProfile, getCompetitionsCount, getOffersCount } from '../services/api';
 import BusinessProfiles from './BusinessProfiles';
 import Agents from './Agents';
 import Competition from './Competition';
+import Offers from './Offers';
 
 interface DashboardProps {
   user: UserType;
@@ -53,6 +54,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
   const [agentsCount, setAgentsCount] = useState<number>(0);
   const [businessProfilesCount, setBusinessProfilesCount] = useState<number>(0);
   const [competitionsCount, setCompetitionsCount] = useState<number>(0);
+  const [offersCount, setOffersCount] = useState<number>(0);
   const [interactionsCount, setInteractionsCount] = useState<number>(0);
   const [isLoadingStats, setIsLoadingStats] = useState<boolean>(true);
 
@@ -147,6 +149,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     }
   }, [authToken, selectedBusinessProfile?.id]);
 
+  // Function to refresh offers count
+  const refreshOffersCount = useCallback(async () => {
+    try {
+      const offersResult = await getOffersCount(authToken, selectedBusinessProfile?.id);
+      if (offersResult.success && offersResult.data !== undefined) {
+        setOffersCount(offersResult.data);
+      }
+    } catch (error) {
+      console.error('Error refreshing offers count:', error);
+    }
+  }, [authToken, selectedBusinessProfile?.id]);
+
   // Fetch real dashboard data
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -161,6 +175,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
 
         // Fetch competitions count (will use selectedBusinessProfile?.id automatically)
         await refreshCompetitionsCount();
+
+        // Fetch offers count (will use selectedBusinessProfile?.id automatically)
+        await refreshOffersCount();
 
         // Fetch interactions count
         const interactionsResult = await getInteractionsCount(authToken);
@@ -194,12 +211,24 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     refreshCompetitionsCount();
   }, [refreshCompetitionsCount]);
 
+  // Refresh offers count when component mounts or business profile changes
+  useEffect(() => {
+    refreshOffersCount();
+  }, [refreshOffersCount]);
+
   // Also refresh competitions count when selectedBusinessProfile changes
   useEffect(() => {
     if (selectedBusinessProfile?.id) {
       refreshCompetitionsCount();
     }
   }, [selectedBusinessProfile?.id, authToken, refreshCompetitionsCount]);
+
+  // Also refresh offers count when selectedBusinessProfile changes
+  useEffect(() => {
+    if (selectedBusinessProfile?.id) {
+      refreshOffersCount();
+    }
+  }, [selectedBusinessProfile?.id, authToken, refreshOffersCount]);
 
 
 
@@ -221,6 +250,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
       items: [
         { id: 'business-profiles', label: t('dashboard.nav.businessProfiles'), icon: Building2, count: businessProfilesCount },
         { id: 'competition', label: t('dashboard.nav.competition'), icon: Target, count: competitionsCount },
+        { id: 'offers', label: t('dashboard.nav.offers'), icon: Package, count: offersCount },
         { id: 'campaigns', label: t('dashboard.nav.campaigns'), icon: TrendingUp, count: 4 },
         { id: 'ads', label: t('dashboard.nav.ads'), icon: Megaphone, count: 15 },
       ]
@@ -436,6 +466,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                   authToken={authToken}
                   onTokenRefreshed={onTokenRefreshed}
                   onCompetitionsChanged={refreshCompetitionsCount}
+                />
+              } />
+              
+              <Route path="offers" element={
+                <Offers
+                  businessProfileId={selectedBusinessProfile?.id}
+                  authToken={authToken}
+                  onTokenRefreshed={onTokenRefreshed}
+                  onOffersChanged={refreshOffersCount}
                 />
               } />
               

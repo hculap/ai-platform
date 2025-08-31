@@ -105,6 +105,7 @@ Demokratyzacja sztucznej inteligencji w biznesie - od analizy po implementację,
 - **Agent Research:** analiza konkurencji, trendy rynkowe, keyword research
 - **Agent Reklamowy:** tworzenie kampanii, copywriting, A/B testing headlines
 - **Agent Graficzny:** generowanie obrazków, logo, materiały marketingowe
+- **Agent Offer Assistant:** generowanie katalogu ofert, wycena produktów/usług, analiza konkurencyjności cenowej
 - **Extensible architecture** dla dodawania nowych agentów
 
 #### 5.1.3 User Management
