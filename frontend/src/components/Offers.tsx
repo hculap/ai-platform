@@ -209,7 +209,7 @@ const OffersComponent: React.FC<OffersProps> = ({
     } catch (error) {
       console.error('Error saving offer:', error);
     }
-  }, [businessProfileId, editingOffer, authToken, onTokenRefreshed, onOffersChanged, fetchOffers]);
+  }, [businessProfileId, editingOffer, authToken, onOffersChanged, fetchOffers]);
 
   const handleCancelForm = useCallback(() => {
     setShowOfferForm(false);
@@ -243,7 +243,7 @@ const OffersComponent: React.FC<OffersProps> = ({
     } finally {
       setIsAIGenerationLoading(false);
     }
-  }, [businessProfileId, authToken, onTokenRefreshed, fetchOffers, onOffersChanged]);
+  }, [businessProfileId, authToken, fetchOffers, onOffersChanged]);
 
   const truncateText = (text: string, maxLength: number = 150) => {
     if (text.length <= maxLength) return text;
@@ -669,45 +669,12 @@ const OffersComponent: React.FC<OffersProps> = ({
 
       {/* Offer Form Modal */}
       {showOfferForm && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
-            <div className="flex items-center justify-between p-6 border-b border-gray-200">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl">
-                  {editingOffer ? <Edit className="w-6 h-6 text-white" /> : <Plus className="w-6 h-6 text-white" />}
-                </div>
-                <div>
-                  <h2 className="text-2xl font-bold text-gray-900">
-                    {editingOffer
-                      ? t('offers.editTitle', 'Edytuj Ofertę')
-                      : t('offers.createTitle', 'Utwórz Ofertę')
-                    }
-                  </h2>
-                  <p className="text-gray-600">
-                    {editingOffer
-                      ? t('offers.editSubtitle', 'Zaktualizuj informacje o ofercie')
-                      : t('offers.createSubtitle', 'Dodaj nową ofertę do katalogu')
-                    }
-                  </p>
-                </div>
-              </div>
-              <button
-                onClick={handleCancelForm}
-                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
-              >
-                <X className="w-5 h-5 text-gray-600" />
-              </button>
-            </div>
-
-            <div className="flex-1 p-6 overflow-y-auto">
-              <OfferForm
-                offer={editingOffer}
-                onSave={handleOfferFormSubmit}
-                onCancel={handleCancelForm}
-              />
-            </div>
-          </div>
-        </div>
+        <OfferForm
+          offer={editingOffer}
+          onSave={handleOfferFormSubmit}
+          onCancel={handleCancelForm}
+          isLoading={false}
+        />
       )}
 
       {/* AI Generation Modal */}

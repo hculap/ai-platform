@@ -71,7 +71,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
       if (!currentProfile) return;
 
       // Set this profile as active (backend will handle deactivating others)
-      const result = await updateBusinessProfile(profileId, {
+      await updateBusinessProfile(profileId, {
         ...currentProfile,
         is_active: true
       }, authToken);
@@ -88,7 +88,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     } catch (error) {
       console.error('Error updating active profile:', error);
     }
-  }, [businessProfiles, authToken, onTokenRefreshed]);
+  }, [businessProfiles, authToken]);
 
   // Function to refresh business profiles (useCallback to prevent infinite loops)
   const refreshBusinessProfiles = useCallback(async () => {
@@ -192,7 +192,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     };
 
     fetchDashboardData();
-  }, [authToken]);
+  }, [authToken, refreshCompetitionsCount, refreshOffersCount]);
 
   // Fetch business profiles separately
   useEffect(() => {
