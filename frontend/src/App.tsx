@@ -15,6 +15,7 @@ import SignupForm from './components/SignupForm';
 import SignInForm from './components/SignInForm';
 import Dashboard from './components/Dashboard';
 import ProtectedRoute from './components/ProtectedRoute';
+import LandingPage from './components/LandingPage';
 
 // Create a separate component for the app content that can use router hooks
 function AppContent() {
@@ -467,6 +468,15 @@ function AppContent() {
       
       {/* Public Routes */}
       <Route path="/" element={
+        <LandingPage
+          onAnalyze={handleAnalyze}
+          onSkipToForm={handleSkipToForm}
+          onSignIn={handleShowSignIn}
+          isAnalyzing={isAnalyzing}
+        />
+      } />
+      
+      <Route path="/simple" element={
         <div className="min-h-screen bg-gray-50 scroll-smooth flex flex-col">
           <BackgroundElements />
           <div className="relative z-10 flex flex-col min-h-screen">
