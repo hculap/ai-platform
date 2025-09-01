@@ -1553,4 +1553,34 @@ export const generateOffers = async (businessProfileId: string, authToken: strin
   }
 };
 
+export const saveSelectedOffers = async (businessProfileId: string, selectedOffers: any[], authToken: string): Promise<{ success: boolean; data?: any; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.post(`/business-profiles/${businessProfileId}/save-selected-offers`, {
+      selected_offers: selectedOffers
+    }, {
+      headers: {
+        'Authorization': `Bearer ${authToken}`
+      }
+    });
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error: any) {
+    console.error('Error saving selected offers:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to save selected offers'
+    };
+  }
+};
+
 export default api;

@@ -4,7 +4,7 @@ AI-powered tool to generate offer catalog based on business profile and competit
 """
 
 import logging
-from typing import Dict, Any, Optional
+from typing import Dict, Any, Optional, List
 from ...shared.tool_factory import SystemMessageTool
 from ...shared.base_tool import ToolInput, ToolOutput, ToolCategory
 from ...shared.validators import BusinessProfileIdValidator, ParametersValidator
@@ -124,13 +124,20 @@ Verbosity
             business_profile_id, user_id
         )
         
-        # Create user message for AI
-        user_message = self._create_user_message(
-            generation_data['business_profile'],
-            generation_data['competitors']
-        )
+        # Debug the retrieved data
+        business_profile = generation_data['business_profile']
+        competitors = generation_data['competitors']
         
-        logger.debug(f"Generated user message for AI: {user_message[:200]}...")
+        logger.info(f"Business profile data: {business_profile}")
+        logger.info(f"Competitors count: {len(competitors)}")
+        logger.info(f"Competitors data: {competitors}")
+        
+        # Create user message for AI
+        user_message = self._create_user_message(business_profile, competitors)
+        
+        logger.info(f"Generated user message for AI: {user_message[:500]}...")
+        logger.info(f"Full user message length: {len(user_message)}")
+        
         return user_message
     
     async def _process_openai_result(
@@ -141,7 +148,7 @@ Verbosity
         user_id: Optional[str]
     ) -> Dict[str, Any]:
         """
-        Process OpenAI result and save generated offers
+        Process OpenAI result and return generated offers for user selection
         
         Args:
             content: Content from OpenAI response
@@ -150,32 +157,65 @@ Verbosity
             user_id: User ID for context
             
         Returns:
-            Processed response data
+            Processed response data with offers for selection
         """
         business_profile_id = validated_params['business_profile_id']
+        
+        # Add debugging information
+        logger.info(f"Processing OpenAI result for business profile {business_profile_id}")
+        logger.info(f"Content type: {type(content)}, Content length: {len(str(content)) if content else 0}")
+        logger.info(f"Content: {str(content)[:500]}...")  # First 500 chars for debugging
+        logger.info(f"Full OpenAI result keys: {openai_result.keys()}")
+        logger.info(f"OpenAI success: {openai_result.get('success')}")
+        
+        if not content or str(content).strip() == "":
+            logger.error("OpenAI returned empty content, generating fallback offers")
+            
+            # Generate fallback offers based on business profile data
+            fallback_offers = self._generate_fallback_offers(validated_params, user_id)
+            
+            if fallback_offers:
+                logger.info(f"Generated {len(fallback_offers)} fallback offers")
+                return {
+                    'message': f'AI service temporarily unavailable. Generated {len(fallback_offers)} basic offers based on your business profile.',
+                    'offers_count': len(fallback_offers),
+                    'offers': fallback_offers,
+                    'business_profile_id': business_profile_id,
+                    'fallback': True
+                }
+            else:
+                return {
+                    'error': 'AI service temporarily unavailable and unable to generate basic offers. Please ensure your business profile has complete information (name, offer description, target customer) and try again.',
+                    'debug_info': {
+                        'content_type': str(type(content)),
+                        'openai_result': openai_result,
+                        'business_profile_id': business_profile_id
+                    }
+                }
         
         try:
             # Parse AI response
             offers_data = OfferGenerationService.parse_ai_response(str(content))
             
-            # Save generated offers to database
-            created_offers = OfferGenerationService.save_generated_offers(
-                business_profile_id, user_id, offers_data
-            )
-            
-            logger.info(f"Successfully generated {len(created_offers)} offers")
+            logger.info(f"Successfully parsed {len(offers_data)} offers from AI response")
             
             return {
-                'message': f'Generated {len(created_offers)} offers successfully',
-                'offers_count': len(created_offers),
-                'offers': [offer.to_dict() for offer in created_offers]
+                'message': f'Generated {len(offers_data)} offers for selection',
+                'offers_count': len(offers_data),
+                'offers': offers_data,  # Return raw offer data for user selection
+                'business_profile_id': business_profile_id
             }
             
         except Exception as e:
             logger.error(f"Error processing OpenAI response: {e}", exc_info=True)
             return {
                 'error': f"Failed to process generated offers: {str(e)}",
-                'content': str(content)
+                'content': str(content),
+                'debug_info': {
+                    'content_type': str(type(content)),
+                    'openai_result': openai_result,
+                    'business_profile_id': business_profile_id
+                }
             }
     
     def _create_user_message(self, business_profile: Dict[str, Any], competitors: list) -> str:
@@ -242,3 +282,66 @@ Verbosity
         )
         
         return "\n".join(message_parts)
+    
+    def _generate_fallback_offers(self, validated_params: Dict[str, Any], user_id: str) -> List[Dict[str, Any]]:
+        """
+        Generate basic fallback offers when AI service is unavailable
+        
+        Args:
+            validated_params: Validated input parameters
+            user_id: User ID for context
+            
+        Returns:
+            List of basic offer dictionaries
+        """
+        try:
+            business_profile_id = validated_params['business_profile_id']
+            
+            # Get business profile data
+            generation_data = OfferGenerationService.prepare_generation_data(
+                business_profile_id, user_id
+            )
+            
+            business_profile = generation_data['business_profile']
+            
+            # Extract key information
+            business_name = business_profile.get('name', 'Your Business')
+            offer_description = business_profile.get('offer_description', '')
+            
+            # Generate basic offers based on common business patterns
+            fallback_offers = []
+            
+            # Basic consultation offer
+            fallback_offers.append({
+                "type": "service",
+                "name": f"{business_name} Consultation",
+                "description": f"Professional consultation services to help you achieve your business goals. Get expert advice and strategic guidance tailored to your needs.",
+                "unit": "per_hour",
+                "price": 200
+            })
+            
+            # Basic service package if offer description exists
+            if offer_description:
+                fallback_offers.append({
+                    "type": "service", 
+                    "name": f"{business_name} Service Package",
+                    "description": f"Comprehensive service package based on our core offering: {offer_description[:80]}...",
+                    "unit": "per_project",
+                    "price": 1500
+                })
+            
+            # Monthly subscription service
+            fallback_offers.append({
+                "type": "service",
+                "name": f"{business_name} Monthly Support",
+                "description": "Ongoing monthly support and services to help your business grow consistently. Includes regular check-ins and continuous optimization.",
+                "unit": "per_month", 
+                "price": 500
+            })
+            
+            logger.info(f"Generated {len(fallback_offers)} fallback offers")
+            return fallback_offers
+            
+        except Exception as e:
+            logger.error(f"Failed to generate fallback offers: {e}", exc_info=True)
+            return []

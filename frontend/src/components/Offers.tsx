@@ -13,14 +13,16 @@ import {
   Loader2,
   AlertCircle,
   CheckCircle,
-  DollarSign
+  DollarSign,
+  Save
 } from 'lucide-react';
 import { 
   getOffers, 
   deleteOffer, 
   createOffer, 
   updateOffer, 
-  generateOffers
+  generateOffers,
+  saveSelectedOffers
 } from '../services/api';
 import { Offer } from '../types';
 import OfferForm from './OfferForm';
@@ -54,6 +56,12 @@ const OffersComponent: React.FC<OffersProps> = ({
   const [isAIGenerationLoading, setIsAIGenerationLoading] = useState(false);
   const [aiGenerationError, setAiGenerationError] = useState<string | null>(null);
   const [aiGenerationSuccess, setAiGenerationSuccess] = useState<string | null>(null);
+  
+  // Selection states for generated offers
+  const [generatedOffers, setGeneratedOffers] = useState<any[]>([]);
+  const [selectedOffers, setSelectedOffers] = useState<Set<string>>(new Set());
+  const [showGenerationResults, setShowGenerationResults] = useState(false);
+  const [isSavingSelected, setIsSavingSelected] = useState(false);
 
   // Debounce search query
   useEffect(() => {
@@ -139,6 +147,10 @@ const OffersComponent: React.FC<OffersProps> = ({
     setShowAIGenerationModal(false);
     setAiGenerationError(null);
     setAiGenerationSuccess(null);
+    setGeneratedOffers([]);
+    setSelectedOffers(new Set());
+    setShowGenerationResults(false);
+    setIsSavingSelected(false);
   }, []);
 
   const handleEditOffer = useCallback((offer: Offer) => {
@@ -226,14 +238,14 @@ const OffersComponent: React.FC<OffersProps> = ({
       setIsAIGenerationLoading(true);
       setAiGenerationError(null);
       setAiGenerationSuccess(null);
+      setShowGenerationResults(false);
 
       const result = await generateOffers(businessProfileId, authToken);
 
-      if (result.success) {
-        setAiGenerationSuccess('Offers generated successfully!');
-        // Refresh offers list
-        fetchOffers();
-        if (onOffersChanged) onOffersChanged();
+      if (result.success && result.data?.data?.offers) {
+        setGeneratedOffers(result.data.data.offers);
+        setShowGenerationResults(true);
+        setSelectedOffers(new Set());
       } else {
         setAiGenerationError(result.error || 'Failed to generate offers');
       }
@@ -243,7 +255,55 @@ const OffersComponent: React.FC<OffersProps> = ({
     } finally {
       setIsAIGenerationLoading(false);
     }
-  }, [businessProfileId, authToken, fetchOffers, onOffersChanged]);
+  }, [businessProfileId, authToken]);
+
+  const handleOfferSelect = useCallback((offerName: string, checked: boolean) => {
+    setSelectedOffers(prev => {
+      const newSelected = new Set(prev);
+      if (checked) {
+        newSelected.add(offerName);
+      } else {
+        newSelected.delete(offerName);
+      }
+      return newSelected;
+    });
+  }, []);
+
+  const handleSaveSelectedOffers = useCallback(async () => {
+    if (!businessProfileId || selectedOffers.size === 0) {
+      return;
+    }
+
+    try {
+      setIsSavingSelected(true);
+      setAiGenerationError(null);
+
+      // Get selected offers from generated offers
+      const selectedOfferData = generatedOffers.filter(offer => 
+        selectedOffers.has(offer.name)
+      );
+
+      const result = await saveSelectedOffers(businessProfileId, selectedOfferData, authToken);
+
+      if (result.success) {
+        setAiGenerationSuccess(`Successfully saved ${selectedOffers.size} offers!`);
+        setShowGenerationResults(false);
+        setGeneratedOffers([]);
+        setSelectedOffers(new Set());
+        
+        // Refresh offers list
+        fetchOffers();
+        if (onOffersChanged) onOffersChanged();
+      } else {
+        setAiGenerationError(result.error || 'Failed to save selected offers');
+      }
+    } catch (error) {
+      console.error('Error saving selected offers:', error);
+      setAiGenerationError('An unexpected error occurred while saving offers');
+    } finally {
+      setIsSavingSelected(false);
+    }
+  }, [businessProfileId, selectedOffers, generatedOffers, authToken, fetchOffers, onOffersChanged]);
 
   const truncateText = (text: string, maxLength: number = 150) => {
     if (text.length <= maxLength) return text;
@@ -704,26 +764,28 @@ const OffersComponent: React.FC<OffersProps> = ({
             </div>
 
             <div className="p-6">
-              {/* Execute Button */}
-              <div className="flex justify-center mb-6">
-                <button
-                  onClick={handleExecuteAIGeneration}
-                  disabled={isAIGenerationLoading}
-                  className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
-                >
-                  {isAIGenerationLoading ? (
-                    <>
-                      <Loader2 className="w-5 h-5 animate-spin" />
-                      {t('offers.aiGeneration.generating', 'Generuję oferty...')}
-                    </>
-                  ) : (
-                    <>
-                      <Brain className="w-5 h-5" />
-                      {t('offers.aiGeneration.generateOffers', 'Generuj Oferty')}
-                    </>
-                  )}
-                </button>
-              </div>
+              {/* Execute Button - only show when no results */}
+              {!showGenerationResults && (
+                <div className="flex justify-center mb-6">
+                  <button
+                    onClick={handleExecuteAIGeneration}
+                    disabled={isAIGenerationLoading}
+                    className="flex items-center gap-3 px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  >
+                    {isAIGenerationLoading ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        {t('offers.aiGeneration.generating', 'Generuję oferty...')}
+                      </>
+                    ) : (
+                      <>
+                        <Brain className="w-5 h-5" />
+                        {t('offers.aiGeneration.generateOffers', 'Generuj Oferty')}
+                      </>
+                    )}
+                  </button>
+                </div>
+              )}
 
               {/* Status Messages */}
               {aiGenerationError && (
@@ -744,16 +806,95 @@ const OffersComponent: React.FC<OffersProps> = ({
                 </div>
               )}
 
-              {/* Empty State */}
-              <div className="text-center py-12">
-                <Brain className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {t('offers.aiGeneration.ready', 'Gotowy do generowania')}
-                </h3>
-                <p className="text-gray-600">
-                  {t('offers.aiGeneration.instruction', 'Kliknij przycisk powyżej, aby wygenerować oferty za pomocą AI bazując na profilu biznesowym.')}
-                </p>
-              </div>
+              {/* Generated Offers Selection */}
+              {showGenerationResults && generatedOffers.length > 0 && (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-semibold text-gray-900 flex items-center gap-2">
+                      <Package className="w-5 h-5 text-purple-600" />
+                      {t('offers.aiGeneration.generatedOffers', 'Wygenerowane Oferty')} ({generatedOffers.length})
+                    </h3>
+                    
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm text-gray-600">
+                        {selectedOffers.size} {t('offers.aiGeneration.selected', 'wybranych')}
+                      </span>
+                      <button
+                        onClick={handleSaveSelectedOffers}
+                        disabled={selectedOffers.size === 0 || isSavingSelected}
+                        className="flex items-center gap-2 px-4 py-2 bg-green-600 hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors"
+                      >
+                        <Save className="w-4 h-4" />
+                        {isSavingSelected ? t('offers.aiGeneration.saving', 'Zapisuję...') : t('offers.aiGeneration.saveSelected', `Zapisz wybrane (${selectedOffers.size})`)}
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-96 overflow-y-auto">
+                    {generatedOffers.map((offer, index) => (
+                      <div key={index} className={`bg-gray-50 rounded-lg p-4 border transition-all ${
+                        selectedOffers.has(offer.name) 
+                          ? 'border-purple-300 bg-purple-50 shadow-md' 
+                          : 'border-gray-200 hover:shadow-md'
+                      }`}>
+                        <div className="flex items-start justify-between mb-3">
+                          <div className="flex items-start gap-3 flex-1">
+                            <input
+                              type="checkbox"
+                              checked={selectedOffers.has(offer.name)}
+                              onChange={(e) => handleOfferSelect(offer.name, e.target.checked)}
+                              className="mt-1 w-4 h-4 text-purple-600 bg-gray-100 border-gray-300 rounded focus:ring-purple-500 focus:ring-2"
+                            />
+                            <div className="flex-1">
+                              <h4 className="font-semibold text-gray-900 text-lg">{offer.name}</h4>
+                              <div className="flex items-center gap-2 mt-1">
+                                <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                                  offer.type === 'service' ? 'bg-blue-100 text-blue-800' : 'bg-green-100 text-green-800'
+                                }`}>
+                                  {offer.type === 'service' ? 'Usługa' : 'Produkt'}
+                                </span>
+                                <span className="text-lg font-bold text-purple-600">
+                                  {formatPrice(offer.price)} / {offer.unit.replace('per_', '')}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {offer.description && (
+                          <div className="ml-7 text-sm text-gray-600 mt-2">
+                            <p>{truncateText(offer.description, 100)}</p>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="flex justify-center pt-4">
+                    <button
+                      onClick={handleExecuteAIGeneration}
+                      disabled={isAIGenerationLoading}
+                      className="flex items-center gap-2 px-4 py-2 text-purple-600 border border-purple-300 hover:bg-purple-50 rounded-lg transition-colors"
+                    >
+                      <Brain className="w-4 h-4" />
+                      {t('offers.aiGeneration.generateAgain', 'Generuj ponownie')}
+                    </button>
+                  </div>
+                </div>
+              )}
+
+              {/* Empty State - only show when no generation in progress and no results */}
+              {!showGenerationResults && !isAIGenerationLoading && (
+                <div className="text-center py-12">
+                  <Brain className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                    {t('offers.aiGeneration.ready', 'Gotowy do generowania')}
+                  </h3>
+                  <p className="text-gray-600">
+                    {t('offers.aiGeneration.instruction', 'Kliknij przycisk powyżej, aby wygenerować oferty za pomocą AI bazując na profilu biznesowym.')}
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

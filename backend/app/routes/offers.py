@@ -368,6 +368,85 @@ def generate_offers(business_profile_id):
         'data': result.data
     }), 200
 
+@offers_bp.route('/business-profiles/<business_profile_id>/save-selected-offers', methods=['POST'])
+@jwt_required()
+def save_selected_offers(business_profile_id):
+    """Save selected offers from AI generation"""
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    logger.info(f"Starting save selected offers for business_profile_id: {business_profile_id}")
+    
+    user_id = get_jwt_identity()
+    
+    # Verify business profile ownership
+    try:
+        business_profile = BusinessProfile.query.filter_by(
+            id=business_profile_id,
+            user_id=user_id
+        ).first()
+        if not business_profile:
+            logger.warning(f"Business profile not found or access denied for ID: {business_profile_id}, User: {user_id}")
+            return jsonify({
+                'error': ERROR_VALIDATION_ERROR,
+                'message': 'Business profile not found or access denied'
+            }), 403
+    except Exception as e:
+        logger.exception(f"Database error while fetching business profile: {e}")
+        return jsonify({
+            'error': ERROR_SERVER_ERROR,
+            'message': 'Database error occurred'
+        }), 500
+    
+    # Get selected offers from request
+    try:
+        data = request.get_json()
+        if not data or 'selected_offers' not in data:
+            return jsonify({
+                'error': ERROR_VALIDATION_ERROR,
+                'message': 'selected_offers array is required'
+            }), 400
+            
+        selected_offers = data['selected_offers']
+        if not isinstance(selected_offers, list):
+            return jsonify({
+                'error': ERROR_VALIDATION_ERROR,
+                'message': 'selected_offers must be an array'
+            }), 400
+            
+        logger.info(f"Received {len(selected_offers)} offers to save")
+        
+    except Exception as e:
+        logger.exception(f"Error parsing request data: {e}")
+        return jsonify({
+            'error': ERROR_SERVER_ERROR,
+            'message': 'Invalid request data'
+        }), 400
+    
+    # Save selected offers using the OfferGenerationService
+    try:
+        from ..services.offer_service import OfferGenerationService
+        
+        created_offers = OfferGenerationService.save_generated_offers(
+            business_profile_id, user_id, selected_offers
+        )
+        
+        logger.info(f"Successfully saved {len(created_offers)} selected offers")
+        
+        return jsonify({
+            'message': f'Successfully saved {len(created_offers)} offers',
+            'offers_count': len(created_offers),
+            'offers': [offer.to_dict() for offer in created_offers]
+        }), 200
+        
+    except Exception as e:
+        logger.exception(f"Error saving selected offers: {e}")
+        db.session.rollback()
+        return jsonify({
+            'error': ERROR_SERVER_ERROR,
+            'message': f'Failed to save offers: {str(e)}'
+        }), 500
+
 @offers_bp.route('/debug/agent-status', methods=['GET'])
 @jwt_required()
 def debug_agent_status():

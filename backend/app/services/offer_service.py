@@ -253,8 +253,23 @@ class OfferGenerationService:
             ValueError: If response is invalid or cannot be parsed
         """
         try:
+            # Clean the response - remove markdown code blocks if present
+            cleaned_response = ai_response.strip()
+            
+            # Remove markdown code blocks (```json...``` or ```...```)
+            if cleaned_response.startswith('```'):
+                # Find the first newline after ```
+                start_idx = cleaned_response.find('\n')
+                if start_idx != -1:
+                    # Find the closing ```
+                    end_idx = cleaned_response.rfind('```')
+                    if end_idx != -1 and end_idx > start_idx:
+                        cleaned_response = cleaned_response[start_idx+1:end_idx].strip()
+            
+            logger.debug(f"Cleaned AI response: {cleaned_response[:200]}...")
+            
             # Try to parse as JSON
-            offers_data = json.loads(ai_response)
+            offers_data = json.loads(cleaned_response)
             
             # Ensure it's a list
             if not isinstance(offers_data, list):
@@ -292,6 +307,7 @@ class OfferGenerationService:
             
         except json.JSONDecodeError as e:
             logger.error(f"Failed to parse AI response as JSON: {e}")
+            logger.error(f"Response content: {ai_response[:500]}...")
             raise ValueError("Invalid JSON response from AI")
         except Exception as e:
             logger.error(f"Error parsing AI response: {e}")
