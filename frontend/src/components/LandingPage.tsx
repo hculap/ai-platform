@@ -40,7 +40,7 @@ const LandingPage: React.FC<LandingPageProps> = ({
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting) {
-            setVisibleSections(prev => new Set([...prev, entry.target.id]));
+            setVisibleSections(prev => new Set(Array.from(prev).concat(entry.target.id)));
           }
         });
       },
@@ -173,37 +173,6 @@ const LandingPage: React.FC<LandingPageProps> = ({
         />
       </main>
 
-      {/* Custom Styles */}
-      <style jsx>{`
-        @keyframes float-slow {
-          0%, 100% { transform: translateY(0px) scale(1); }
-          50% { transform: translateY(-20px) scale(1.05); }
-        }
-        
-        @keyframes float-reverse {
-          0%, 100% { transform: translateY(0px) rotate(0deg); }
-          50% { transform: translateY(30px) rotate(180deg); }
-        }
-        
-        @keyframes float-particle {
-          0%, 100% { transform: translateY(0px) translateX(0px); opacity: 0.3; }
-          25% { transform: translateY(-10px) translateX(5px); opacity: 0.6; }
-          50% { transform: translateY(-20px) translateX(-5px); opacity: 1; }
-          75% { transform: translateY(-10px) translateX(3px); opacity: 0.6; }
-        }
-        
-        .animate-float-slow {
-          animation: float-slow 8s ease-in-out infinite;
-        }
-        
-        .animate-float-reverse {
-          animation: float-reverse 12s ease-in-out infinite;
-        }
-        
-        .animate-float-particle {
-          animation: float-particle 6s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 };
