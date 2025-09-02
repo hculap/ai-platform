@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { BusinessProfile, BusinessProfileApi, AnalysisResult, AuthResponse, Offer } from '../types';
+import { BusinessProfile, BusinessProfileApi, AnalysisResult, AuthResponse, Offer, Campaign, CampaignGenerationParams, CampaignGenerationResult, CampaignGoal } from '../types';
 import { tokenManager } from './tokenManager';
 
 // API Configuration
@@ -1579,6 +1579,306 @@ export const saveSelectedOffers = async (businessProfileId: string, selectedOffe
     return {
       success: false,
       error: error.response?.data?.message || error.message || 'Failed to save selected offers'
+    };
+  }
+};
+
+// Campaign API functions
+export const getCampaigns = async (authToken: string, businessProfileId: string): Promise<{ success: boolean; data?: Campaign[]; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.get(`/business-profiles/${businessProfileId}/campaigns`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+    
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (error: any) {
+    console.error('Error getting campaigns:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to get campaigns'
+    };
+  }
+};
+
+export const getCampaign = async (campaignId: string, authToken: string): Promise<{ success: boolean; data?: Campaign; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.get(`/campaigns/${campaignId}`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+    
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (error: any) {
+    console.error('Error getting campaign:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to get campaign'
+    };
+  }
+};
+
+export const createCampaign = async (businessProfileId: string, campaignData: Omit<Campaign, 'id' | 'business_profile_id' | 'user_id' | 'created_at' | 'updated_at'>, authToken: string): Promise<{ success: boolean; data?: any; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.post(`/business-profiles/${businessProfileId}/campaigns`, campaignData, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+    
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error: any) {
+    console.error('Error creating campaign:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to create campaign'
+    };
+  }
+};
+
+export const updateCampaign = async (campaignId: string, campaignData: Partial<Omit<Campaign, 'id' | 'business_profile_id' | 'user_id' | 'created_at' | 'updated_at'>>, authToken: string): Promise<{ success: boolean; data?: any; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.put(`/campaigns/${campaignId}`, campaignData, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+    
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error: any) {
+    console.error('Error updating campaign:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to update campaign'
+    };
+  }
+};
+
+export const deleteCampaign = async (campaignId: string, authToken: string): Promise<{ success: boolean; data?: any; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.delete(`/campaigns/${campaignId}`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+    
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error: any) {
+    console.error('Error deleting campaign:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to delete campaign'
+    };
+  }
+};
+
+// Generate campaign using OpenAI async processing pattern
+export const generateCampaign = async (businessProfileId: string, params: CampaignGenerationParams, authToken: string): Promise<{ success: boolean; jobId?: string; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.post(`/agents/campaign-generator/tools/generate-campaign/call`, {
+      input: {
+        business_profile_id: businessProfileId,
+        campaign_goal: params.campaign_goal,
+        budget: params.budget,
+        deadline: params.deadline,
+        selected_products: params.selected_products
+      },
+      background: true
+    }, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+    
+    return {
+      success: true,
+      jobId: response.data.data?.openai_response_id || response.data.openai_response_id || response.data.job_id || response.data.data?.job_id
+    };
+  } catch (error: any) {
+    console.error('Error generating campaign:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to generate campaign'
+    };
+  }
+};
+
+// Poll campaign generation status using job ID
+export const getCampaignGenerationStatus = async (jobId: string, authToken: string): Promise<{ success: boolean; status?: string; data?: CampaignGenerationResult; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.get(`/agents/campaign-generator/tools/generate-campaign/call?job_id=${jobId}`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+    
+    const responseData = response.data;
+    const actualStatus = responseData.data?.status || responseData.status;
+    
+    // When completed, wrap the response data in the expected campaign_data structure
+    let campaignResult = undefined;
+    if (actualStatus === 'completed' && responseData.data) {
+      // Fix field name mismatches and normalize the structure
+      const normalizedData = {
+        ...responseData.data,
+        risks_recommendations: responseData.data.risks_and_recommendations || responseData.data.risks_recommendations
+      };
+      
+      campaignResult = {
+        campaign_data: normalizedData,
+        business_profile_id: '', // Will be set by the component
+        campaign_params: {
+          campaign_goal: 'Brand Awareness' as CampaignGoal, // Default value, will be updated by component
+          budget: undefined,
+          deadline: undefined,
+          selected_products: []
+        }
+      };
+    }
+    
+    return {
+      success: true,
+      status: actualStatus,
+      data: campaignResult
+    };
+  } catch (error: any) {
+    console.error('Error getting campaign generation status:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to get campaign generation status'
+    };
+  }
+};
+
+export const saveCampaign = async (businessProfileId: string, campaignData: { campaign_params: CampaignGenerationParams; campaign_data: any }, authToken: string): Promise<{ success: boolean; data?: Campaign; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.post(`/business-profiles/${businessProfileId}/campaigns/save`, campaignData, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+    
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (error: any) {
+    console.error('Error saving campaign:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to save campaign'
+    };
+  }
+};
+
+export const getCampaignsCount = async (authToken: string, businessProfileId?: string): Promise<{ success: boolean; data?: number; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const params = businessProfileId ? { business_profile_id: businessProfileId } : {};
+    const response = await api.get('/campaigns/count', {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      },
+      params
+    });
+    
+    return {
+      success: true,
+      data: response.data.data.count
+    };
+  } catch (error: any) {
+    console.error('Error getting campaigns count:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to get campaigns count'
     };
   }
 };

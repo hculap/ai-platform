@@ -7,11 +7,12 @@ import {
   Users, Activity, Clock, CheckCircle, Plus, Menu, Package
 } from 'lucide-react';
 import { User as UserType } from '../types';
-import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, updateBusinessProfile, getCompetitionsCount, getOffersCount } from '../services/api';
+import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, updateBusinessProfile, getCompetitionsCount, getOffersCount, getCampaignsCount } from '../services/api';
 import BusinessProfiles from './BusinessProfiles';
 import Agents from './Agents';
 import Competition from './Competition';
 import Offers from './Offers';
+import Campaigns from './Campaigns';
 
 interface DashboardProps {
   user: UserType;
@@ -55,6 +56,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
   const [businessProfilesCount, setBusinessProfilesCount] = useState<number>(0);
   const [competitionsCount, setCompetitionsCount] = useState<number>(0);
   const [offersCount, setOffersCount] = useState<number>(0);
+  const [campaignsCount, setCampaignsCount] = useState<number>(0);
   const [interactionsCount, setInteractionsCount] = useState<number>(0);
   const [isLoadingStats, setIsLoadingStats] = useState<boolean>(true);
 
@@ -161,6 +163,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     }
   }, [authToken, selectedBusinessProfile?.id]);
 
+  // Function to refresh campaigns count
+  const refreshCampaignsCount = useCallback(async () => {
+    try {
+      const campaignsResult = await getCampaignsCount(authToken, selectedBusinessProfile?.id);
+      if (campaignsResult.success && campaignsResult.data !== undefined) {
+        setCampaignsCount(campaignsResult.data);
+      }
+    } catch (error) {
+      console.error('Error refreshing campaigns count:', error);
+    }
+  }, [authToken, selectedBusinessProfile?.id]);
+
   // Fetch real dashboard data
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -179,6 +193,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
         // Fetch offers count (will use selectedBusinessProfile?.id automatically)
         await refreshOffersCount();
 
+        // Fetch campaigns count (will use selectedBusinessProfile?.id automatically)
+        await refreshCampaignsCount();
+
         // Fetch interactions count
         const interactionsResult = await getInteractionsCount(authToken);
         if (interactionsResult.success && interactionsResult.data !== undefined) {
@@ -192,7 +209,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     };
 
     fetchDashboardData();
-  }, [authToken, refreshCompetitionsCount, refreshOffersCount]);
+  }, [authToken, refreshCompetitionsCount, refreshOffersCount, refreshCampaignsCount]);
 
   // Fetch business profiles separately
   useEffect(() => {
@@ -216,6 +233,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     refreshOffersCount();
   }, [refreshOffersCount]);
 
+  // Refresh campaigns count when component mounts or business profile changes
+  useEffect(() => {
+    refreshCampaignsCount();
+  }, [refreshCampaignsCount]);
+
   // Also refresh competitions count when selectedBusinessProfile changes
   useEffect(() => {
     if (selectedBusinessProfile?.id) {
@@ -229,6 +251,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
       refreshOffersCount();
     }
   }, [selectedBusinessProfile?.id, authToken, refreshOffersCount]);
+
+  // Also refresh campaigns count when selectedBusinessProfile changes
+  useEffect(() => {
+    if (selectedBusinessProfile?.id) {
+      refreshCampaignsCount();
+    }
+  }, [selectedBusinessProfile?.id, authToken, refreshCampaignsCount]);
 
 
 
@@ -251,7 +280,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
         { id: 'business-profiles', label: t('dashboard.nav.businessProfiles'), icon: Building2, count: businessProfilesCount },
         { id: 'competition', label: t('dashboard.nav.competition'), icon: Target, count: competitionsCount },
         { id: 'offers', label: t('dashboard.nav.offers'), icon: Package, count: offersCount },
-        { id: 'campaigns', label: t('dashboard.nav.campaigns'), icon: TrendingUp, count: 4 },
+        { id: 'campaigns', label: t('dashboard.nav.campaigns'), icon: TrendingUp, count: campaignsCount },
         { id: 'ads', label: t('dashboard.nav.ads'), icon: Megaphone, count: 15 },
       ]
     }
@@ -589,7 +618,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
               {/* Placeholder routes for other sections */}
               <Route path="automations" element={<div className="text-center py-12"><p>{t('dashboard.sections.automations.comingSoon', 'Sekcja Automatyzacji już wkrótce')}</p></div>} />
               <Route path="prompts" element={<div className="text-center py-12"><p>{t('dashboard.sections.prompts.comingSoon', 'Sekcja Promptów już wkrótce')}</p></div>} />
-              <Route path="campaigns" element={<div className="text-center py-12"><p>{t('dashboard.sections.campaigns.comingSoon', 'Sekcja Kampanii już wkrótce')}</p></div>} />
+              <Route path="campaigns" element={
+                <Campaigns
+                  businessProfileId={selectedBusinessProfile?.id}
+                  authToken={authToken}
+                  onTokenRefreshed={onTokenRefreshed}
+                  onCampaignsChanged={refreshCampaignsCount}
+                />
+              } />
               <Route path="ads" element={<div className="text-center py-12"><p>{t('dashboard.sections.ads.comingSoon', 'Sekcja Reklam już wkrótce')}</p></div>} />
               <Route path="settings" element={<div className="text-center py-12"><p>{t('dashboard.sections.settings.comingSoon', 'Sekcja Ustawień już wkrótce')}</p></div>} />
               <Route path="profile" element={<div className="text-center py-12"><p>{t('dashboard.sections.profile.comingSoon', 'Sekcja Profilu już wkrótce')}</p></div>} />

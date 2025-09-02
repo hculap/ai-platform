@@ -81,3 +81,56 @@ export interface Offer {
   created_at: string;
   updated_at: string;
 }
+
+export interface Campaign {
+  id: string;
+  business_profile_id: string;
+  user_id: string;
+  goal: CampaignGoal;
+  budget?: number;
+  deadline?: string;
+  selected_products: string[];
+  strategy_summary?: string;
+  timeline?: string;
+  target_audience?: string;
+  sales_funnel_steps?: string;
+  channels?: Record<string, boolean>;
+  channels_rationale?: Record<string, string>;
+  recommended_budget?: number;
+  risks_recommendations?: string;
+  status: 'draft' | 'published' | 'archived';
+  created_at: string;
+  updated_at: string;
+}
+
+export type CampaignGoal = 
+  | 'Brand Awareness'
+  | 'Lead Generation'
+  | 'Sales / Conversions'
+  | 'Product Launch'
+  | 'Customer Retention & Loyalty'
+  | 'Event Promotion'
+  | 'Rebranding / Reputation Management'
+  | 'Community Engagement';
+
+export interface CampaignGenerationParams {
+  campaign_goal: CampaignGoal;
+  budget?: number;
+  deadline?: string;
+  selected_products?: string[];
+}
+
+export interface CampaignGenerationResult {
+  campaign_data: {
+    strategy_summary: string;
+    timeline: string;
+    target_audience: string;
+    sales_funnel_steps: string;
+    channels: Record<string, boolean>;
+    channels_rationale: Record<string, string>;
+    recommended_budget?: number;
+    risks_recommendations: string;
+  };
+  business_profile_id: string;
+  campaign_params: CampaignGenerationParams;
+}

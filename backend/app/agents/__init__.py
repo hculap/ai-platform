@@ -7,6 +7,7 @@ from .base import AgentRegistry, BaseAgent, AgentInput, AgentOutput, AgentMetada
 from .concierge import ConciergeAgent
 from .competitors_researcher import CompetitorsResearcherAgent
 from .offer_assistant import OfferAssistantAgent
+from .campaign_generator import CampaignGeneratorAgent
 
 
 def initialize_agents() -> None:
@@ -22,6 +23,9 @@ def initialize_agents() -> None:
 
     # Register Offer Assistant Agent (uses system message approach)
     AgentRegistry.register('offer-assistant', OfferAssistantAgent)
+
+    # Register Campaign Generator Agent (uses prompt_id approach)
+    AgentRegistry.register('campaign-generator', CampaignGeneratorAgent)
 
     print('✅ Agent system initialized')
     agent_types = [agent_type for agent_type, _ in AgentRegistry.list_agents()]
@@ -41,6 +45,7 @@ __all__ = [
     'ConciergeAgent',
     'CompetitorsResearcherAgent',
     'OfferAssistantAgent',
+    'CampaignGeneratorAgent',
 
     # Initialization function
     'initialize_agents'
