@@ -215,7 +215,7 @@ class OfferGenerationService:
             user_id: ID of the authenticated user
             
         Returns:
-            Dictionary containing business profile and competitors data
+            Dictionary containing business profile, competitors, and current offers data
             
         Raises:
             ValueError: If business profile not found
@@ -233,9 +233,15 @@ class OfferGenerationService:
             business_profile_id=business_profile_id
         ).all()
         
+        # Get current offers for this business profile
+        current_offers = OfferService.get_offers_for_business_profile(
+            business_profile_id, user_id
+        )
+        
         return {
             'business_profile': business_profile.to_dict(),
-            'competitors': [comp.to_dict() for comp in competitors]
+            'competitors': [comp.to_dict() for comp in competitors],
+            'current_offers': [offer.to_dict() for offer in current_offers]
         }
     
     @staticmethod

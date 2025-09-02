@@ -5,7 +5,7 @@ AI-powered tool to generate offer catalog based on business profile and competit
 
 import logging
 from typing import Dict, Any, Optional, List
-from ...shared.tool_factory import SystemMessageTool
+from ...shared.tool_factory import PromptBasedTool
 from ...shared.base_tool import ToolInput, ToolOutput, ToolCategory
 from ...shared.validators import BusinessProfileIdValidator, ParametersValidator
 from ...shared.parsers import create_parser
@@ -13,13 +13,18 @@ from ....services.offer_service import OfferGenerationService, OfferService
 
 logger = logging.getLogger(__name__)
 
-class GenerateOffersTool(SystemMessageTool):
+class GenerateOffersTool(PromptBasedTool):
     """
     AI tool to generate comprehensive offer catalog for businesses.
     
     Uses business profile data and competitive analysis to create
     tailored product/service offerings with pricing recommendations.
+    Uses pre-registered OpenAI prompt for consistency.
     """
+    
+    # Constants
+    PROMPT_ID = 'pmpt_68b45d3e9768819385a3b08df384bddf05cf82b6c6aeae41'
+    VERSION = '1.0.0'
     
     def __init__(self):
         # Create parameter validator
@@ -29,78 +34,15 @@ class GenerateOffersTool(SystemMessageTool):
         # Create parser for offer data
         parser = create_parser('generic')  # Will parse JSON response
         
-        # System message from the provided prompt
-        system_message = """Role and Objective
-• Act as an Offer Assistant. Given a business_profile object and a competitors array, produce a concise offer catalog tailored to the business.
-
-Checklist
-• Summarize planned steps in 3–7 bullets (internal only; do not include in output).
-• Parse business_profile to identify category, ICP, positioning, and core capabilities.
-• Use competitors only as contextual signals (no fabrication).
-• Derive 3–8 clear offers with sensible units and a single recommended price each.
-• Keep language aligned with the detected/declared language.
-• Validate output strictly against the schema and field order.
-
-Instructions
-• Use only the provided business_profile and competitors. Do not browse or fetch external data.
-• Extract what the business can credibly sell; convert services into productized packages when appropriate.
-• Price each offer once (no ranges). If pricing signals are weak, infer conservatively from effort/value and common billing practices—not from invented competitor numbers.
-• Keep names short, benefit-led; descriptions ≤120 words, plain text (no Markdown).
-• Units must reflect how the buyer pays (e.g., per_month, per_project, per_hour, per_item, or a clear custom unit).
-• If the input is sparse, still return 3–5 best-effort offers that fit the profile; avoid exotic units or unrealistic pricing.
-
-Rules
-• No fabrication of competitor facts or prices. Competitors are context only.
-• Output only the fields specified, in the exact order. No extra fields, IDs, notes, currency symbols, or metadata.
-• Prices are numeric (VAT excluded), assumed in the default currency (see Default Values).
-• Language defaults to Polish unless business_profile clearly indicates English.
-• If an element cannot be determined confidently, choose a conservative, reasonable option rather than leaving fields blank.
-
-Output Format
-
-Return only a strict JSON array with 3–8 objects.
-Each object must have exactly these fields in order:
-
-[
-  {
-    "type": "product or service",
-    "name": "String",
-    "description": "String, ≤120 words, plain text",
-    "unit": "per_month | per_project | per_hour | per_item | custom unit string",
-    "price": 0
-  }
-]
-
-• price must be a number (no quotes, no currency symbol).
-• Do not include any text before or after the JSON array.
-
-Validation
-• Enforce: correct field names, exact order, required presence, types (string/number), and description length.
-• Ensure 3–8 total items.
-• Ensure unit clarity and pricing plausibility (no zero/negative prices unless clearly freemium).
-• If validation fails, self-correct and regenerate until compliant.
-
-Default Values
-• Language: detect from business_profile; fallback "pl".
-• Currency assumption for price: default PLN, VAT excluded (currency not printed).
-• Units: prefer per_month for subscriptions, per_project for scoped work, per_hour for time & materials, per_item for SKUs.
-
-Stop Conditions
-• If business_profile is so ambiguous you cannot propose even 3 conservative offers, return an empty JSON array [].
-• Otherwise, do not ask questions; deliver best-effort compliant output.
-
-Verbosity
-• Output is JSON only (no commentary, no checklist)."""
-
         super().__init__(
             name='Generate Offers Tool',
             slug='generate-offers',
             description='Generate AI-powered offer catalog based on business profile and competitive landscape',
-            system_message=system_message,
+            prompt_id=self.PROMPT_ID,
             validator=validator,
             parser=parser,
             category=ToolCategory.ANALYSIS,
-            version='1.0.0'
+            version=self.VERSION
         )
     
     async def _prepare_openai_message(self, validated_params: Dict[str, Any], input_data: ToolInput) -> str:
@@ -127,13 +69,16 @@ Verbosity
         # Debug the retrieved data
         business_profile = generation_data['business_profile']
         competitors = generation_data['competitors']
+        current_offers = generation_data['current_offers']
         
         logger.info(f"Business profile data: {business_profile}")
         logger.info(f"Competitors count: {len(competitors)}")
+        logger.info(f"Current offers count: {len(current_offers)}")
         logger.info(f"Competitors data: {competitors}")
+        logger.info(f"Current offers data: {current_offers}")
         
         # Create user message for AI
-        user_message = self._create_user_message(business_profile, competitors)
+        user_message = self._create_user_message(business_profile, competitors, current_offers)
         
         logger.info(f"Generated user message for AI: {user_message[:500]}...")
         logger.info(f"Full user message length: {len(user_message)}")
@@ -218,13 +163,14 @@ Verbosity
                 }
             }
     
-    def _create_user_message(self, business_profile: Dict[str, Any], competitors: list) -> str:
+    def _create_user_message(self, business_profile: Dict[str, Any], competitors: list, current_offers: list) -> str:
         """
         Create user message for OpenAI API call
         
         Args:
             business_profile: Business profile data
             competitors: List of competitor data
+            current_offers: List of current offer data
             
         Returns:
             Formatted user message string
@@ -272,12 +218,33 @@ Verbosity
             message_parts.append("\n=== COMPETITORS ===")
             message_parts.append("No competitor data available")
         
+        # Current offers context
+        if current_offers:
+            message_parts.append("\n=== CURRENT OFFERS ===")
+            for i, offer in enumerate(current_offers, 1):
+                offer_info = f"{i}. {offer.get('name', 'Unknown')} ({offer.get('type', 'unknown')})"
+                if offer.get('description'):
+                    # Truncate description to keep message manageable
+                    desc = offer['description'][:100]
+                    if len(offer['description']) > 100:
+                        desc += "..."
+                    offer_info += f" - {desc}"
+                if offer.get('unit') and offer.get('price'):
+                    offer_info += f" | {offer['price']} {offer['unit']}"
+                offer_info += f" | Status: {offer.get('status', 'unknown')}"
+                message_parts.append(offer_info)
+        else:
+            message_parts.append("\n=== CURRENT OFFERS ===")
+            message_parts.append("No existing offers found")
+        
         # Generation request
         message_parts.append("\n=== REQUEST ===")
         message_parts.append(
-            "Based on the business profile and competitive landscape above, "
-            "generate a comprehensive offer catalog. Create 3-8 clear offers "
-            "that align with the business capabilities and market positioning. "
+            "Based on the business profile, competitive landscape, and current offers above, "
+            "generate a comprehensive offer catalog. Create 3-8 NEW offers that complement "
+            "the existing ones and align with business capabilities and market positioning. "
+            "AVOID creating offers too similar to the current ones - focus on new opportunities, "
+            "different service tiers, or complementary products/services. "
             "Each offer should have a competitive price point and clear value proposition."
         )
         
