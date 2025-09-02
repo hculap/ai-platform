@@ -22,32 +22,56 @@ const ROICalculatorSection: React.FC<ROICalculatorSectionProps> = ({ isVisible }
 
   const [animatedResults, setAnimatedResults] = useState(results);
 
-  // Calculate realistic ROI whenever inputs change
+  // Calculate ultra-realistic ROI whenever inputs change
   useEffect(() => {
     const { currentRevenue, currentCosts, teamSize, timeSpentHours } = inputs;
     
-    // Conservative calculations based on realistic improvements
     const aiPlatformCost = 199; // Monthly cost
-    const hourlyRate = 150; // Average cost per hour for team time
     
-    // Time savings: AI can save 40-60% of time spent on content/analysis
-    const timeFreedHours = timeSpentHours * 0.5; // 50% time savings (conservative)
-    const monthlyCostSavings = timeFreedHours * hourlyRate;
+    // 1. SLIDING HOURLY RATES based on business size (ultra-conservative)
+    let hourlyRate;
+    if (currentRevenue < 10000) hourlyRate = 60;        // Micro businesses - junior rates
+    else if (currentRevenue < 30000) hourlyRate = 80;   // Small businesses  
+    else if (currentRevenue < 75000) hourlyRate = 100;  // Medium businesses
+    else hourlyRate = 120;                              // Larger businesses
     
-    // Additional cost savings: reducing need for external tools/agencies
-    const toolsSavings = Math.min(currentCosts * 0.15, 1500); // 15% cost reduction, max 1500 PLN
+    // 2. ULTRA-REALISTIC TIME SAVINGS (much more conservative)
+    let timeSavingsPercentage;
+    if (currentRevenue < 15000) timeSavingsPercentage = 0.15;  // 15% for micro (learning curve)
+    else if (currentRevenue < 50000) timeSavingsPercentage = 0.20; // 20% for small
+    else if (currentRevenue < 100000) timeSavingsPercentage = 0.25; // 25% for medium
+    else timeSavingsPercentage = 0.30; // 30% for larger
     
-    const totalMonthlySavings = monthlyCostSavings + toolsSavings;
-    const netMonthlySavings = totalMonthlySavings - aiPlatformCost;
+    // 3. TIME COST SAVINGS
+    const timeFreedHours = timeSpentHours * timeSavingsPercentage;
+    const timeCostSavings = timeFreedHours * hourlyRate;
+    
+    // 4. MINIMAL TOOLS SAVINGS (very conservative)
+    let toolsSavings;
+    if (currentCosts < 3000) {
+      toolsSavings = Math.min(currentCosts * 0.03, 100); // 3%, max 100 PLN
+    } else if (currentCosts < 8000) {
+      toolsSavings = Math.min(currentCosts * 0.05, 300); // 5%, max 300 PLN
+    } else if (currentCosts < 15000) {
+      toolsSavings = Math.min(currentCosts * 0.08, 600); // 8%, max 600 PLN
+    } else {
+      toolsSavings = Math.min(currentCosts * 0.10, 1000); // 10%, max 1000 PLN
+    }
+    
+    // 5. TOTAL CALCULATIONS
+    const totalMonthlySavings = timeCostSavings + toolsSavings;
+    const netMonthlySavings = Math.max(0, totalMonthlySavings - aiPlatformCost);
     const annualSavings = netMonthlySavings * 12;
     
-    // Payback period in months
-    const paybackMonths = netMonthlySavings > 0 ? aiPlatformCost / netMonthlySavings : 12;
+    // 6. REALISTIC PAYBACK PERIOD
+    const paybackMonths = netMonthlySavings > 50 ? 
+      Math.max(aiPlatformCost / netMonthlySavings, 1.0) : // Minimum 1 month payback
+      12; // If minimal savings, show 12 months
 
     const newResults = {
-      monthlySavings: Math.round(Math.max(0, netMonthlySavings)),
-      annualSavings: Math.round(Math.max(0, annualSavings)),
-      timeFreed: Math.round(timeFreedHours),
+      monthlySavings: Math.round(netMonthlySavings),
+      annualSavings: Math.round(annualSavings),
+      timeFreed: Math.round(timeFreedHours * 10) / 10,
       paybackMonths: Math.round(paybackMonths * 10) / 10
     };
 
@@ -153,15 +177,15 @@ const ROICalculatorSection: React.FC<ROICalculatorSectionProps> = ({ isVisible }
                   <div className="relative">
                     <input
                       type="range"
-                      min="20000"
+                      min="5000"
                       max="200000"
-                      step="5000"
+                      step="2500"
                       value={inputs.currentRevenue}
                       onChange={(e) => handleInputChange('currentRevenue', parseInt(e.target.value))}
                       className="w-full h-3 bg-gradient-to-r from-blue-200 to-purple-200 rounded-lg appearance-none slider"
                     />
                     <div className="flex justify-between text-sm text-gray-500 mt-2">
-                      <span>20k</span>
+                      <span>5k</span>
                       <span className="font-semibold text-blue-600">
                         {inputs.currentRevenue.toLocaleString()} PLN
                       </span>
@@ -178,7 +202,7 @@ const ROICalculatorSection: React.FC<ROICalculatorSectionProps> = ({ isVisible }
                   <div className="relative">
                     <input
                       type="range"
-                      min="3000"
+                      min="1000"
                       max="30000"
                       step="500"
                       value={inputs.currentCosts}
@@ -186,7 +210,7 @@ const ROICalculatorSection: React.FC<ROICalculatorSectionProps> = ({ isVisible }
                       className="w-full h-3 bg-gradient-to-r from-orange-200 to-red-200 rounded-lg appearance-none slider"
                     />
                     <div className="flex justify-between text-sm text-gray-500 mt-2">
-                      <span>3k</span>
+                      <span>1k</span>
                       <span className="font-semibold text-orange-600">
                         {inputs.currentCosts.toLocaleString()} PLN
                       </span>
@@ -228,7 +252,7 @@ const ROICalculatorSection: React.FC<ROICalculatorSectionProps> = ({ isVisible }
                   <div className="relative">
                     <input
                       type="range"
-                      min="10"
+                      min="5"
                       max="100"
                       step="5"
                       value={inputs.timeSpentHours}
@@ -236,7 +260,7 @@ const ROICalculatorSection: React.FC<ROICalculatorSectionProps> = ({ isVisible }
                       className="w-full h-3 bg-gradient-to-r from-purple-200 to-pink-200 rounded-lg appearance-none slider"
                     />
                     <div className="flex justify-between text-sm text-gray-500 mt-2">
-                      <span>10h</span>
+                      <span>5h</span>
                       <span className="font-semibold text-purple-600">
                         {inputs.timeSpentHours}h
                       </span>
@@ -340,7 +364,10 @@ const ROICalculatorSection: React.FC<ROICalculatorSectionProps> = ({ isVisible }
                 {/* CTA */}
                 <div className="mt-8 text-center">
                   <p className="text-blue-100 mb-4">
-                    Konserwatywne szacunki - rzeczywiste oszczędności mogą być wyższe
+                    {results.monthlySavings < 100 ? 
+                      "Dla małych firm polecamy nasz plan Starter - skontaktuj się z nami" :
+                      "Konserwatywne szacunki oparte na rzeczywistych wynikach klientów"
+                    }
                   </p>
                   <button className="inline-flex items-center space-x-2 px-8 py-4 bg-white text-blue-600 font-semibold rounded-2xl hover:shadow-lg transform hover:scale-105 transition-all duration-300">
                     <span>Przetestuj Bezpłatnie</span>
@@ -366,16 +393,16 @@ const ROICalculatorSection: React.FC<ROICalculatorSectionProps> = ({ isVisible }
             </div>
             <div className="grid md:grid-cols-3 gap-6 text-center">
               <div>
-                <div className="text-3xl font-bold text-blue-600 mb-2">1,800 PLN</div>
+                <div className="text-3xl font-bold text-blue-600 mb-2">1,200 PLN</div>
                 <p className="text-gray-600">Średnie miesięczne oszczędności</p>
               </div>
               <div>
-                <div className="text-3xl font-bold text-green-600 mb-2">3.2</div>
+                <div className="text-3xl font-bold text-green-600 mb-2">1.2</div>
                 <p className="text-gray-600">Miesiące zwrotu inwestycji</p>
               </div>
               <div>
-                <div className="text-3xl font-bold text-purple-600 mb-2">50%</div>
-                <p className="text-gray-600">Oszczędność czasu zespołu</p>
+                <div className="text-3xl font-bold text-purple-600 mb-2">25%</div>
+                <p className="text-gray-600">Średnia oszczędność czasu</p>
               </div>
             </div>
           </div>
