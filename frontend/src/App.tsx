@@ -51,7 +51,6 @@ function AppContent() {
       }
       
       setOpenaiResponseId(startResult.openaiResponseId);
-      console.log('Background analysis started with ID:', startResult.openaiResponseId);
       
       // Start polling for completion
       pollAnalysisStatus(startResult.openaiResponseId);

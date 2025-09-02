@@ -30,6 +30,7 @@ import {
   getOffers
 } from '../services/api';
 import { Campaign, CampaignGoal, CampaignGenerationParams, CampaignGenerationResult, Offer } from '../types';
+import MarkdownRenderer from './MarkdownRenderer';
 
 interface CampaignsProps {
   businessProfileId?: string;
@@ -189,10 +190,8 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
     try {
       // Start campaign generation (returns job ID immediately)
       const response = await generateCampaign(businessProfileId, generationParams, authToken);
-      console.log('Generation response:', response);
       
       if (response.success && response.jobId) {
-        console.log('Starting polling with jobId:', response.jobId);
         // Start polling for results
         await pollCampaignGeneration(response.jobId);
       } else {
@@ -208,7 +207,6 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
   };
 
   const pollCampaignGeneration = async (jobId: string): Promise<void> => {
-    console.log('Starting polling for jobId:', jobId);
     const maxAttempts = 30; // 5 minutes max (10s intervals)
     let attempts = 0;
 
@@ -216,9 +214,7 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
       const poll = async (): Promise<void> => {
         try {
           attempts++;
-          console.log(`Polling attempt ${attempts} for jobId:`, jobId);
           const statusResponse = await getCampaignGenerationStatus(jobId, authToken);
-          console.log('Status response:', statusResponse);
           
           if (statusResponse.success) {
             if (statusResponse.status === 'completed' && statusResponse.data) {
@@ -241,7 +237,6 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
               return;
             } else if (statusResponse.status === 'queued' || statusResponse.status === 'pending' || statusResponse.status === 'processing') {
               // Still processing, continue polling
-              console.log(`Status is ${statusResponse.status}, continuing to poll in 10 seconds...`);
               if (attempts < maxAttempts) {
                 setTimeout(poll, 10000); // Poll every 10 seconds
               } else {
@@ -457,9 +452,13 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
                 {/* Campaign Summary */}
                 {campaign.strategy_summary && (
                   <div className="mt-4">
-                    <p className="text-sm text-gray-600 line-clamp-2">
-                      {campaign.strategy_summary}
-                    </p>
+                    <div className="line-clamp-3">
+                      <MarkdownRenderer 
+                        content={campaign.strategy_summary} 
+                        variant="summary"
+                        className="text-sm"
+                      />
+                    </div>
                   </div>
                 )}
 
@@ -518,37 +517,41 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
                   <div className="mt-6 border-t pt-6 space-y-4">
                     {campaign.timeline && (
                       <div>
-                        <h4 className="text-sm font-medium text-gray-900 mb-2">Timeline</h4>
-                        <div className="text-sm text-gray-600 whitespace-pre-wrap bg-gray-50 p-3 rounded-md">
-                          {campaign.timeline}
-                        </div>
+                        <h4 className="text-sm font-medium text-gray-900 mb-2">📅 Timeline</h4>
+                        <MarkdownRenderer 
+                          content={campaign.timeline} 
+                          variant="timeline"
+                        />
                       </div>
                     )}
                     
                     {campaign.target_audience && (
                       <div>
-                        <h4 className="text-sm font-medium text-gray-900 mb-2">Target Audience</h4>
-                        <div className="text-sm text-gray-600 whitespace-pre-wrap bg-gray-50 p-3 rounded-md">
-                          {campaign.target_audience}
-                        </div>
+                        <h4 className="text-sm font-medium text-gray-900 mb-2">🎯 Target Audience</h4>
+                        <MarkdownRenderer 
+                          content={campaign.target_audience} 
+                          variant="audience"
+                        />
                       </div>
                     )}
 
                     {campaign.sales_funnel_steps && (
                       <div>
-                        <h4 className="text-sm font-medium text-gray-900 mb-2">Sales Funnel</h4>
-                        <div className="text-sm text-gray-600 whitespace-pre-wrap bg-gray-50 p-3 rounded-md">
-                          {campaign.sales_funnel_steps}
-                        </div>
+                        <h4 className="text-sm font-medium text-gray-900 mb-2">🔄 Sales Funnel</h4>
+                        <MarkdownRenderer 
+                          content={campaign.sales_funnel_steps} 
+                          variant="funnel"
+                        />
                       </div>
                     )}
 
                     {campaign.risks_recommendations && (
                       <div>
-                        <h4 className="text-sm font-medium text-gray-900 mb-2">Risks & Recommendations</h4>
-                        <div className="text-sm text-gray-600 whitespace-pre-wrap bg-yellow-50 p-3 rounded-md">
-                          {campaign.risks_recommendations}
-                        </div>
+                        <h4 className="text-sm font-medium text-gray-900 mb-2">⚠️ Risks & Recommendations</h4>
+                        <MarkdownRenderer 
+                          content={campaign.risks_recommendations} 
+                          variant="risks"
+                        />
                       </div>
                     )}
                   </div>
@@ -735,20 +738,22 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
               {/* Strategy Summary */}
               {generatedCampaign?.campaign_data?.strategy_summary && (
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">Strategy Summary</h4>
-                  <div className="text-sm text-gray-600 bg-gray-50 p-4 rounded-md whitespace-pre-wrap">
-                    {generatedCampaign.campaign_data.strategy_summary}
-                  </div>
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">🎨 Strategy Summary</h4>
+                  <MarkdownRenderer 
+                    content={generatedCampaign.campaign_data.strategy_summary} 
+                    variant="summary"
+                  />
                 </div>
               )}
 
               {/* Timeline */}
               {generatedCampaign?.campaign_data?.timeline && (
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">Timeline & Phases</h4>
-                  <div className="text-sm text-gray-600 bg-gray-50 p-4 rounded-md whitespace-pre-wrap">
-                    {generatedCampaign.campaign_data.timeline}
-                  </div>
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">📅 Timeline & Phases</h4>
+                  <MarkdownRenderer 
+                    content={generatedCampaign.campaign_data.timeline} 
+                    variant="timeline"
+                  />
                 </div>
               )}
 
@@ -769,7 +774,12 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
                               <span className="font-medium text-blue-900">{channelInfo?.label || channel}</span>
                             </div>
                             {rationale && (
-                              <p className="text-xs text-blue-700">{rationale}</p>
+                              <div className="text-xs">
+                                <MarkdownRenderer 
+                                  content={rationale} 
+                                  className="text-xs bg-transparent border-0 p-0"
+                                />
+                              </div>
                             )}
                           </div>
                         );
@@ -781,20 +791,22 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
               {/* Target Audience */}
               {generatedCampaign?.campaign_data?.target_audience && (
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">Target Audience</h4>
-                  <div className="text-sm text-gray-600 bg-gray-50 p-4 rounded-md whitespace-pre-wrap">
-                    {generatedCampaign?.campaign_data?.target_audience}
-                  </div>
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">🎯 Target Audience</h4>
+                  <MarkdownRenderer 
+                    content={generatedCampaign.campaign_data.target_audience} 
+                    variant="audience"
+                  />
                 </div>
               )}
 
               {/* Sales Funnel */}
               {generatedCampaign?.campaign_data?.sales_funnel_steps && (
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">Sales Funnel Steps</h4>
-                  <div className="text-sm text-gray-600 bg-gray-50 p-4 rounded-md whitespace-pre-wrap">
-                    {generatedCampaign?.campaign_data?.sales_funnel_steps}
-                  </div>
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">🔄 Sales Funnel Steps</h4>
+                  <MarkdownRenderer 
+                    content={generatedCampaign.campaign_data.sales_funnel_steps} 
+                    variant="funnel"
+                  />
                 </div>
               )}
 
@@ -814,10 +826,11 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
               {/* Risks & Recommendations */}
               {generatedCampaign?.campaign_data?.risks_recommendations && (
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">Risks & Recommendations</h4>
-                  <div className="text-sm text-gray-600 bg-yellow-50 p-4 rounded-md whitespace-pre-wrap">
-                    {generatedCampaign?.campaign_data?.risks_recommendations}
-                  </div>
+                  <h4 className="text-sm font-medium text-gray-900 mb-2">⚠️ Risks & Recommendations</h4>
+                  <MarkdownRenderer 
+                    content={generatedCampaign.campaign_data.risks_recommendations} 
+                    variant="risks"
+                  />
                 </div>
               )}
             </div>

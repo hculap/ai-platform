@@ -195,7 +195,6 @@ const Agents: React.FC<AgentsProps> = ({
         return;
       }
 
-      console.log('🚀 Starting agent execution...');
       const result = await executeAgent(selectedAgent.slug, 'analyze-website', {
         input: {
           url: normalizedUrl
@@ -206,31 +205,20 @@ const Agents: React.FC<AgentsProps> = ({
         background: true
       }, authToken);
 
-      console.log('📡 Agent execution result:', result);
 
 
       if (result.success && result.data) {
-        console.log('✅ Agent execution successful, checking response structure...');
-        console.log('📋 Response data structure:', {
-          hasData: !!result.data.data,
-          dataKeys: result.data.data ? Object.keys(result.data.data) : null,
-          openaiResponseId: result.data.data?.openai_response_id,
-          status: result.data.status
-        });
 
         // Check if this is a background response
         if (result.data.data && result.data.data.openai_response_id) {
-          console.log('🎯 Background response detected, starting polling...');
           // Start polling for status
           startPolling(result.data.data.openai_response_id);
         } else if (result.data.status === 'completed' && result.data.data) {
           // Direct completion (fallback for non-background mode)
-          console.log('🎯 Direct completion detected...');
           setAnalysisResult(result.data.data);
           setShowBusinessForm(true);
           setShowAgentModal(false);
         } else {
-          console.log('❌ Unexpected response format:', result.data);
           setExecutionError('Unexpected response format');
         }
       } else {
@@ -261,7 +249,6 @@ const Agents: React.FC<AgentsProps> = ({
   const startPolling = useCallback((responseId: string) => {
     // Don't start if already polling for the same response ID
     if (isPolling && openaiResponseId === responseId) {
-      console.log('🔄 Already polling for this response ID, skipping...');
       return;
     }
 
@@ -276,13 +263,10 @@ const Agents: React.FC<AgentsProps> = ({
 
     const interval = setInterval(async () => {
       try {
-        console.log('🔄 Polling for status with responseId:', responseId);
         const statusResult = await checkAnalysisStatus(responseId);
-        console.log('📊 Status result:', statusResult);
 
         if (statusResult.status === 'completed' && statusResult.data) {
           // Analysis completed successfully
-          console.log('✅ Analysis completed with data:', statusResult.data);
           setAnalysisResult(statusResult.data);
           setShowBusinessForm(true);
           setShowAgentModal(false);
@@ -292,7 +276,6 @@ const Agents: React.FC<AgentsProps> = ({
           setPollingInterval(null);
         } else if (statusResult.status === 'failed' || statusResult.status === 'error') {
           // Analysis failed
-          console.log('❌ Analysis failed:', statusResult.error);
           setExecutionError(statusResult.error || 'Analysis failed');
           setIsPolling(false);
           setOpenaiResponseId(null);
@@ -300,7 +283,6 @@ const Agents: React.FC<AgentsProps> = ({
           setPollingInterval(null);
         } else {
           // Still processing
-          console.log('⏳ Analysis still processing, status:', statusResult.status);
         }
         // Continue polling for 'pending', 'queued', 'in_progress' statuses
       } catch (error) {
@@ -340,7 +322,6 @@ const Agents: React.FC<AgentsProps> = ({
 
 
       if (result.success) {
-        console.log('Business profile created successfully');
         // Show success notification
         showNotification('Profil biznesowy został pomyślnie utworzony!', 'success');
 

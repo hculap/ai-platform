@@ -284,15 +284,11 @@ class CampaignGenerationService:
                 Offer.business_profile_id == business_profile_id
             ).all()
         
-        logger.info(f"Campaign params received: {campaign_params}")
-        
         extracted_params = {
             'goal': campaign_params.get('campaign_goal'),
             'budget': campaign_params.get('budget'),
             'deadline': campaign_params.get('deadline')
         }
-        
-        logger.info(f"Extracted campaign params: {extracted_params}")
         
         return {
             'business_profile': business_profile.to_dict(),
@@ -395,14 +391,50 @@ class CampaignGenerationService:
             raise ValueError("Business profile not found or access denied")
         
         try:
-            # Create campaign with generated data
+            # Validate and prepare campaign parameters
+            goal = campaign_params.get('campaign_goal')
+            if not goal:
+                raise ValueError("Campaign goal is required")
+            
+            # Validate goal is in allowed options (import Campaign class constants)
+            from ..models.campaign import Campaign
+            if goal not in Campaign.GOAL_OPTIONS:
+                raise ValueError(f"Invalid campaign goal: {goal}")
+            
+            # Handle budget conversion
+            budget = campaign_params.get('budget')
+            if budget is not None:
+                try:
+                    budget = float(budget)
+                    if budget <= 0:
+                        raise ValueError("Budget must be positive")
+                except (ValueError, TypeError):
+                    raise ValueError("Invalid budget format")
+            
+            # Handle deadline conversion from string to date
+            deadline = campaign_params.get('deadline')
+            if deadline is not None:
+                try:
+                    if isinstance(deadline, str):
+                        deadline = datetime.strptime(deadline, '%Y-%m-%d').date()
+                    elif not hasattr(deadline, 'year'):  # Not a date-like object
+                        raise ValueError("Invalid deadline format")
+                except ValueError:
+                    raise ValueError("Deadline must be in YYYY-MM-DD format")
+            
+            # Handle selected products
+            selected_products = campaign_params.get('selected_products', [])
+            if not isinstance(selected_products, list):
+                raise ValueError("Selected products must be a list")
+            
+            # Create campaign with validated data
             campaign = Campaign(
                 business_profile_id=business_profile_id,
                 user_id=user_id,
-                goal=campaign_params.get('campaign_goal'),
-                budget=campaign_params.get('budget'),
-                deadline=campaign_params.get('deadline'),
-                selected_products=campaign_params.get('selected_products', []),
+                goal=goal,
+                budget=budget,
+                deadline=deadline,
+                selected_products=selected_products,
                 status='draft'  # All AI-generated campaigns start as draft
             )
             
@@ -424,5 +456,7 @@ class CampaignGenerationService:
             
         except Exception as e:
             db.session.rollback()
-            logger.error(f"Failed to save generated campaign: {e}")
-            raise ValueError("Failed to save generated campaign")
+            logger.error(f"Failed to save generated campaign: {e}", exc_info=True)
+            logger.error(f"Campaign params: {campaign_params}")
+            logger.error(f"Campaign data keys: {list(campaign_data.keys()) if campaign_data else 'None'}")
+            raise ValueError(f"Failed to save generated campaign: {str(e)}")

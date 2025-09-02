@@ -152,7 +152,6 @@ class GenerateCampaignTool(PromptBasedTool):
         user_id = input_data.user_id
         
         logger.info(f"Preparing OpenAI message for campaign generation, business profile {business_profile_id}")
-        logger.info(f"Validated params: {validated_params}")
         
         # Prepare data for AI generation
         generation_data = CampaignGenerationService.prepare_generation_data(
@@ -165,18 +164,12 @@ class GenerateCampaignTool(PromptBasedTool):
         selected_products = generation_data['selected_products']
         campaign_params = generation_data['campaign_params']
         
-        logger.info(f"Business profile data: {business_profile['name']}")
-        logger.info(f"Competitors count: {len(competitors)}")
-        logger.info(f"Selected products count: {len(selected_products)}")
-        logger.info(f"Campaign goal: {campaign_params['goal']}")
         
         # Create user message for AI
         user_message = self._create_user_message(
             business_profile, competitors, selected_products, campaign_params
         )
         
-        logger.info(f"Generated user message for AI: {user_message[:500]}...")
-        logger.info(f"Full user message length: {len(user_message)}")
         
         return user_message
     
@@ -202,7 +195,6 @@ class GenerateCampaignTool(PromptBasedTool):
         business_profile_id = validated_params['business_profile_id']
         
         logger.info(f"Processing OpenAI result for campaign generation, business profile {business_profile_id}")
-        logger.info(f"Content type: {type(content)}, Content length: {len(str(content)) if content else 0}")
         
         if not content or str(content).strip() == "":
             logger.error("OpenAI returned empty content for campaign generation")
