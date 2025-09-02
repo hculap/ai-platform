@@ -10,45 +10,60 @@ const testimonials = [
     name: 'Anna Kowalska',
     company: 'TechStart Solutions',
     role: 'CEO & Founder',
-    content: 'W 60 sekund otrzymałam analizę, na którą wcześniej potrzebowałam tygodnia. AI odkryła możliwości, których sama bym nie zauważyła.',
+    content: 'AI Growth OS zastąpił mi cały dział marketingu. Strategista analizuje rynek, Creator tworzy treści, a Automation publikuje wszystko 24/7. Oszczędzam 40,000 zł miesięcznie.',
     rating: 5,
     avatar: 'AK',
-    gradient: 'from-blue-500 to-purple-600'
+    gradient: 'from-blue-500 to-purple-600',
+    useCase: 'Team Replacement'
   },
   {
     name: 'Marcin Nowak',
-    company: 'GrowthLab',
-    role: 'Marketing Director',
-    content: 'Dzięki analizie konkurencji zwiększyliśmy sprzedaż o 150% w 3 miesiące. To najlepsza inwestycja w rozwój firmy.',
+    company: 'E-commerce Mastery',
+    role: 'Founder',
+    content: 'Wcześniej żonglowałem 12 narzędziami: analytics, social media, email marketing, design. Teraz mam wszystko w jednym miejscu. Wzrost sprzedaży o 240% w 4 miesiące.',
     rating: 5,
     avatar: 'MN',
-    gradient: 'from-green-500 to-teal-600'
+    gradient: 'from-green-500 to-teal-600',
+    useCase: 'Unified Platform'
   },
   {
     name: 'Katarzyna Wiśniewska',
-    company: 'Digital Agency Pro',
-    role: 'Strategy Lead',
-    content: 'Analiza AI jest tak precyzyjna, że mogę natychmiast wdrażać rekomendacje. Oszczędzam 20 godzin tygodniowo.',
+    company: 'Creative Agency Pro',
+    role: 'Agency Owner',
+    content: 'Maya (AI Creator) produkuje treści szybciej niż moi 3 copywriterów razem wzięci. Viktor (AI Analyst) optymalizuje kampanie lepiej niż eksperci z wieloletnim doświadczeniem.',
     rating: 5,
     avatar: 'KW',
-    gradient: 'from-purple-500 to-pink-600'
+    gradient: 'from-purple-500 to-pink-600',
+    useCase: 'AI Team Performance'
+  },
+  {
+    name: 'Robert Zieliński',
+    company: 'LocalBiz Solutions',
+    role: 'Business Consultant',
+    content: 'Automation w AI Growth OS działa jak szwajcarski zegarek. Moje kampanie działają samodzielnie, klienci dostają personalizowane treści, a ja fokusuje się na strategii.',
+    rating: 5,
+    avatar: 'RZ',
+    gradient: 'from-orange-500 to-red-600',
+    useCase: 'Full Automation'
   }
 ];
 
 const companyLogos = [
-  { name: 'TechStart', logo: 'TS' },
-  { name: 'GrowthLab', logo: 'GL' },
-  { name: 'Digital Pro', logo: 'DP' },
-  { name: 'InnovateCorp', logo: 'IC' },
-  { name: 'ScaleUp', logo: 'SU' },
-  { name: 'BusinessAI', logo: 'BA' }
+  { name: 'TechStart Solutions', logo: 'TS' },
+  { name: 'E-commerce Mastery', logo: 'EM' },
+  { name: 'Creative Agency Pro', logo: 'CA' },
+  { name: 'LocalBiz Solutions', logo: 'LB' },
+  { name: 'SaaS Innovate', logo: 'SI' },
+  { name: 'Digital Growth Hub', logo: 'DG' },
+  { name: 'Marketing Pros', logo: 'MP' },
+  { name: 'Scale Ventures', logo: 'SV' }
 ];
 
 const stats = [
-  { value: 2147, label: 'Firm przeanalizowanych', icon: Users, suffix: '+' },
-  { value: 150, label: 'Średni wzrost sprzedaży', icon: TrendingUp, suffix: '%' },
-  { value: 60, label: 'Sekund na analizę', icon: Zap, suffix: '' },
-  { value: 4.9, label: 'Średnia ocena', icon: Star, suffix: '/5' }
+  { value: 3240, label: 'Firm używa AI Growth OS', icon: Users, suffix: '+' },
+  { value: 187, label: 'Średni wzrost wydajności', icon: TrendingUp, suffix: '%' },
+  { value: 24, label: 'Godzin oszczędności tygodniowo', icon: Zap, suffix: 'h' },
+  { value: 4.9, label: 'Średnia ocena platformy', icon: Star, suffix: '/5' }
 ];
 
 const SocialProofSection: React.FC<SocialProofSectionProps> = ({ isVisible }) => {
@@ -114,15 +129,16 @@ const SocialProofSection: React.FC<SocialProofSectionProps> = ({ isVisible }) =>
         >
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
             <span className="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-              Dołącz do Tysięcy
+              Dołącz do Tysięcy Firm
             </span>
             <br />
             <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Zadowolonych Przedsiębiorców
+              Używających AI Growth OS
             </span>
           </h2>
-          <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-            Firmy z całej Polski już wykorzystują moc AI do rozwoju swojego biznesu
+          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+            Od startupów po globalne korporacje - firmy z różnych branż zastąpiły dziesiątki narzędzi 
+            jedną inteligentną platformą wzrostu
           </p>
         </div>
 
@@ -217,7 +233,7 @@ const SocialProofSection: React.FC<SocialProofSectionProps> = ({ isVisible }) =>
           style={{ transitionDelay: '0.6s' }}
         >
           <p className="text-center text-gray-600 mb-8 font-medium">
-            Zaufały nam firmy z różnych branż
+            Firmy z różnych branż zastąpiły swoje działy marketingu AI Growth OS
           </p>
           <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
             {companyLogos.map((company, index) => (

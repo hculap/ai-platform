@@ -8,57 +8,43 @@ interface FeatureGalaxySectionProps {
 const features = [
   {
     id: 1,
-    title: 'Analiza Biznesowa AI',
-    description: 'Kompleksowa analiza Twojej strony internetowej w 60 sekund. AI wyodrębnia kluczowe informacje o Twoim biznesie.',
+    title: 'Strategia & Inteligencja',
+    description: 'AI analizuje rynek, konkurencję i trendy, dostarczając głębokie wglądy biznesowe i strategie wzrostu oparte na danych.',
     icon: Brain,
     gradient: 'from-blue-500 to-purple-600',
-    benefits: ['Automatyczna kategorizacja biznesu', 'Identyfikacja grupy docelowej', 'Analiza propozycji wartości'],
-    stats: '2000+ analiz dziennie'
+    benefits: ['Analiza konkurencji w czasie rzeczywistym', 'Identyfikacja trendów rynkowych', 'Spersonalizowane strategie wzrostu', 'Predykcje i prognozy biznesowe'],
+    stats: 'Miliony punktów danych dziennie',
+    capabilities: ['Market Intelligence', 'Competitor Analysis', 'Trend Forecasting', 'Strategic Planning']
   },
   {
     id: 2,
-    title: 'Badanie Konkurencji',
-    description: 'AI znajduje i analizuje Twoich głównych konkurentów, ujawniając ich silne i słabe strony.',
+    title: 'Tworzenie Treści',
+    description: 'Zaawansowane AI tworzy wysokiej jakości treści: posty, reklamy, landing page, emaile - wszystko dostosowane do Twojej marki.',
     icon: Target,
-    gradient: 'from-red-500 to-orange-600',
-    benefits: ['Automatyczne wykrywanie konkurentów', 'Analiza pozycjonowania', 'Identyfikacja luk rynkowych'],
-    stats: '500+ konkurentów dziennie'
+    gradient: 'from-green-500 to-emerald-600',
+    benefits: ['Posty na social media', 'Kampanie reklamowe', 'Landing pages', 'Email marketing', 'Copy dla e-commerce'],
+    stats: '10000+ treści tworzone dziennie',
+    capabilities: ['Content Generation', 'Brand Voice Adaptation', 'Multi-format Creation', 'A/B Testing']
   },
   {
     id: 3,
-    title: 'Rekomendacje Wzrostu',
-    description: 'Spersonalizowane strategie rozwoju oparte na analizie Twojego biznesu i rynku.',
-    icon: TrendingUp,
-    gradient: 'from-green-500 to-emerald-600',
-    benefits: ['Konkretne działania do wdrożenia', 'Priorytetyzacja inicjatyw', 'Prognoza ROI'],
-    stats: '150% średni wzrost'
+    title: 'Automatyzacja & Wykonanie',
+    description: 'Inteligentne workflow\'y automatyzują publikowanie, zarządzanie kampaniami i optymalizację performance w czasie rzeczywistym.',
+    icon: Zap,
+    gradient: 'from-orange-500 to-red-600',
+    benefits: ['Automatyczne publikowanie', 'Zarządzanie kampaniami', 'Optymalizacja budżetów', 'Monitorowanie wyników 24/7'],
+    stats: '99.9% niezawodności automatyzacji',
+    capabilities: ['Workflow Automation', 'Campaign Management', 'Performance Optimization', 'Real-time Monitoring']
   },
   {
     id: 4,
-    title: 'Analiza Globalnych Trendów',
-    description: 'Monitorowanie trendów branżowych i możliwości ekspansji na nowe rynki.',
-    icon: Globe,
-    gradient: 'from-indigo-500 to-blue-600',
-    benefits: ['Trendy w czasie rzeczywistym', 'Analiza międzynarodowa', 'Prognozy rozwoju rynku'],
-    stats: '50+ krajów objętych'
-  },
-  {
-    id: 5,
-    title: 'Segmentacja Klientów',
-    description: 'Precyzyjna identyfikacja i analiza różnych segmentów Twojej grupy docelowej.',
+    title: 'Warstwa Asystentów',
+    description: 'AI Asystenci specjalizujący się w różnych obszarach: Strategista, Creator, Analityk i Growth Manager - Twój cyfrowy zespół.',
     icon: Users,
     gradient: 'from-purple-500 to-pink-600',
-    benefits: ['Persona klientów', 'Analiza behawioralna', 'Personalizacja komunikacji'],
-    stats: '15+ segmentów średnio'
-  },
-  {
-    id: 6,
-    title: 'Optymalizacja w Czasie Rzeczywistym',
-    description: 'Ciągłe monitorowanie i sugerowanie ulepszeń dla maksymalizacji wyników.',
-    icon: Zap,
-    gradient: 'from-yellow-500 to-orange-600',
-    benefits: ['Monitoring 24/7', 'Alerty o zmianach', 'Automatyczne sugestie'],
-    stats: '99.9% dostępności'
+    benefits: ['AI Strategista biznesowy', 'AI Creator treści', 'AI Analityk danych', 'AI Growth Manager', '24/7 dostępność'],
+    stats: '4 specjalistycznych asystentów',
+    capabilities: ['Strategic Guidance', 'Creative Direction', 'Data Analysis', 'Growth Management']
   }
 ];
 
@@ -88,21 +74,21 @@ const FeatureGalaxySection: React.FC<FeatureGalaxySectionProps> = ({ isVisible }
         >
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
             <span className="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-              Galaxy Funkcji
+              4 Kluczowe Obszary
             </span>
             <br />
             <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Napędzanych AI
+              AI Growth OS
             </span>
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Odkryj wszechstronne możliwości naszej platformy AI. Każda funkcja została zaprojektowana, 
-            aby przyspieszyć rozwój Twojego biznesu.
+            Każdy obszar to kompletny zestaw narzędzi AI, które wcześniej wymagały dziesiątek oddzielnych platform. 
+            Teraz wszystko w jednym miejscu.
           </p>
         </div>
 
         {/* Features grid */}
-        <div className="grid lg:grid-cols-3 md:grid-cols-2 gap-8 mb-16">
+        <div className="grid lg:grid-cols-2 gap-8 mb-16 max-w-6xl mx-auto">
           {features.map((feature, index) => {
             const Icon = feature.icon;
             const isHovered = hoveredFeature === feature.id;
@@ -160,18 +146,30 @@ const FeatureGalaxySection: React.FC<FeatureGalaxySectionProps> = ({ isVisible }
 
                     {/* Expandable benefits */}
                     <div className={`transition-all duration-500 overflow-hidden ${
-                      isSelected ? 'max-h-40 opacity-100' : 'max-h-0 opacity-0'
+                      isSelected ? 'max-h-64 opacity-100' : 'max-h-0 opacity-0'
                     }`}>
-                      <div className="border-t border-gray-200 pt-4">
-                        <h4 className="font-semibold text-gray-900 mb-3">Kluczowe korzyści:</h4>
-                        <ul className="space-y-2">
-                          {feature.benefits.map((benefit, i) => (
-                            <li key={i} className="flex items-start space-x-2 text-sm text-gray-600">
-                              <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
-                              <span>{benefit}</span>
-                            </li>
-                          ))}
-                        </ul>
+                      <div className="border-t border-gray-200 pt-4 space-y-4">
+                        <div>
+                          <h4 className="font-semibold text-gray-900 mb-3">Kluczowe możliwości:</h4>
+                          <ul className="space-y-2">
+                            {feature.benefits.map((benefit, i) => (
+                              <li key={i} className="flex items-start space-x-2 text-sm text-gray-600">
+                                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full mt-2 flex-shrink-0" />
+                                <span>{benefit}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                        <div>
+                          <h4 className="font-semibold text-gray-900 mb-3">Główne funkcje:</h4>
+                          <div className="flex flex-wrap gap-2">
+                            {feature.capabilities.map((capability, i) => (
+                              <span key={i} className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full text-xs font-medium">
+                                {capability}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
                       </div>
                     </div>
 
@@ -215,19 +213,19 @@ const FeatureGalaxySection: React.FC<FeatureGalaxySectionProps> = ({ isVisible }
             
             <div className="relative z-10 max-w-4xl mx-auto">
               <h3 className="text-3xl font-bold mb-4">
-                Wszystkie Funkcje w Jednej Platformie
+                4 Obszary = Kompletny Zespół AI
               </h3>
               <p className="text-xl text-blue-100 mb-8 leading-relaxed">
-                Nie musisz wybierać między różnymi narzędziami. Nasza platforma AI łączy wszystkie potrzebne funkcje 
-                w jednym, intuicyjnym interfejsie.
+                Zamiast zarządzać dziesiątkami narzędzi i specjalistów, masz jeden AI Growth OS, 
+                który zastępuje cały dział marketingu i wzrostu.
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <button className="px-8 py-4 bg-white text-blue-600 font-semibold rounded-2xl hover:shadow-lg transform hover:scale-105 transition-all duration-300">
-                  Rozpocznij Bezpłatnie
+                  Uruchom AI Growth OS
                 </button>
                 <button className="px-8 py-4 bg-white/20 backdrop-blur-sm text-white font-semibold rounded-2xl border border-white/30 hover:bg-white/30 transition-all duration-300">
-                  Zobacz Wszystkie Funkcje
+                  Poznaj 4 Obszary
                 </button>
               </div>
             </div>

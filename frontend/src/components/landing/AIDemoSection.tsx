@@ -9,55 +9,70 @@ interface AIDemoSectionProps {
 const demoSteps = [
   {
     id: 1,
-    title: 'Skanowanie strony',
-    description: 'AI analizuje strukturę, treść i metadane Twojej witryny',
-    icon: Globe,
-    duration: 2000,
-    color: 'from-blue-500 to-blue-600'
+    title: 'Strategia & Inteligencja',
+    description: 'AI Strategista analizuje rynek, konkurencję i identyfikuje możliwości wzrostu dla Twojego biznesu',
+    icon: Brain,
+    duration: 3000,
+    color: 'from-blue-500 to-purple-600',
+    result: 'Znalazł 3 nowe możliwości wzrostu i przeanalizował 15 konkurentów'
   },
   {
     id: 2,
-    title: 'Przetwarzanie AI',
-    description: 'Algorytmy wyodrębniają kluczowe informacje biznesowe',
-    icon: Brain,
-    duration: 3000,
-    color: 'from-purple-500 to-purple-600'
+    title: 'Tworzenie Treści',
+    description: 'AI Creator produkuje wysokiej jakości treści: posty, reklamy, landing page dopasowane do Twojej marki',
+    icon: Target,
+    duration: 2500,
+    color: 'from-green-500 to-emerald-600',
+    result: 'Stworzył 12 postów LinkedIn, 3 kampanie Facebook i landing page'
   },
   {
     id: 3,
-    title: 'Analiza konkurencji',
-    description: 'Identyfikacja i badanie głównych konkurentów w branży',
-    icon: Target,
-    duration: 2500,
-    color: 'from-orange-500 to-red-600'
+    title: 'Automatyzacja & Wykonanie',
+    description: 'Inteligentne workflow\'y ustawiają publikowanie, zarządzanie kampaniami i optymalizację w czasie rzeczywistym',
+    icon: Zap,
+    duration: 2000,
+    color: 'from-orange-500 to-red-600',
+    result: 'Skonfigurował 5 automatyzacji i 24/7 monitoring kampanii'
   },
   {
     id: 4,
-    title: 'Generowanie wglądów',
-    description: 'Tworzenie spersonalizowanych rekomendacji biznesowych',
-    icon: TrendingUp,
+    title: 'Koordynacja Zespołu AI',
+    description: 'Wszyscy asystenci AI współpracują ze sobą, tworząc spójny plan działania i raportując postępy',
+    icon: Globe,
     duration: 1500,
-    color: 'from-green-500 to-green-600'
+    color: 'from-purple-500 to-pink-600',
+    result: 'Zespół AI przygotował kompleksowy plan wzrostu na Q4'
   }
 ];
 
 const sampleResults = {
-  businessProfile: {
-    company: 'TechStart Solutions',
-    target: 'Małe i średnie przedsiębiorstwa szukające cyfrowej transformacji',
-    usp: 'Kompleksowe rozwiązania IT z 24/7 wsparciem technicznym',
-    problems: 'Brak efektywnych systemów cyfrowych, przestarzałe procesy'
+  strategy: {
+    opportunities: [
+      'Niezagospodarowany segment młodych profesjonalistów (25-35 lat)',
+      'Możliwość wejścia na rynek niemiecki - mała konkurencja',
+      'Trend AI w branży - 67% firm planuje inwestycje w 2024'
+    ],
+    competitors: [
+      { name: 'Digital Pro Agency', gap: 'Brak AI w ofercie', opportunity: 'Pozycjonowanie jako lider AI' },
+      { name: 'TechGrow', gap: 'Słaba obecność social media', opportunity: 'Dominacja LinkedIn' }
+    ]
   },
-  competitors: [
-    { name: 'Digital Pro Agency', strength: 'Marketing cyfrowy', weakness: 'Brak wsparcia technicznego' },
-    { name: 'IT Solutions Plus', strength: 'Doświadczenie', weakness: 'Wysokie ceny' },
-    { name: 'TechGrow', strength: 'Innowacyjność', weakness: 'Mały zespół' }
+  content: [
+    { type: 'Post LinkedIn', title: '"3 trendy AI, które zmienią Twoją branżę w 2024"', engagement: '+234% CTR' },
+    { type: 'Kampania Facebook', title: 'Targeting: młodzi profesjonaliści', conversion: '+156% konwersji' },
+    { type: 'Landing Page', title: 'Optymalizacja pod słowa kluczowe AI', seo: 'Ranking #1 Google' }
   ],
-  recommendations: [
-    'Podkreśl przewagę 24/7 wsparcia w komunikacji marketingowej',
-    'Rozwiń ofertę dla sektora e-commerce',
-    'Wprowadź pakiety cenowe dla startupów'
-  ]
+  automation: [
+    { name: 'Publikowanie LinkedIn', frequency: '2 posty dziennie', status: 'Aktywne' },
+    { name: 'Email nurturing', segments: '3 segmenty klientów', open_rate: '47% open rate' },
+    { name: 'Lead scoring', leads: '23 hot leads dziś', conversion: '+89% jakość leadów' }
+  ],
+  team_coordination: {
+    alex: 'Przygotowuje strategię wejścia na rynek niemiecki',
+    maya: 'Tworzy serię 20 postów o AI dla młodych profesjonalistów',
+    viktor: 'Optymalizuje kampanie pod nowe segmenty',
+    sophia: 'Koordynuje Q4 launch plan - wszystkie elementy gotowe za 3 dni'
+  }
 };
 
 const AIDemoSection: React.FC<AIDemoSectionProps> = ({ isVisible, onTryDemo }) => {
@@ -127,194 +142,107 @@ const AIDemoSection: React.FC<AIDemoSectionProps> = ({ isVisible, onTryDemo }) =
           }`}
         >
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
-            <span className="text-white">Zobacz </span>
+            <span className="text-white">Zobacz Platformę </span>
             <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
-              AI w Akcji
+              w Akcji
             </span>
           </h2>
           <p className="text-xl text-blue-100 max-w-3xl mx-auto">
-            Doświadcz mocy sztucznej inteligencji na żywo. Zobacz, jak AI analizuje biznes w czasie rzeczywistym.
+            3-minutowe demo pokazujące jak cały zespół AI pracuje dla Twojego biznesu w czasie rzeczywistym
           </p>
         </div>
 
-        {/* Demo interface */}
-        <div className="grid lg:grid-cols-2 gap-12 items-start">
-          {/* Demo controls */}
+        {/* Video Demo */}
+        <div className="max-w-5xl mx-auto">
           <div 
             className={`transition-all duration-1000 transform ${
-              isVisible ? 'translate-x-0 opacity-100' : '-translate-x-8 opacity-0'
+              isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
             }`}
             style={{ transitionDelay: '0.2s' }}
           >
-            <div className="bg-white/10 backdrop-blur-md rounded-3xl p-8 border border-white/20">
-              <div className="text-center mb-8">
-                <h3 className="text-2xl font-bold mb-4">Interaktywne Demo AI</h3>
-                <p className="text-blue-100">
-                  {demoState === 'ready' && 'Kliknij play, aby zobaczyć AI w akcji'}
-                  {demoState === 'running' && 'AI analizuje przykładową stronę...'}
-                  {demoState === 'completed' && 'Analiza zakończona! Zobacz wyniki.'}
-                </p>
-              </div>
-
-              {/* URL input */}
-              <div className="mb-6">
-                <div className="relative">
-                  <input
-                    type="text"
-                    value={demoUrl}
-                    onChange={(e) => setDemoUrl(e.target.value)}
-                    className="w-full px-6 py-4 bg-white/20 backdrop-blur-sm border border-white/30 rounded-2xl text-white placeholder-blue-200 focus:outline-none focus:border-blue-400"
-                    placeholder="Wprowadź URL do analizy demo"
-                    disabled={demoState === 'running'}
-                  />
-                  <Globe className="absolute right-4 top-1/2 transform -translate-y-1/2 w-6 h-6 text-blue-300" />
+            {/* Video container */}
+            <div className="relative bg-black/20 backdrop-blur-sm rounded-3xl overflow-hidden border border-white/20 shadow-2xl">
+              {/* Video placeholder */}
+              <div className="relative aspect-video bg-gradient-to-br from-gray-800 to-gray-900">
+                {/* Video overlay content */}
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center">
+                    {/* Play button */}
+                    <button className="inline-flex items-center justify-center w-24 h-24 bg-blue-600 hover:bg-blue-700 rounded-full shadow-2xl transform hover:scale-110 transition-all duration-300 mb-6">
+                      <Play className="w-10 h-10 text-white ml-1" />
+                    </button>
+                    
+                    <h3 className="text-2xl font-bold text-white mb-3">
+                      Zobacz AI Growth OS w Akcji
+                    </h3>
+                    <p className="text-blue-200 max-w-md mx-auto">
+                      3-minutowe demo pokazujące jak 4 obszary platformy współpracują w czasie rzeczywistym
+                    </p>
+                  </div>
                 </div>
-              </div>
 
-              {/* Demo controls */}
-              <div className="text-center space-y-4">
-                {demoState === 'ready' && (
-                  <button
-                    onClick={startDemo}
-                    className="inline-flex items-center space-x-2 px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-2xl hover:shadow-lg transform hover:scale-105 transition-all duration-300"
-                  >
-                    <Play className="w-6 h-6" />
-                    <span>Uruchom Demo AI</span>
-                  </button>
-                )}
+                {/* Video thumbnail overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/50 to-transparent" />
                 
-                {demoState === 'running' && (
-                  <div className="space-y-4">
-                    <div className="inline-flex items-center space-x-2 px-8 py-4 bg-white/20 rounded-2xl">
-                      <div className="w-6 h-6 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                      <span>Trwa analiza...</span>
-                    </div>
+                {/* Corner badges */}
+                <div className="absolute top-4 left-4">
+                  <div className="bg-red-600 text-white px-3 py-1 rounded-full text-sm font-semibold">
+                    LIVE DEMO
                   </div>
-                )}
-
-                {demoState === 'completed' && (
-                  <div className="space-y-4">
-                    <div className="inline-flex items-center space-x-2 px-8 py-4 bg-green-500/20 border border-green-400/30 rounded-2xl">
-                      <CheckCircle className="w-6 h-6 text-green-400" />
-                      <span>Analiza zakończona!</span>
-                    </div>
-                    <div className="flex space-x-4 justify-center">
-                      <button
-                        onClick={resetDemo}
-                        className="px-6 py-3 bg-white/20 hover:bg-white/30 text-white font-medium rounded-xl transition-colors"
-                      >
-                        Powtórz Demo
-                      </button>
-                      <button
-                        onClick={() => onTryDemo(demoUrl)}
-                        className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300"
-                      >
-                        Wypróbuj na Swojej Stronie
-                      </button>
-                    </div>
+                </div>
+                
+                <div className="absolute top-4 right-4">
+                  <div className="bg-white/20 backdrop-blur-sm text-white px-3 py-1 rounded-full text-sm">
+                    3:24
                   </div>
-                )}
-              </div>
-            </div>
-          </div>
+                </div>
 
-          {/* Demo visualization */}
-          <div 
-            className={`transition-all duration-1000 transform ${
-              isVisible ? 'translate-x-0 opacity-100' : 'translate-x-8 opacity-0'
-            }`}
-            style={{ transitionDelay: '0.4s' }}
-          >
-            {/* Process steps */}
-            <div className="space-y-6 mb-8">
-              {demoSteps.map((step, index) => {
-                const Icon = step.icon;
-                const isActive = demoState === 'running' && index === currentStep;
-                const isCompleted = demoState === 'running' && index < currentStep || demoState === 'completed';
-                const isUpcoming = demoState === 'running' && index > currentStep;
-
-                return (
-                  <div 
-                    key={step.id}
-                    className={`flex items-center space-x-4 p-4 rounded-2xl border transition-all duration-500 ${
-                      isActive 
-                        ? 'bg-gradient-to-r ' + step.color + ' border-transparent shadow-lg scale-105' 
-                        : isCompleted 
-                          ? 'bg-green-500/20 border-green-400/30' 
-                          : 'bg-white/10 border-white/20'
-                    }`}
-                  >
-                    <div className={`w-12 h-12 rounded-xl flex items-center justify-center ${
-                      isActive || isCompleted ? 'bg-white/20' : 'bg-white/10'
-                    }`}>
-                      {isCompleted ? (
-                        <CheckCircle className="w-6 h-6 text-green-400" />
-                      ) : (
-                        <Icon className={`w-6 h-6 ${isActive ? 'text-white animate-pulse' : 'text-blue-300'}`} />
-                      )}
-                    </div>
-                    <div className="flex-1">
-                      <h4 className={`font-semibold mb-1 ${isActive ? 'text-white' : 'text-blue-100'}`}>
-                        {step.title}
-                      </h4>
-                      <p className={`text-sm ${isActive ? 'text-blue-100' : 'text-blue-200'}`}>
-                        {step.description}
-                      </p>
-                    </div>
-                    {isActive && (
-                      <div className="flex-shrink-0">
-                        <div className="w-3 h-3 bg-white rounded-full animate-pulse" />
+                {/* Bottom info bar */}
+                <div className="absolute bottom-4 left-4 right-4">
+                  <div className="bg-white/10 backdrop-blur-sm rounded-xl p-4 border border-white/20">
+                    <div className="flex items-center justify-between">
+                      <div>
+                        <h4 className="text-white font-semibold text-lg">Kompletny AI Growth OS Demo</h4>
+                        <p className="text-blue-200 text-sm">Strategia → Tworzenie → Automatyzacja → Koordynacja</p>
                       </div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Results preview */}
-            {showResults && (
-              <div className="bg-white/10 backdrop-blur-md rounded-3xl p-6 border border-white/20 animate-slide-up">
-                <h4 className="text-xl font-bold mb-4 text-center">Przykładowe Wyniki Analizy</h4>
-                
-                <div className="space-y-4 text-sm">
-                  <div className="bg-white/10 rounded-2xl p-4">
-                    <h5 className="font-semibold text-blue-300 mb-2">Profil Biznesowy</h5>
-                    <p className="text-blue-100 mb-2">
-                      <strong>Firma:</strong> {sampleResults.businessProfile.company}
-                    </p>
-                    <p className="text-blue-100 mb-2">
-                      <strong>Grupa docelowa:</strong> {sampleResults.businessProfile.target}
-                    </p>
-                    <p className="text-blue-100">
-                      <strong>USP:</strong> {sampleResults.businessProfile.usp}
-                    </p>
-                  </div>
-
-                  <div className="bg-white/10 rounded-2xl p-4">
-                    <h5 className="font-semibold text-purple-300 mb-2">Analiza Konkurencji</h5>
-                    <div className="space-y-2">
-                      {sampleResults.competitors.slice(0, 2).map((competitor, index) => (
-                        <div key={index} className="text-blue-100 text-xs">
-                          <strong>{competitor.name}:</strong> {competitor.strength}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="bg-white/10 rounded-2xl p-4">
-                    <h5 className="font-semibold text-green-300 mb-2">Rekomendacje</h5>
-                    <div className="space-y-1">
-                      {sampleResults.recommendations.slice(0, 2).map((rec, index) => (
-                        <div key={index} className="flex items-start space-x-2 text-blue-100 text-xs">
-                          <ArrowRight className="w-3 h-3 text-green-400 mt-0.5 flex-shrink-0" />
-                          <span>{rec}</span>
-                        </div>
-                      ))}
+                      <div className="flex items-center space-x-2 text-blue-200 text-sm">
+                        <Globe className="w-4 h-4" />
+                        <span>example.com</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            )}
+            </div>
+
+            {/* Video description */}
+            <div className="mt-8 text-center">
+              <div className="grid md:grid-cols-4 gap-6 max-w-4xl mx-auto">
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+                  <Brain className="w-8 h-8 text-blue-400 mx-auto mb-3" />
+                  <h4 className="font-semibold text-white mb-2">Strategia AI</h4>
+                  <p className="text-blue-200 text-sm">Analiza rynku i konkurencji</p>
+                </div>
+                
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+                  <Target className="w-8 h-8 text-green-400 mx-auto mb-3" />
+                  <h4 className="font-semibold text-white mb-2">Creator AI</h4>
+                  <p className="text-blue-200 text-sm">Tworzenie treści i reklam</p>
+                </div>
+                
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+                  <Zap className="w-8 h-8 text-orange-400 mx-auto mb-3" />
+                  <h4 className="font-semibold text-white mb-2">Automatyzacja</h4>
+                  <p className="text-blue-200 text-sm">Workflow i publikowanie</p>
+                </div>
+                
+                <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-4 border border-white/20">
+                  <Globe className="w-8 h-8 text-purple-400 mx-auto mb-3" />
+                  <h4 className="font-semibold text-white mb-2">Koordynacja</h4>
+                  <p className="text-blue-200 text-sm">Zarządzanie zespołem AI</p>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -326,16 +254,16 @@ const AIDemoSection: React.FC<AIDemoSectionProps> = ({ isVisible, onTryDemo }) =
           style={{ transitionDelay: '0.6s' }}
         >
           <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-sm rounded-3xl p-8 border border-white/20">
-            <h3 className="text-2xl font-bold mb-4">Gotowy na prawdziwą analizę?</h3>
+            <h3 className="text-2xl font-bold mb-4">Gotowy na kompletny AI Growth OS?</h3>
             <p className="text-blue-100 mb-6 max-w-2xl mx-auto">
-              To co widziałeś to tylko próbka. Otrzymaj kompletną analizę swojego biznesu w 60 sekund.
+              To co widziałeś to tylko próbka. Uruchom pełny AI Growth OS dla swojego biznesu - 4 obszary, dziesiątki funkcji, jeden system.
             </p>
             <button 
               onClick={() => onTryDemo('your-website.com')}
               className="inline-flex items-center space-x-2 px-8 py-4 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-2xl hover:shadow-lg transform hover:scale-105 transition-all duration-300"
             >
               <Zap className="w-6 h-6" />
-              <span>Analizuj Swoją Stronę</span>
+              <span>Uruchom AI Growth OS</span>
               <ArrowRight className="w-6 h-6" />
             </button>
           </div>

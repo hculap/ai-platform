@@ -22,16 +22,16 @@ const PricingSection: React.FC<PricingSectionProps> = ({ isVisible, onGetStarted
         >
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
             <span className="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
-              Prosty
+              Jeden System
             </span>
             <br />
             <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Przejrzysty Cennik
+              Nieskończone Oszczędności
             </span>
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto mb-8">
-            Wybierz plan dostosowany do wielkości i potrzeb Twojego biznesu. 
-            Wszystkie plany zawierają 30-dniowy okres próbny.
+            Zamiast płacić za dziesiątki narzędzi i zatrudniać specjalistów, masz wszystko w jednej platformie. 
+            Oszczędzasz 60-80% kosztów przy 10x lepszych wynikach.
           </p>
         </div>
 
@@ -43,20 +43,24 @@ const PricingSection: React.FC<PricingSectionProps> = ({ isVisible, onGetStarted
               <div className="w-16 h-16 bg-gray-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Zap className="w-8 h-8 text-gray-600" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Darmowy Start</h3>
-              <p className="text-gray-600 mb-6">Idealne do poznania platformy</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Poznaj Platformę</h3>
+              <p className="text-gray-600 mb-6">Testuj wszystkie 4 obszary AI Growth OS</p>
               <div className="text-4xl font-bold text-gray-900 mb-2">Darmowy</div>
-              <p className="text-gray-500">na zawsze</p>
+              <p className="text-gray-500">14 dni pełna wersja</p>
             </div>
 
             <ul className="space-y-4 mb-8">
               <li className="flex items-start space-x-3">
                 <Check className="w-5 h-5 text-gray-600 mt-0.5" />
-                <span className="text-gray-700">1 analiza miesięcznie</span>
+                <span className="text-gray-700">Dostęp do wszystkich 4 obszarów</span>
               </li>
               <li className="flex items-start space-x-3">
                 <Check className="w-5 h-5 text-gray-600 mt-0.5" />
-                <span className="text-gray-700">Podstawowe wglądy AI</span>
+                <span className="text-gray-700">Poznaj zespół AI asystentów</span>
+              </li>
+              <li className="flex items-start space-x-3">
+                <Check className="w-5 h-5 text-gray-600 mt-0.5" />
+                <span className="text-gray-700">Podstawowa automatyzacja</span>
               </li>
               <li className="flex items-start space-x-3">
                 <Check className="w-5 h-5 text-gray-600 mt-0.5" />
@@ -68,7 +72,7 @@ const PricingSection: React.FC<PricingSectionProps> = ({ isVisible, onGetStarted
               onClick={onGetStarted}
               className="w-full py-4 px-6 bg-gray-100 text-gray-900 rounded-2xl font-semibold hover:bg-gray-200 transition-colors"
             >
-              Rozpocznij Za Darmo
+              Testuj AI Growth OS
             </button>
           </div>
 
@@ -84,8 +88,8 @@ const PricingSection: React.FC<PricingSectionProps> = ({ isVisible, onGetStarted
               <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <Crown className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Business Pro</h3>
-              <p className="text-gray-600 mb-6">Dla rozwijających się firm</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Kompletny AI Growth OS</h3>
+              <p className="text-gray-600 mb-6">Zastąp cały dział marketingu jedną platformą</p>
               <div className="flex items-center justify-center space-x-2">
                 <span className="text-2xl text-gray-400 line-through">299 PLN</span>
                 <span className="text-4xl font-bold text-blue-600">199 PLN</span>
@@ -96,19 +100,23 @@ const PricingSection: React.FC<PricingSectionProps> = ({ isVisible, onGetStarted
             <ul className="space-y-4 mb-8">
               <li className="flex items-start space-x-3">
                 <Check className="w-5 h-5 text-blue-600 mt-0.5" />
-                <span className="text-gray-700">Nielimitowane analizy</span>
+                <span className="text-gray-700"><strong>4 AI Asystenci</strong>: Strategista, Creator, Analityk, Growth Manager</span>
               </li>
               <li className="flex items-start space-x-3">
                 <Check className="w-5 h-5 text-blue-600 mt-0.5" />
-                <span className="text-gray-700">Zaawansowane wglądy AI</span>
+                <span className="text-gray-700"><strong>Nielimitowane treści</strong>: Posty, reklamy, landing pages, emaile</span>
               </li>
               <li className="flex items-start space-x-3">
                 <Check className="w-5 h-5 text-blue-600 mt-0.5" />
-                <span className="text-gray-700">Pełna analiza konkurencji</span>
+                <span className="text-gray-700"><strong>Pełna automatyzacja</strong>: Publikowanie 24/7, workflow'y, optymalizacja</span>
               </li>
               <li className="flex items-start space-x-3">
                 <Check className="w-5 h-5 text-blue-600 mt-0.5" />
-                <span className="text-gray-700">Eksporty PDF/Excel</span>
+                <span className="text-gray-700"><strong>Zaawansowana strategia</strong>: Analiza konkurencji, trendy, prognozy</span>
+              </li>
+              <li className="flex items-start space-x-3">
+                <Check className="w-5 h-5 text-blue-600 mt-0.5" />
+                <span className="text-gray-700">Integracje z popularnymi narzędziami</span>
               </li>
               <li className="flex items-start space-x-3">
                 <Check className="w-5 h-5 text-blue-600 mt-0.5" />
@@ -121,7 +129,7 @@ const PricingSection: React.FC<PricingSectionProps> = ({ isVisible, onGetStarted
               className="w-full py-4 px-6 bg-gradient-to-r from-blue-500 to-purple-600 text-white rounded-2xl font-semibold hover:shadow-lg transform hover:scale-105 transition-all duration-300"
             >
               <div className="flex items-center justify-center space-x-2">
-                <span>Wybierz Business Pro</span>
+                <span>Uruchom AI Growth OS</span>
                 <ArrowRight className="w-5 h-5" />
               </div>
             </button>
@@ -133,8 +141,8 @@ const PricingSection: React.FC<PricingSectionProps> = ({ isVisible, onGetStarted
               <div className="w-16 h-16 bg-gradient-to-br from-purple-600 to-pink-600 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                 <Rocket className="w-8 h-8 text-white" />
               </div>
-              <h3 className="text-2xl font-bold text-gray-900 mb-2">Enterprise</h3>
-              <p className="text-gray-600 mb-6">Dla dużych organizacji</p>
+              <h3 className="text-2xl font-bold text-gray-900 mb-2">Enterprise AI OS</h3>
+              <p className="text-gray-600 mb-6">Skalowalne rozwiązanie dla korporacji</p>
               <div className="flex items-center justify-center space-x-2">
                 <span className="text-2xl text-gray-400 line-through">699 PLN</span>
                 <span className="text-4xl font-bold text-purple-600">499 PLN</span>
@@ -145,23 +153,23 @@ const PricingSection: React.FC<PricingSectionProps> = ({ isVisible, onGetStarted
             <ul className="space-y-4 mb-8">
               <li className="flex items-start space-x-3">
                 <Check className="w-5 h-5 text-purple-600 mt-0.5" />
-                <span className="text-gray-700">Wszystko z Business Pro</span>
+                <span className="text-gray-700">Wszystko z AI Growth OS +</span>
               </li>
               <li className="flex items-start space-x-3">
                 <Check className="w-5 h-5 text-purple-600 mt-0.5" />
-                <span className="text-gray-700">Dedykowany manager</span>
+                <span className="text-gray-700"><strong>Dedykowany AI Manager</strong> - osobisty koordynator zespołu AI</span>
               </li>
               <li className="flex items-start space-x-3">
                 <Check className="w-5 h-5 text-purple-600 mt-0.5" />
-                <span className="text-gray-700">Custom integracje</span>
+                <span className="text-gray-700"><strong>White-label rozwiązania</strong> dla Twoich klientów</span>
               </li>
               <li className="flex items-start space-x-3">
                 <Check className="w-5 h-5 text-purple-600 mt-0.5" />
-                <span className="text-gray-700">Wsparcie 24/7</span>
+                <span className="text-gray-700">Custom integracje z systemiami ERP/CRM</span>
               </li>
               <li className="flex items-start space-x-3">
                 <Check className="w-5 h-5 text-purple-600 mt-0.5" />
-                <span className="text-gray-700">SLA 99.9%</span>
+                <span className="text-gray-700">Wsparcie 24/7 + SLA 99.9%</span>
               </li>
             </ul>
 
@@ -181,11 +189,11 @@ const PricingSection: React.FC<PricingSectionProps> = ({ isVisible, onGetStarted
         <div className="text-center">
           <div className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-3xl p-8 text-white">
             <h3 className="text-2xl font-bold mb-4">
-              30-dniowa gwarancja zwrotu pieniędzy
+              Gwarancja sukcesu lub zwrot pieniędzy
             </h3>
             <p className="text-xl text-blue-100 mb-6">
-              Jeśli nie jesteś zadowolony, zwrócimy 100% wpłaconej kwoty. 
-              Bez pytań.
+              Jeśli AI Growth OS nie zaoszczędzi Ci przynajmniej 20 godzin tygodniowo i nie zwiększy wyników o 50%, 
+              zwrócimy 100% wpłaconej kwoty. Bez pytań.
             </p>
             
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -193,10 +201,10 @@ const PricingSection: React.FC<PricingSectionProps> = ({ isVisible, onGetStarted
                 onClick={onGetStarted}
                 className="px-8 py-4 bg-white text-blue-600 font-semibold rounded-2xl hover:shadow-lg transform hover:scale-105 transition-all duration-300"
               >
-                Rozpocznij Bezpłatny Okres Próbny
+                Uruchom AI Growth OS Bezpłatnie
               </button>
               <button className="px-8 py-4 bg-white/20 backdrop-blur-sm text-white font-semibold rounded-2xl border border-white/30 hover:bg-white/30 transition-all duration-300">
-                Porozmawiaj z Ekspertem
+                Zobacz Demo Platformy
               </button>
             </div>
           </div>

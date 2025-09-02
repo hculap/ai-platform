@@ -102,39 +102,30 @@ const HeroSection: React.FC<HeroSectionProps> = ({
           style={{ transitionDelay: '0.2s' }}
         >
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-          <span>Już <span className="font-bold text-blue-600">{animatedCount.toLocaleString()}</span> firm zaufało naszej AI</span>
+          <span>Już <span className="font-bold text-blue-600">{animatedCount.toLocaleString()}</span> firm rozwija się z naszym AI</span>
           <Sparkles className="w-4 h-4 text-yellow-500" />
         </div>
 
         {/* Main headline */}
         <div className={`transition-all duration-1000 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
-          <h1 className="text-5xl md:text-7xl lg:text-8xl font-extrabold mb-8 leading-tight">
-            <span className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-600 bg-clip-text text-transparent">
-              Odkryj Moc
-            </span>
-            <br />
-            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent relative">
-              Swojego Biznesu
-              <div className="absolute -top-2 -right-8 animate-bounce">
-                <Zap className="w-8 h-8 text-yellow-400" />
-              </div>
-            </span>
-            <br />
-            <span className="text-4xl md:text-5xl lg:text-6xl bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
-              w 60 Sekund
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 leading-tight">
+            <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
+              Twój AI Growth OS
             </span>
           </h1>
+          
+          <p className="text-xl md:text-3xl lg:text-4xl font-medium mb-6 text-gray-900">
+            Jeden system. Nieskończony wzrost.
+          </p>
         </div>
 
-        {/* Subheading */}
+        {/* Value proposition */}
         <div 
           className={`transition-all duration-1000 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}
           style={{ transitionDelay: '0.4s' }}
         >
-          <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-4xl mx-auto leading-relaxed">
-            Nasza <span className="font-semibold text-blue-600">sztuczna inteligencja</span> przeanalizuje Twoją stronę w sekundach 
-            i dostarczy <span className="font-semibold text-purple-600">kompleksowe wglądy biznesowe</span>, 
-            których potrzebujesz do wzrostu.
+          <p className="text-lg md:text-2xl lg:text-3xl max-w-3xl mx-auto font-medium mb-12 text-gray-900">
+            Zastąp dziesiątki narzędzi jedną platformą AI
           </p>
         </div>
 
@@ -149,7 +140,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                 type="text" 
                 value={url}
                 onChange={(e) => setUrl(e.target.value)}
-                placeholder="Wprowadź adres swojej strony (np. mojafirma.pl, example.com)"
+                placeholder="Wprowadź adres swojej strony (np. mojafirma.pl)"
                 className={`w-full px-8 py-6 text-lg bg-white/90 backdrop-blur-sm border-2 rounded-2xl focus:outline-none transition-all duration-300 pr-20 ${
                   url.length === 0 
                     ? 'border-gray-200 focus:border-blue-500' 
@@ -203,20 +194,25 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                 ) : (
                   <div className="flex items-center space-x-2">
                     <Sparkles className="w-5 h-5" />
-                    <span>Analizuj Za Darmo</span>
+                    <span>Uruchom AI Growth OS Bezpłatnie</span>
                     <ArrowRight className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" />
                   </div>
                 )}
               </button>
               
-              <div className="flex items-center justify-center space-x-2 text-gray-500">
-                <span>lub</span>
+              <p className="text-sm text-gray-500 mt-3">
+                14 dni za darmo, anuluj w każdej chwili
+              </p>
+
+              {/* Alternative CTA */}
+              <div className="flex items-center justify-center space-x-4 mt-6 pt-4 border-t border-gray-200">
+                <span className="text-gray-500 text-sm">lub</span>
                 <button
                   type="button"
                   onClick={onSkipToForm}
-                  className="text-blue-600 hover:text-blue-700 font-medium hover:underline transition-colors"
+                  className="px-6 py-3 bg-white/80 backdrop-blur-sm text-blue-600 font-semibold rounded-xl border border-blue-200 hover:bg-white hover:shadow-lg transform hover:scale-105 transition-all duration-300"
                 >
-                  przejdź do formularza
+                  Zacznij bez URL - wypełnij formularz
                 </button>
               </div>
             </div>
@@ -225,63 +221,35 @@ const HeroSection: React.FC<HeroSectionProps> = ({
 
         {/* Key benefits */}
         <div 
-          className={`grid md:grid-cols-3 gap-8 max-w-4xl mx-auto transition-all duration-1000 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}
+          className={`grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto transition-all duration-1000 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'}`}
           style={{ transitionDelay: '0.8s' }}
         >
-          <div className="flex items-center space-x-3 justify-center md:justify-start">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-              <Zap className="w-6 h-6 text-white" />
+          <div className="text-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg mx-auto mb-3">
+              <TrendingUp className="w-8 h-8 text-white" />
             </div>
-            <div className="text-left">
-              <h3 className="font-semibold text-gray-900">60 sekund</h3>
-              <p className="text-gray-600">Natychmiastowa analiza</p>
-            </div>
+            <h3 className="font-semibold text-gray-900">Strategia</h3>
           </div>
           
-          <div className="flex items-center space-x-3 justify-center md:justify-start">
-            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-              <TrendingUp className="w-6 h-6 text-white" />
+          <div className="text-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg mx-auto mb-3">
+              <Sparkles className="w-8 h-8 text-white" />
             </div>
-            <div className="text-left">
-              <h3 className="font-semibold text-gray-900">100% AI</h3>
-              <p className="text-gray-600">Precyzyjne wglądy</p>
-            </div>
+            <h3 className="font-semibold text-gray-900">Tworzenie</h3>
           </div>
           
-          <div className="flex items-center space-x-3 justify-center md:justify-start">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg">
-              <Sparkles className="w-6 h-6 text-white" />
+          <div className="text-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center shadow-lg mx-auto mb-3">
+              <Zap className="w-8 h-8 text-white" />
             </div>
-            <div className="text-left">
-              <h3 className="font-semibold text-gray-900">Darmowy Start</h3>
-              <p className="text-gray-600">Bez zobowiązań</p>
-            </div>
+            <h3 className="font-semibold text-gray-900">Automatyzacja</h3>
           </div>
-        </div>
-
-        {/* Floating demo preview cards */}
-        <div className="absolute top-1/2 left-4 transform -translate-y-1/2 hidden lg:block">
-          <div className="w-64 h-32 bg-white/80 backdrop-blur-sm rounded-xl shadow-xl p-4 border border-white/20 animate-float" style={{ animationDelay: '0s' }}>
-            <div className="flex items-center space-x-2 mb-2">
-              <div className="w-3 h-3 bg-green-500 rounded-full" />
-              <span className="text-sm font-medium">Analiza zakończona</span>
+          
+          <div className="text-center">
+            <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg mx-auto mb-3">
+              <Globe className="w-8 h-8 text-white" />
             </div>
-            <div className="text-xs text-gray-600">
-              <p>• Grupa docelowa: Przedsiębiorcy 25-45 lat</p>
-              <p>• USP: Innowacyjne rozwiązania IT</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="absolute top-1/3 right-4 transform -translate-y-1/2 hidden lg:block">
-          <div className="w-56 h-28 bg-white/80 backdrop-blur-sm rounded-xl shadow-xl p-4 border border-white/20 animate-float" style={{ animationDelay: '2s' }}>
-            <div className="flex items-center space-x-2 mb-2">
-              <div className="w-3 h-3 bg-blue-500 rounded-full" />
-              <span className="text-sm font-medium">Konkurencja</span>
-            </div>
-            <div className="text-xs text-gray-600">
-              <p>Znaleziono 8 głównych konkurentów</p>
-            </div>
+            <h3 className="font-semibold text-gray-900">Asystenci</h3>
           </div>
         </div>
       </div>

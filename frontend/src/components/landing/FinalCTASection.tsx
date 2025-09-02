@@ -8,27 +8,27 @@ interface FinalCTASectionProps {
 }
 
 const stats = [
-  { value: 2147, label: 'Firm przeanalizowanych', icon: Users },
-  { value: 150, label: 'Średni wzrost przychodów', icon: TrendingUp, suffix: '%' },
-  { value: 4.9, label: 'Ocena klientów', icon: Star, suffix: '/5' },
-  { value: 60, label: 'Sekund na analizę', icon: Clock }
+  { value: 3240, label: 'Firm używa AI Growth OS', icon: Users },
+  { value: 187, label: 'Średni wzrost wydajności', icon: TrendingUp, suffix: '%' },
+  { value: 4.9, label: 'Ocena platformy', icon: Star, suffix: '/5' },
+  { value: 24, label: 'Godzin oszczędności tygodniowo', icon: Clock }
 ];
 
 const urgencyReasons = [
   {
     icon: Clock,
-    title: 'Każdy dzień to stracone możliwości',
-    description: 'Twoja konkurencja już wykorzystuje AI do rozwoju biznesu'
+    title: 'Każdy dzień kosztuje Cię więcej',
+    description: 'Płacisz za dziesiątki narzędzi, gdy mógłbyś mieć wszystko w jednym AI Growth OS'
   },
   {
     icon: TrendingUp,
-    title: 'Rynek nie czeka',
-    description: 'Trendy zmieniają się szybko - bądź zawsze o krok do przodu'
+    title: 'Konkurencja już ma przewagę',
+    description: 'Firmy z AI Growth OS rosną 187% szybciej niż te używające rozproszonych narzędzi'
   },
   {
     icon: Users,
-    title: 'Twoi klienci ewoluują',
-    description: 'Poznaj ich potrzeby zanim zmienią dostawcę'
+    title: 'Twój zespół pracuje nieefektywnie',
+    description: '24h dziennie tracone na przełączanie między narzędziami - AI Growth OS kończy z tym'
   }
 ];
 
@@ -156,17 +156,17 @@ const FinalCTASection: React.FC<FinalCTASectionProps> = ({ isVisible, onAnalyze,
           </div>
 
           <h2 className="text-5xl md:text-6xl lg:text-7xl font-extrabold mb-8 leading-tight">
-            <span className="text-white">Nie Czekaj.</span>
+            <span className="text-white">Przestań Płacić</span>
             <br />
             <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
-              Zacznij Dziś.
+              Za Chaos.
             </span>
           </h2>
 
           <p className="text-xl md:text-2xl text-blue-100 max-w-4xl mx-auto mb-12 leading-relaxed">
-            Każdego dnia bez analizy AI to stracone możliwości rozwoju. 
+            Jeden AI Growth OS zastępuje dziesiątki narzędzi i cały dział marketingu. 
             <br />
-            <span className="font-semibold text-white">Twoja konkurencja już zaczęła.</span>
+            <span className="font-semibold text-white">Oszczędzaj 60-80% kosztów przy 10x lepszych wynikach.</span>
           </p>
 
           {/* Quick start form */}
@@ -176,7 +176,7 @@ const FinalCTASection: React.FC<FinalCTASectionProps> = ({ isVisible, onAnalyze,
                 type="text"
                 value={demoUrl}
                 onChange={(e) => setDemoUrl(e.target.value)}
-                placeholder="Wprowadź URL swojej strony i zacznij w 60 sekund"
+                placeholder="Wprowadź URL i uruchom kompletny AI Growth OS"
                 className="w-full px-8 py-6 text-lg bg-white/10 backdrop-blur-sm border border-white/30 rounded-2xl text-white placeholder-blue-200 focus:outline-none focus:border-blue-400 focus:bg-white/20 transition-all duration-300"
               />
               <button
@@ -184,7 +184,7 @@ const FinalCTASection: React.FC<FinalCTASectionProps> = ({ isVisible, onAnalyze,
                 className="absolute right-2 top-2 bottom-2 px-8 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center space-x-2"
               >
                 <Zap className="w-5 h-5" />
-                <span>Analizuj Teraz</span>
+                <span>Uruchom AI Growth OS</span>
               </button>
             </div>
           </div>
@@ -196,7 +196,7 @@ const FinalCTASection: React.FC<FinalCTASectionProps> = ({ isVisible, onAnalyze,
               className="px-10 py-5 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-lg font-bold rounded-2xl hover:shadow-2xl transform hover:scale-110 transition-all duration-300 flex items-center space-x-3"
             >
               <CheckCircle className="w-6 h-6" />
-              <span>Rozpocznij Za Darmo</span>
+              <span>Testuj AI Growth OS</span>
               <ArrowRight className="w-6 h-6" />
             </button>
             
@@ -206,7 +206,7 @@ const FinalCTASection: React.FC<FinalCTASectionProps> = ({ isVisible, onAnalyze,
                 onClick={onSignUp}
                 className="text-white hover:text-blue-300 underline font-medium transition-colors"
               >
-                zobacz demo na żywo
+                zobacz platformę w akcji
               </button>
             </div>
           </div>
@@ -221,7 +221,7 @@ const FinalCTASection: React.FC<FinalCTASectionProps> = ({ isVisible, onAnalyze,
         >
           <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10">
             <div className="text-center mb-8">
-              <h3 className="text-2xl font-bold mb-4">Dlaczego warto działać już dziś?</h3>
+              <h3 className="text-2xl font-bold mb-4">Dlaczego musisz przejść na AI Growth OS już dziś?</h3>
               
               {/* Rotating urgency reasons */}
               <div className="relative h-24 overflow-hidden">
@@ -316,12 +316,12 @@ const FinalCTASection: React.FC<FinalCTASectionProps> = ({ isVisible, onAnalyze,
             <div className="relative z-10 max-w-4xl mx-auto">
               <Globe className="w-16 h-16 text-blue-400 mx-auto mb-6" />
               <h3 className="text-3xl font-bold mb-4">
-                Twój biznes zasługuje na najlepsze narzędzia
+                Twój biznes zasługuje na jeden kompletny system
               </h3>
               <p className="text-xl text-blue-100 mb-8 leading-relaxed">
-                Ponad 2000 firm już wykorzystuje moc AI do rozwoju. 
+                Ponad 3240 firm już przeszło na AI Growth OS i oszczędza 60-80% kosztów. 
                 <br />
-                <span className="font-semibold text-white">Dołącz do nich i wyprzedź konkurencję.</span>
+                <span className="font-semibold text-white">Przestań płacić za chaos. Przejdź na jedną platformę.</span>
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
@@ -331,14 +331,14 @@ const FinalCTASection: React.FC<FinalCTASectionProps> = ({ isVisible, onAnalyze,
                 >
                   <div className="flex items-center justify-center space-x-3">
                     <Sparkles className="w-6 h-6" />
-                    <span>Zacznij Bezpłatnie Już Teraz</span>
+                    <span>Uruchom AI Growth OS Bezpłatnie</span>
                     <ArrowRight className="w-6 h-6" />
                   </div>
                 </button>
               </div>
               
               <p className="text-blue-200 text-sm mt-6">
-                ✓ Bez zobowiązań ✓ 30-dniowa gwarancja zwrotu ✓ Anuluj w każdej chwili
+                ✓ 14 dni pełna wersja za darmo ✓ Gwarancja sukcesu lub zwrot ✓ Anuluj w każdej chwili
               </p>
             </div>
           </div>
