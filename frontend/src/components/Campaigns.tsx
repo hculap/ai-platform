@@ -1,9 +1,7 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Search,
-  Plus,
-  Edit,
   Target,
   Calendar,
   Trash2,
@@ -15,11 +13,11 @@ import {
   DollarSign,
   Save,
   Sparkles,
-  ArrowRight,
   Eye,
   EyeOff,
   Globe,
-  TrendingUp
+  TrendingUp,
+  Award
 } from 'lucide-react';
 import { 
   getCampaigns, 
@@ -86,6 +84,49 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
   const [generatedCampaign, setGeneratedCampaign] = useState<CampaignGenerationResult | null>(null);
   const [showGeneratedResult, setShowGeneratedResult] = useState(false);
   const [expandedCampaignId, setExpandedCampaignId] = useState<string | null>(null);
+
+  // Function to highlight search terms in text
+  const highlightSearchTerm = useCallback((text: string, searchTerm: string) => {
+    if (!searchTerm.trim()) return text;
+
+    const regex = new RegExp(`(${searchTerm.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi');
+    const parts = text.split(regex);
+
+    return parts.map((part, index) =>
+      regex.test(part) ? (
+        <span key={index} className="bg-yellow-200 text-yellow-800 px-1 rounded">
+          {part}
+        </span>
+      ) : part
+    );
+  }, []);
+
+  const truncateText = (text: string, maxLength: number = 150) => {
+    if (text.length <= maxLength) return text;
+    return text.substring(0, maxLength) + '...';
+  };
+
+  // Skeleton loader component
+  const CampaignCardSkeleton = () => (
+    <div className="bg-white rounded-2xl border border-gray-200/60 p-8 animate-pulse">
+      <div className="flex items-start gap-4 mb-6">
+        <div className="w-16 h-16 bg-gray-200 rounded-2xl"></div>
+        <div className="flex-1">
+          <div className="h-6 bg-gray-200 rounded mb-2 w-3/4"></div>
+          <div className="h-4 bg-gray-200 rounded w-1/2"></div>
+        </div>
+      </div>
+      <div className="space-y-2 mb-6">
+        <div className="h-4 bg-gray-200 rounded"></div>
+        <div className="h-4 bg-gray-200 rounded w-5/6"></div>
+        <div className="h-4 bg-gray-200 rounded w-4/6"></div>
+      </div>
+      <div className="flex justify-between items-center">
+        <div className="h-8 bg-gray-200 rounded w-24"></div>
+        <div className="h-10 bg-gray-200 rounded w-32"></div>
+      </div>
+    </div>
+  );
 
   // Generation form state
   const [generationParams, setGenerationParams] = useState<CampaignGenerationParams>({
@@ -330,268 +371,476 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
   }
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-bold text-gray-900">Campaigns</h2>
-          <p className="mt-1 text-sm text-gray-500">Generate and manage marketing campaign strategies</p>
+    <div className="space-y-8">
+      {/* Enhanced Header Panel */}
+      <div className="relative bg-white rounded-xl border border-gray-200 p-6 shadow-sm overflow-hidden">
+        {/* Background Effects */}
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-50/50 via-white to-purple-50/30"></div>
+        <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-blue-400/20 to-purple-400/20 rounded-full blur-2xl"></div>
+        <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-gradient-to-tr from-purple-400/10 to-blue-400/10 rounded-full blur-3xl"></div>
+
+        {/* Content with relative positioning */}
+        <div className="relative p-8">
+          {/* Header Section - Title and Count */}
+          <div className="flex justify-between items-center mb-8">
+            {/* Left - Title and Icon */}
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg">
+                <Target className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-4xl font-black text-gray-900 tracking-tight">
+                  {t('campaigns.title', 'Kampanie')}
+                </h1>
+                <p className="text-lg text-gray-600 font-medium mt-1">
+                  {t('campaigns.subtitle', 'Generuj i zarządzaj strategiami kampanii marketingowych')}
+                </p>
+              </div>
+            </div>
+
+            {/* Right - Available Count */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 border border-gray-200/60 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg">
+                  <Award className="w-4 h-4 text-white" />
+                </div>
+                <div className="text-right">
+                  <p className="text-lg font-bold text-gray-900">
+                    {isLoading ? (
+                      <span className="inline-block w-8 h-5 bg-gray-200 rounded animate-pulse"></span>
+                    ) : (
+                      `${filteredCampaigns.length}`
+                    )}
+                  </p>
+                  <p className="text-xs text-gray-500">{t('campaigns.available', 'Dostępnych kampanii')}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Search and Actions Section */}
+          <div className="flex justify-between items-center gap-4 mb-2">
+            {/* Left - Search */}
+            <div className="flex-1 max-w-md">
+              <div className="relative bg-white/90 backdrop-blur-sm rounded-xl border border-gray-200/60 shadow-lg">
+                <div className="relative">
+                  <Search className="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder={t('campaigns.search.placeholder', 'Szukaj kampanii...')}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-12 pr-12 py-3 bg-transparent border-0 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 placeholder-gray-500 font-medium rounded-xl"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Right - Action Button */}
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowGenerationForm(true)}
+                className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+              >
+                <Brain className="w-5 h-5" />
+                <span>{t('campaigns.generateNew', 'Generuj Kampanię')}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Search feedback */}
+          <div className="min-h-[20px] mb-2">
+            {searchQuery && !debouncedSearchQuery && (
+              <div className="flex items-center gap-2 text-sm text-gray-500">
+                <div className="w-4 h-4 border-2 border-gray-300 border-t-blue-500 rounded-full animate-spin"></div>
+                <span>{t('campaigns.searching', 'Szukam...')}</span>
+              </div>
+            )}
+
+            {debouncedSearchQuery && filteredCampaigns.length > 0 && (
+              <div className="flex items-center gap-2 text-sm text-emerald-600">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                <span className="font-medium">
+                  {t('campaigns.searchResults', 'Znaleziono {{count}} {{type}}', {
+                    count: filteredCampaigns.length,
+                    type: filteredCampaigns.length === 1 ? 'kampanię' : 'kampanii'
+                  })}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
-        <button
-          onClick={() => setShowGenerationForm(true)}
-          className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-        >
-          <Brain className="h-4 w-4 mr-2" />
-          Generate Campaign
-        </button>
       </div>
 
       {/* Error Message */}
       {error && (
-        <div className="rounded-md bg-red-50 p-4">
+        <div className="rounded-2xl bg-red-50 border border-red-200 p-6 shadow-sm">
           <div className="flex">
-            <AlertCircle className="h-5 w-5 text-red-400" />
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-red-800">Error</h3>
-              <p className="mt-2 text-sm text-red-700">{error}</p>
+            <div className="p-2 bg-red-100 rounded-xl">
+              <AlertCircle className="h-5 w-5 text-red-600" />
             </div>
-            <div className="ml-auto pl-3">
+            <div className="ml-4 flex-1">
+              <h3 className="text-sm font-semibold text-red-900 mb-1">{t('campaigns.error', 'Błąd')}</h3>
+              <p className="text-sm text-red-800">{error}</p>
+            </div>
+            <div className="ml-auto">
               <button
                 onClick={() => setError(null)}
-                className="inline-flex rounded-md bg-red-50 p-1.5 text-red-500 hover:bg-red-100"
+                className="p-2 text-red-500 hover:text-red-700 hover:bg-red-100 rounded-lg transition-colors"
               >
-                <X className="h-3 w-3" />
+                <X className="h-4 w-4" />
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Search */}
-      <div className="flex items-center space-x-4">
-        <div className="flex-1 relative">
-          <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-            <Search className="h-5 w-5 text-gray-400" />
+      {/* Content Area */}
+      <>
+        {isLoading && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {[...Array(4)].map((_, index) => (
+              <CampaignCardSkeleton key={index} />
+            ))}
           </div>
-          <input
-            type="text"
-            placeholder="Search campaigns..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-          />
-        </div>
-      </div>
+        )}
 
-      {/* Campaigns List */}
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
-          <span className="ml-2 text-gray-600">Loading campaigns...</span>
-        </div>
-      ) : filteredCampaigns.length === 0 ? (
-        <div className="text-center py-12">
-          <Target className="mx-auto h-12 w-12 text-gray-400" />
-          <h3 className="mt-2 text-sm font-medium text-gray-900">No campaigns found</h3>
-          <p className="mt-1 text-sm text-gray-500">
-            {campaigns.length === 0 
-              ? "Get started by generating your first campaign strategy." 
-              : "No campaigns match your search criteria."
-            }
-          </p>
-          {campaigns.length === 0 && (
-            <div className="mt-6">
-              <button
-                onClick={() => setShowGenerationForm(true)}
-                className="inline-flex items-center px-4 py-2 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700"
-              >
-                <Brain className="h-4 w-4 mr-2" />
-                Generate Your First Campaign
-              </button>
+        {!isLoading && filteredCampaigns.length === 0 && (
+          <div className="text-center py-16">
+            <div className="relative inline-block">
+              <div className="w-24 h-24 bg-gradient-to-br from-gray-100 to-gray-200 rounded-3xl flex items-center justify-center mx-auto mb-6 transform rotate-3">
+                <Target className="w-12 h-12 text-gray-400" />
+              </div>
+              <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                <Brain className="w-4 h-4 text-white" />
+              </div>
             </div>
-          )}
-        </div>
-      ) : (
-        <div className="grid gap-6 lg:grid-cols-2">
-          {filteredCampaigns.map((campaign) => (
-            <div key={campaign.id} className="bg-white shadow rounded-lg overflow-hidden">
-              <div className="p-6">
-                <div className="flex items-start justify-between">
-                  <div className="flex items-center">
-                    <span className="text-2xl mr-3">{getGoalIcon(campaign.goal)}</span>
-                    <div>
-                      <h3 className="text-lg font-medium text-gray-900">{campaign.goal}</h3>
-                      <p className="text-sm text-gray-500">
-                        Created {new Date(campaign.created_at).toLocaleDateString()}
-                      </p>
+
+            <div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                {searchQuery
+                  ? t('campaigns.noSearchResults', 'Nie znaleziono kampanii')
+                  : t('campaigns.noCampaigns', 'Brak kampanii')
+                }
+              </h3>
+              <p className="text-gray-600 mb-8 leading-relaxed">
+                {searchQuery
+                  ? t('campaigns.tryDifferentSearch', 'Spróbuj dostosować swoje wyszukiwanie')
+                  : t('campaigns.addFirst', 'Wygeneruj swoją pierwszą kampanię, aby rozpocząć analizę marketingową')
+                }
+              </p>
+              {!searchQuery && (
+                <button
+                  onClick={() => setShowGenerationForm(true)}
+                  className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+                >
+                  <Brain className="w-5 h-5" />
+                  <span>{t('campaigns.createFirst', 'Wygeneruj Pierwszą Kampanię')}</span>
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
+        {!isLoading && filteredCampaigns.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            {filteredCampaigns.map((campaign) => (
+              <div
+                key={campaign.id}
+                className="group relative bg-white rounded-2xl border border-gray-200/60 p-8 hover:shadow-2xl hover:shadow-purple-500/10 hover:border-purple-300/50 transition-all duration-500 overflow-hidden"
+              >
+                {/* Background Effects */}
+                <div className="absolute inset-0 bg-gradient-to-br from-white via-purple-50/30 to-blue-50/20 opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+                <div className="absolute -top-8 -right-8 w-24 h-24 bg-gradient-to-br from-purple-400/10 to-blue-400/10 rounded-full blur-2xl opacity-0 group-hover:opacity-100 transition-all duration-500"></div>
+
+                <div className="relative">
+                  {/* Campaign Header */}
+                  <div className="flex items-start gap-4 mb-6">
+                    <div className="relative">
+                      <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-orange-600 rounded-2xl shadow-lg flex items-center justify-center group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
+                        <span className="text-2xl">{getGoalIcon(campaign.goal)}</span>
+                      </div>
+                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                        <Target className="w-3 h-3 text-white" />
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium border ${getStatusColor(campaign.status)}`}>
-                      {campaign.status}
-                    </span>
-                    <div className="flex space-x-1">
+
+                    <div className="flex-1 min-w-0">
+                      <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-purple-700 transition-colors">
+                        {debouncedSearchQuery
+                          ? highlightSearchTerm(campaign.goal, debouncedSearchQuery)
+                          : campaign.goal
+                        }
+                      </h3>
+                      <div className="flex items-center gap-4 text-sm text-gray-500">
+                        <div className="flex items-center gap-2">
+                          <Calendar className="w-4 h-4" />
+                          <span>{new Date(campaign.created_at).toLocaleDateString()}</span>
+                        </div>
+                        <span className={`px-2 py-1 rounded-full text-xs font-semibold border ${getStatusColor(campaign.status)}`}>
+                          {campaign.status}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2">
                       <button
                         onClick={() => setExpandedCampaignId(
                           expandedCampaignId === campaign.id ? null : campaign.id
                         )}
-                        className="p-1 text-gray-400 hover:text-indigo-600"
+                        className="flex items-center gap-1 px-3 py-1 text-sm text-gray-600 hover:text-purple-600 hover:bg-purple-50 rounded-lg transition-colors"
+                        title={expandedCampaignId === campaign.id ? t('campaigns.hide', 'Ukryj') : t('campaigns.show', 'Pokaż')}
                       >
-                        {expandedCampaignId === campaign.id ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                        {expandedCampaignId === campaign.id ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                        <span className="hidden sm:inline">{expandedCampaignId === campaign.id ? t('campaigns.hide', 'Ukryj') : t('campaigns.show', 'Pokaż')}</span>
                       </button>
                       <button
                         onClick={() => setShowDeleteConfirm(campaign.id)}
-                        className="p-1 text-gray-400 hover:text-red-600"
+                        className="flex items-center gap-1 px-3 py-1 text-sm text-gray-600 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                        title={t('campaigns.delete', 'Usuń')}
                       >
-                        <Trash2 className="h-4 w-4" />
+                        <Trash2 className="w-4 h-4" />
+                        <span className="hidden sm:inline">{t('campaigns.delete', 'Usuń')}</span>
                       </button>
                     </div>
                   </div>
-                </div>
 
-                {/* Campaign Summary */}
-                {campaign.strategy_summary && (
-                  <div className="mt-4">
-                    <div className="line-clamp-3">
-                      <MarkdownRenderer 
-                        content={campaign.strategy_summary} 
-                        variant="summary"
-                        className="text-sm"
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {/* Campaign Details */}
-                <div className="mt-4 grid grid-cols-2 gap-4">
-                  {campaign.budget && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <DollarSign className="h-4 w-4 mr-1" />
-                      Budget: ${campaign.budget.toLocaleString()}
+                  {/* Campaign Summary */}
+                  {campaign.strategy_summary && (
+                    <div className="mb-8">
+                      <div className="bg-gray-50/80 backdrop-blur-sm rounded-2xl p-6 border border-gray-100 group-hover:bg-purple-50/50 group-hover:border-purple-200/50 transition-all duration-300">
+                        <div className="flex items-start gap-3">
+                          <div className="p-2 bg-white rounded-xl shadow-sm group-hover:shadow-md transition-all duration-300">
+                            <Sparkles className="w-5 h-5 text-gray-600 group-hover:text-purple-600 transition-colors" />
+                          </div>
+                          <div className="flex-1">
+                            <h4 className="text-sm font-semibold text-gray-800 mb-2 uppercase tracking-wide">
+                              {t('campaigns.strategySummary', 'Strategia')}
+                            </h4>
+                            <div className="text-gray-700 leading-relaxed group-hover:text-gray-800 transition-colors line-clamp-3">
+                              {debouncedSearchQuery ? (
+                                <MarkdownRenderer 
+                                  content={highlightSearchTerm(truncateText(campaign.strategy_summary, 200), debouncedSearchQuery) as string} 
+                                  variant="summary"
+                                  className="text-sm"
+                                />
+                              ) : (
+                                <MarkdownRenderer 
+                                  content={truncateText(campaign.strategy_summary, 200)} 
+                                  variant="summary"
+                                  className="text-sm"
+                                />
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      </div>
                     </div>
                   )}
-                  {campaign.deadline && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Calendar className="h-4 w-4 mr-1" />
-                      Deadline: {new Date(campaign.deadline).toLocaleDateString()}
-                    </div>
-                  )}
-                  {campaign.recommended_budget && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <TrendingUp className="h-4 w-4 mr-1" />
-                      Recommended: ${campaign.recommended_budget.toLocaleString()}
-                    </div>
-                  )}
-                </div>
 
-                {/* Channels */}
-                {campaign.channels && Object.keys(campaign.channels).length > 0 && (
-                  <div className="mt-4">
-                    <h4 className="text-sm font-medium text-gray-900 mb-2">Recommended Channels</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {Object.entries(campaign.channels)
-                        .filter(([_, enabled]) => enabled)
-                        .slice(0, 4)
-                        .map(([channel, _]) => {
-                          const channelInfo = AVAILABLE_CHANNELS.find(c => c.key === channel);
-                          return (
-                            <span
-                              key={channel}
-                              className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800"
-                            >
-                              {channelInfo?.icon} {channelInfo?.label || channel}
+                  {/* Campaign Budget & Details */}
+                  {(campaign.budget || campaign.recommended_budget || campaign.deadline) && (
+                    <div className="mb-8">
+                      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 backdrop-blur-sm rounded-2xl p-6 border border-emerald-100 group-hover:from-emerald-100/50 group-hover:to-teal-100/50 group-hover:border-emerald-200/50 transition-all duration-300">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          {campaign.budget && (
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-white rounded-xl shadow-sm group-hover:shadow-md transition-all duration-300">
+                                <DollarSign className="w-5 h-5 text-emerald-600 group-hover:text-emerald-700 transition-colors" />
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-semibold text-emerald-800 mb-1 uppercase tracking-wide">
+                                  {t('campaigns.budget', 'Budżet')}
+                                </h4>
+                                <p className="text-lg font-bold text-emerald-700 group-hover:text-emerald-800 transition-colors">
+                                  ${campaign.budget.toLocaleString()}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          {campaign.recommended_budget && (
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-white rounded-xl shadow-sm group-hover:shadow-md transition-all duration-300">
+                                <TrendingUp className="w-5 h-5 text-emerald-600 group-hover:text-emerald-700 transition-colors" />
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-semibold text-emerald-800 mb-1 uppercase tracking-wide">
+                                  {t('campaigns.recommended', 'Zalecane')}
+                                </h4>
+                                <p className="text-lg font-bold text-emerald-700 group-hover:text-emerald-800 transition-colors">
+                                  ${campaign.recommended_budget.toLocaleString()}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                          {campaign.deadline && (
+                            <div className="flex items-center gap-3 md:col-span-2">
+                              <div className="p-2 bg-white rounded-xl shadow-sm group-hover:shadow-md transition-all duration-300">
+                                <Calendar className="w-5 h-5 text-emerald-600 group-hover:text-emerald-700 transition-colors" />
+                              </div>
+                              <div>
+                                <h4 className="text-sm font-semibold text-emerald-800 mb-1 uppercase tracking-wide">
+                                  {t('campaigns.deadline', 'Termin')}
+                                </h4>
+                                <p className="text-lg font-bold text-emerald-700 group-hover:text-emerald-800 transition-colors">
+                                  {new Date(campaign.deadline).toLocaleDateString()}
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Channels */}
+                  {campaign.channels && Object.keys(campaign.channels).length > 0 && (
+                    <div className="mb-8">
+                      <div className="bg-blue-50/80 backdrop-blur-sm rounded-2xl p-6 border border-blue-100 group-hover:bg-blue-100/50 group-hover:border-blue-200/50 transition-all duration-300">
+                        <div className="flex items-center gap-3 mb-4">
+                          <div className="p-2 bg-white rounded-xl shadow-sm group-hover:shadow-md transition-all duration-300">
+                            <Globe className="w-5 h-5 text-blue-600 group-hover:text-blue-700 transition-colors" />
+                          </div>
+                          <h4 className="text-sm font-semibold text-blue-800 uppercase tracking-wide">
+                            {t('campaigns.recommendedChannels', 'Zalecane Kanały')}
+                          </h4>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {Object.entries(campaign.channels)
+                            .filter(([_, enabled]) => enabled)
+                            .slice(0, 6)
+                            .map(([channel, _]) => {
+                              const channelInfo = AVAILABLE_CHANNELS.find(c => c.key === channel);
+                              return (
+                                <span
+                                  key={channel}
+                                  className="inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-semibold bg-white/80 border border-blue-200 text-blue-800 group-hover:bg-white group-hover:border-blue-300 transition-all duration-300"
+                                >
+                                  <span className="text-sm">{channelInfo?.icon}</span>
+                                  {channelInfo?.label || channel}
+                                </span>
+                              );
+                            })}
+                          {Object.values(campaign.channels).filter(Boolean).length > 6 && (
+                            <span className="inline-flex items-center px-3 py-2 rounded-xl text-xs font-semibold bg-white/60 border border-blue-200 text-blue-700">
+                              +{Object.values(campaign.channels).filter(Boolean).length - 6} more
                             </span>
-                          );
-                        })}
-                      {Object.values(campaign.channels).filter(Boolean).length > 4 && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                          +{Object.values(campaign.channels).filter(Boolean).length - 4} more
-                        </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Expanded Details */}
+                  {expandedCampaignId === campaign.id && (
+                    <div className="mt-6 pt-6 border-t border-gray-200/60 group-hover:border-purple-200/60 transition-all duration-300 space-y-6">
+                      {campaign.timeline && (
+                        <div className="bg-orange-50/80 backdrop-blur-sm rounded-2xl p-6 border border-orange-100">
+                          <h4 className="text-sm font-semibold text-orange-800 mb-3 uppercase tracking-wide flex items-center gap-2">
+                            <Calendar className="w-4 h-4" />
+                            {t('campaigns.timeline', 'Harmonogram')}
+                          </h4>
+                          <MarkdownRenderer 
+                            content={campaign.timeline} 
+                            variant="timeline"
+                          />
+                        </div>
+                      )}
+                      
+                      {campaign.target_audience && (
+                        <div className="bg-purple-50/80 backdrop-blur-sm rounded-2xl p-6 border border-purple-100">
+                          <h4 className="text-sm font-semibold text-purple-800 mb-3 uppercase tracking-wide flex items-center gap-2">
+                            <Target className="w-4 h-4" />
+                            {t('campaigns.targetAudience', 'Grupa Docelowa')}
+                          </h4>
+                          <MarkdownRenderer 
+                            content={campaign.target_audience} 
+                            variant="audience"
+                          />
+                        </div>
+                      )}
+
+                      {campaign.sales_funnel_steps && (
+                        <div className="bg-teal-50/80 backdrop-blur-sm rounded-2xl p-6 border border-teal-100">
+                          <h4 className="text-sm font-semibold text-teal-800 mb-3 uppercase tracking-wide flex items-center gap-2">
+                            <TrendingUp className="w-4 h-4" />
+                            {t('campaigns.salesFunnel', 'Lejek Sprzedażowy')}
+                          </h4>
+                          <MarkdownRenderer 
+                            content={campaign.sales_funnel_steps} 
+                            variant="funnel"
+                          />
+                        </div>
+                      )}
+
+                      {campaign.risks_recommendations && (
+                        <div className="bg-yellow-50/80 backdrop-blur-sm rounded-2xl p-6 border border-yellow-100">
+                          <h4 className="text-sm font-semibold text-yellow-800 mb-3 uppercase tracking-wide flex items-center gap-2">
+                            <AlertCircle className="w-4 h-4" />
+                            {t('campaigns.risksRecommendations', 'Ryzyka i Zalecenia')}
+                          </h4>
+                          <MarkdownRenderer 
+                            content={campaign.risks_recommendations} 
+                            variant="risks"
+                          />
+                        </div>
                       )}
                     </div>
-                  </div>
-                )}
-
-                {/* Expanded Details */}
-                {expandedCampaignId === campaign.id && (
-                  <div className="mt-6 border-t pt-6 space-y-4">
-                    {campaign.timeline && (
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-900 mb-2">📅 Timeline</h4>
-                        <MarkdownRenderer 
-                          content={campaign.timeline} 
-                          variant="timeline"
-                        />
-                      </div>
-                    )}
-                    
-                    {campaign.target_audience && (
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-900 mb-2">🎯 Target Audience</h4>
-                        <MarkdownRenderer 
-                          content={campaign.target_audience} 
-                          variant="audience"
-                        />
-                      </div>
-                    )}
-
-                    {campaign.sales_funnel_steps && (
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-900 mb-2">🔄 Sales Funnel</h4>
-                        <MarkdownRenderer 
-                          content={campaign.sales_funnel_steps} 
-                          variant="funnel"
-                        />
-                      </div>
-                    )}
-
-                    {campaign.risks_recommendations && (
-                      <div>
-                        <h4 className="text-sm font-medium text-gray-900 mb-2">⚠️ Risks & Recommendations</h4>
-                        <MarkdownRenderer 
-                          content={campaign.risks_recommendations} 
-                          variant="risks"
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
-            </div>
-          ))}
-        </div>
-      )}
+            ))}
+          </div>
+        )}
+      </>
 
       {/* Delete Confirmation Modal */}
       {showDeleteConfirm && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" onClick={() => setShowDeleteConfirm(null)}>
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white" onClick={e => e.stopPropagation()}>
-            <div className="mt-3 text-center">
-              <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
-                <AlertCircle className="h-6 w-6 text-red-600" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mt-4">Delete Campaign</h3>
-              <div className="mt-2 px-7 py-3">
-                <p className="text-sm text-gray-500">
-                  Are you sure you want to delete this campaign? This action cannot be undone.
-                </p>
-              </div>
-              <div className="items-center px-4 py-3">
-                <div className="flex space-x-3">
-                  <button
-                    onClick={() => handleDeleteCampaign(showDeleteConfirm)}
-                    className="px-4 py-2 bg-red-600 text-white text-base font-medium rounded-md w-full shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-300"
-                  >
-                    Delete
-                  </button>
-                  <button
-                    onClick={() => setShowDeleteConfirm(null)}
-                    className="px-4 py-2 bg-gray-300 text-gray-700 text-base font-medium rounded-md w-full shadow-sm hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-gray-300"
-                  >
-                    Cancel
-                  </button>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-gradient-to-r from-red-600 to-red-600 rounded-xl">
+                  <Trash2 className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {t('campaigns.deleteConfirm.title', 'Potwierdź usunięcie')}
+                  </h2>
+                  <p className="text-gray-600">
+                    {t('campaigns.deleteConfirm.message', 'Czy na pewno chcesz usunąć tę kampanię?')}
+                  </p>
                 </div>
               </div>
+              <button
+                onClick={() => setShowDeleteConfirm(null)}
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <X className="w-5 h-5 text-gray-600" />
+              </button>
+            </div>
+
+            <div className="flex items-center justify-end gap-4 p-6">
+              <button
+                onClick={() => setShowDeleteConfirm(null)}
+                className="px-6 py-3 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 font-medium rounded-xl transition-colors"
+              >
+                {t('campaigns.cancel', 'Anuluj')}
+              </button>
+              <button
+                onClick={() => handleDeleteCampaign(showDeleteConfirm)}
+                className="px-6 py-3 bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white font-medium rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+              >
+                {t('campaigns.delete', 'Usuń')}
+              </button>
             </div>
           </div>
         </div>
@@ -599,258 +848,368 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
 
       {/* Campaign Generation Form Modal */}
       {showGenerationForm && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" onClick={() => setShowGenerationForm(false)}>
-          <div className="relative top-20 mx-auto p-6 border max-w-2xl shadow-lg rounded-md bg-white" onClick={e => e.stopPropagation()}>
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-medium text-gray-900">Generate Campaign Strategy</h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl">
+                  <Brain className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {t('campaigns.generateTitle', 'Generuj Strategię Kampanii')}
+                  </h2>
+                  <p className="text-gray-600">
+                    {t('campaigns.generateSubtitle', 'Stwórz spersonalizowaną strategię marketingową z AI')}
+                  </p>
+                </div>
+              </div>
               <button
                 onClick={() => setShowGenerationForm(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <X className="h-6 w-6" />
+                <X className="w-5 h-5 text-gray-600" />
               </button>
             </div>
 
-            <div className="space-y-6">
-              {/* Campaign Goal */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Campaign Goal *</label>
-                <select
-                  value={generationParams.campaign_goal}
-                  onChange={(e) => setGenerationParams({...generationParams, campaign_goal: e.target.value as CampaignGoal})}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                >
-                  {CAMPAIGN_GOALS.map(goal => (
-                    <option key={goal} value={goal}>
-                      {getGoalIcon(goal)} {goal}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div className="flex-1 p-6 overflow-y-auto">
+              {!isGenerating && (
+                <div className="space-y-6">
+                {/* Campaign Goal */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    {t('campaigns.form.goal', 'Cel Kampanii')} *
+                  </label>
+                  <select
+                    value={generationParams.campaign_goal}
+                    onChange={(e) => setGenerationParams({...generationParams, campaign_goal: e.target.value as CampaignGoal})}
+                    className="block w-full px-4 py-3 bg-white border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 font-medium"
+                  >
+                    {CAMPAIGN_GOALS.map(goal => (
+                      <option key={goal} value={goal}>
+                        {getGoalIcon(goal)} {goal}
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              {/* Budget */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Budget (optional)</label>
-                <div className="mt-1 relative rounded-md shadow-sm">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <DollarSign className="h-5 w-5 text-gray-400" />
+                {/* Budget */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    {t('campaigns.form.budget', 'Budżet')} ({t('campaigns.form.optional', 'opcjonalnie')})
+                  </label>
+                  <div className="relative rounded-xl shadow-sm">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <DollarSign className="h-5 w-5 text-gray-400" />
+                    </div>
+                    <input
+                      type="number"
+                      min="0"
+                      value={generationParams.budget || ''}
+                      onChange={(e) => setGenerationParams({...generationParams, budget: e.target.value ? parseFloat(e.target.value) : undefined})}
+                      placeholder={t('campaigns.form.budgetPlaceholder', 'Zostaw puste dla rekomendacji AI')}
+                      className="block w-full pl-12 pr-4 py-3 bg-white border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 font-medium placeholder-gray-500"
+                    />
                   </div>
+                </div>
+
+                {/* Deadline */}
+                <div>
+                  <label className="block text-sm font-semibold text-gray-900 mb-2">
+                    {t('campaigns.form.deadline', 'Termin Kampanii')} ({t('campaigns.form.optional', 'opcjonalnie')})
+                  </label>
                   <input
-                    type="number"
-                    min="0"
-                    value={generationParams.budget || ''}
-                    onChange={(e) => setGenerationParams({...generationParams, budget: e.target.value ? parseFloat(e.target.value) : undefined})}
-                    placeholder="Leave empty for AI recommendation"
-                    className="block w-full pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                    type="date"
+                    min={new Date().toISOString().split('T')[0]}
+                    value={generationParams.deadline || ''}
+                    onChange={(e) => setGenerationParams({...generationParams, deadline: e.target.value || undefined})}
+                    className="block w-full px-4 py-3 bg-white border border-gray-300 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-gray-900 font-medium"
                   />
                 </div>
-              </div>
 
-              {/* Deadline */}
-              <div>
-                <label className="block text-sm font-medium text-gray-700">Campaign Deadline (optional)</label>
-                <input
-                  type="date"
-                  min={new Date().toISOString().split('T')[0]}
-                  value={generationParams.deadline || ''}
-                  onChange={(e) => setGenerationParams({...generationParams, deadline: e.target.value || undefined})}
-                  className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
-                />
-              </div>
-
-              {/* Products Selection */}
-              {offers.length > 0 && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">Selected Products/Services (optional)</label>
-                  <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {offers.map(offer => (
-                      <label key={offer.id} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={generationParams.selected_products?.includes(offer.id) || false}
-                          onChange={(e) => {
-                            const selected = generationParams.selected_products || [];
-                            if (e.target.checked) {
-                              setGenerationParams({...generationParams, selected_products: [...selected, offer.id]});
-                            } else {
-                              setGenerationParams({...generationParams, selected_products: selected.filter(id => id !== offer.id)});
-                            }
-                          }}
-                          className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">
-                          {offer.name} ({offer.type}) - ${offer.price}/{offer.unit}
-                        </span>
-                      </label>
-                    ))}
+                {/* Products Selection */}
+                {offers.length > 0 && (
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-900 mb-2">
+                      {t('campaigns.form.products', 'Wybrane Produkty/Usługi')} ({t('campaigns.form.optional', 'opcjonalnie')})
+                    </label>
+                    <div className="space-y-3 max-h-48 overflow-y-auto bg-gray-50 rounded-xl p-4 border">
+                      {offers.map(offer => (
+                        <label key={offer.id} className="flex items-start gap-3 p-3 bg-white rounded-lg border border-gray-200 hover:border-purple-300 hover:bg-purple-50/30 transition-all cursor-pointer">
+                          <input
+                            type="checkbox"
+                            checked={generationParams.selected_products?.includes(offer.id) || false}
+                            onChange={(e) => {
+                              const selected = generationParams.selected_products || [];
+                              if (e.target.checked) {
+                                setGenerationParams({...generationParams, selected_products: [...selected, offer.id]});
+                              } else {
+                                setGenerationParams({...generationParams, selected_products: selected.filter(id => id !== offer.id)});
+                              }
+                            }}
+                            className="mt-1 w-4 h-4 rounded border-gray-300 text-purple-600 shadow-sm focus:border-purple-300 focus:ring focus:ring-purple-200 focus:ring-opacity-50"
+                          />
+                          <div className="flex-1">
+                            <span className="text-sm font-semibold text-gray-900 block">
+                              {offer.name}
+                            </span>
+                            <span className="text-xs text-gray-600">
+                              ({offer.type}) - ${offer.price}/{offer.unit}
+                            </span>
+                          </div>
+                        </label>
+                      ))}
+                    </div>
+                    {generationParams.selected_products?.length === 0 && (
+                      <p className="text-sm text-gray-500 mt-2 bg-blue-50 p-3 rounded-lg border border-blue-200">
+                        {t('campaigns.form.noProductsNote', 'Brak wybranych produktów - strategia będzie na poziomie marki')}
+                      </p>
+                    )}
                   </div>
-                  {generationParams.selected_products?.length === 0 && (
-                    <p className="text-sm text-gray-500 mt-1">No products selected - strategy will be brand-level</p>
-                  )}
+                )}
+              </div>
+              )}
+
+              {isGenerating && (
+                <div className="text-center py-16">
+                  <div className="relative inline-block mb-8">
+                    <div className="w-20 h-20 bg-gradient-to-br from-blue-100 to-purple-100 rounded-3xl flex items-center justify-center mx-auto transform rotate-3">
+                      <Loader2 className="w-10 h-10 text-purple-600 animate-spin" />
+                    </div>
+                    <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full flex items-center justify-center">
+                      <Sparkles className="w-4 h-4 text-white" />
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="text-2xl font-bold text-gray-900 mb-3">
+                      {t('campaigns.generating.title', 'Generuję Strategię Kampanii')}
+                    </h3>
+                    <p className="text-lg text-gray-600 mb-8 leading-relaxed max-w-md mx-auto">
+                      {t('campaigns.generating.description', 'AI analizuje Twój profil biznesowy i tworzy spersonalizowaną strategię marketingową...')}
+                    </p>
+                    
+                    {/* Progress indicator */}
+                    <div className="flex items-center justify-center space-x-2">
+                      <div className="flex space-x-2">
+                        {[0, 1, 2].map((index) => (
+                          <div
+                            key={index}
+                            className={`h-2 w-8 rounded-full transition-colors duration-500 ${
+                              index === 0 ? 'bg-purple-500' :
+                              index === 1 ? 'bg-purple-300' : 'bg-gray-200'
+                            }`}
+                          />
+                        ))}
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
 
-            <div className="mt-8 flex justify-end space-x-3">
+            {!isGenerating && (
+              <div className="flex items-center justify-end gap-4 p-6 border-t border-gray-200">
               <button
                 onClick={() => setShowGenerationForm(false)}
-                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="px-6 py-3 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 font-medium rounded-xl transition-colors"
               >
-                Cancel
+                {t('campaigns.cancel', 'Anuluj')}
               </button>
               <button
                 onClick={handleGenerateCampaign}
                 disabled={isGenerating}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
+                className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
               >
                 {isGenerating ? (
                   <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Generating...
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    <span>{t('campaigns.generating', 'Generuję...')}</span>
                   </>
                 ) : (
                   <>
-                    <Sparkles className="h-4 w-4 mr-2" />
-                    Generate Strategy
+                    <Sparkles className="w-5 h-5" />
+                    <span>{t('campaigns.generateStrategy', 'Generuj Strategię')}</span>
                   </>
                 )}
               </button>
-            </div>
+              </div>
+            )}
           </div>
         </div>
       )}
 
       {/* Generated Campaign Result Modal */}
       {showGeneratedResult && generatedCampaign && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-10 mx-auto p-6 border max-w-4xl shadow-lg rounded-md bg-white my-10">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-lg font-medium text-gray-900">Generated Campaign Strategy</h3>
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
+            <div className="flex items-center justify-between p-6 border-b border-gray-200">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl">
+                  <CheckCircle className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900">
+                    {t('campaigns.generatedTitle', 'Wygenerowana Strategia Kampanii')}
+                  </h2>
+                  <p className="text-gray-600">
+                    {t('campaigns.generatedSubtitle', 'Przejrzyj i zapisz swoją spersonalizowaną strategię')}
+                  </p>
+                </div>
+              </div>
               <button
                 onClick={() => setShowGeneratedResult(false)}
-                className="text-gray-400 hover:text-gray-600"
+                className="p-2 hover:bg-gray-100 rounded-lg transition-colors"
               >
-                <X className="h-6 w-6" />
+                <X className="w-5 h-5 text-gray-600" />
               </button>
             </div>
 
-            <div className="space-y-6 max-h-96 overflow-y-auto">
-              {/* Strategy Summary */}
-              {generatedCampaign?.campaign_data?.strategy_summary && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">🎨 Strategy Summary</h4>
-                  <MarkdownRenderer 
-                    content={generatedCampaign.campaign_data.strategy_summary} 
-                    variant="summary"
-                  />
-                </div>
-              )}
+            <div className="flex-1 p-6 overflow-y-auto">
 
-              {/* Timeline */}
-              {generatedCampaign?.campaign_data?.timeline && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">📅 Timeline & Phases</h4>
-                  <MarkdownRenderer 
-                    content={generatedCampaign.campaign_data.timeline} 
-                    variant="timeline"
-                  />
-                </div>
-              )}
+              <div className="space-y-6">
+                {/* Strategy Summary */}
+                {generatedCampaign?.campaign_data?.strategy_summary && (
+                  <div className="bg-purple-50/80 backdrop-blur-sm rounded-2xl p-6 border border-purple-100">
+                    <h4 className="text-sm font-semibold text-purple-800 mb-3 uppercase tracking-wide flex items-center gap-2">
+                      <Sparkles className="w-4 h-4" />
+                      {t('campaigns.strategySummary', 'Strategia')}
+                    </h4>
+                    <MarkdownRenderer 
+                      content={generatedCampaign.campaign_data.strategy_summary} 
+                      variant="summary"
+                    />
+                  </div>
+                )}
 
-              {/* Recommended Channels */}
-              {generatedCampaign?.campaign_data?.channels && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">Recommended Channels</h4>
-                  <div className="grid grid-cols-2 gap-4">
-                    {Object.entries(generatedCampaign?.campaign_data?.channels || {})
-                      .filter(([_, enabled]) => enabled)
-                      .map(([channel, _]) => {
-                        const channelInfo = AVAILABLE_CHANNELS.find(c => c.key === channel);
-                        const rationale = generatedCampaign?.campaign_data?.channels_rationale?.[channel];
-                        return (
-                          <div key={channel} className="bg-blue-50 p-3 rounded-md">
-                            <div className="flex items-center mb-1">
-                              <span className="text-lg mr-2">{channelInfo?.icon}</span>
-                              <span className="font-medium text-blue-900">{channelInfo?.label || channel}</span>
-                            </div>
-                            {rationale && (
-                              <div className="text-xs">
-                                <MarkdownRenderer 
-                                  content={rationale} 
-                                  className="text-xs bg-transparent border-0 p-0"
-                                />
+                {/* Timeline */}
+                {generatedCampaign?.campaign_data?.timeline && (
+                  <div className="bg-orange-50/80 backdrop-blur-sm rounded-2xl p-6 border border-orange-100">
+                    <h4 className="text-sm font-semibold text-orange-800 mb-3 uppercase tracking-wide flex items-center gap-2">
+                      <Calendar className="w-4 h-4" />
+                      {t('campaigns.timeline', 'Harmonogram')}
+                    </h4>
+                    <MarkdownRenderer 
+                      content={generatedCampaign.campaign_data.timeline} 
+                      variant="timeline"
+                    />
+                  </div>
+                )}
+
+                {/* Recommended Channels */}
+                {generatedCampaign?.campaign_data?.channels && (
+                  <div className="bg-blue-50/80 backdrop-blur-sm rounded-2xl p-6 border border-blue-100">
+                    <h4 className="text-sm font-semibold text-blue-800 mb-4 uppercase tracking-wide flex items-center gap-2">
+                      <Globe className="w-4 h-4" />
+                      {t('campaigns.recommendedChannels', 'Zalecane Kanały')}
+                    </h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      {Object.entries(generatedCampaign?.campaign_data?.channels || {})
+                        .filter(([_, enabled]) => enabled)
+                        .map(([channel, _]) => {
+                          const channelInfo = AVAILABLE_CHANNELS.find(c => c.key === channel);
+                          const rationale = generatedCampaign?.campaign_data?.channels_rationale?.[channel];
+                          return (
+                            <div key={channel} className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-blue-200">
+                              <div className="flex items-center mb-2">
+                                <span className="text-lg mr-3">{channelInfo?.icon}</span>
+                                <span className="font-semibold text-blue-900">{channelInfo?.label || channel}</span>
                               </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                              {rationale && (
+                                <div className="text-xs text-blue-700">
+                                  <MarkdownRenderer 
+                                    content={rationale} 
+                                    className="text-xs bg-transparent border-0 p-0"
+                                  />
+                                </div>
+                              )}
+                            </div>
+                          );
+                        })}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Target Audience */}
-              {generatedCampaign?.campaign_data?.target_audience && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">🎯 Target Audience</h4>
-                  <MarkdownRenderer 
-                    content={generatedCampaign.campaign_data.target_audience} 
-                    variant="audience"
-                  />
-                </div>
-              )}
-
-              {/* Sales Funnel */}
-              {generatedCampaign?.campaign_data?.sales_funnel_steps && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">🔄 Sales Funnel Steps</h4>
-                  <MarkdownRenderer 
-                    content={generatedCampaign.campaign_data.sales_funnel_steps} 
-                    variant="funnel"
-                  />
-                </div>
-              )}
-
-              {/* Budget Recommendation */}
-              {generatedCampaign?.campaign_data?.recommended_budget && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">Budget Recommendation</h4>
-                  <div className="flex items-center bg-green-50 p-4 rounded-md">
-                    <DollarSign className="h-5 w-5 text-green-600 mr-2" />
-                    <span className="text-lg font-semibold text-green-800">
-                      ${generatedCampaign?.campaign_data?.recommended_budget?.toLocaleString()}
-                    </span>
+                {/* Target Audience */}
+                {generatedCampaign?.campaign_data?.target_audience && (
+                  <div className="bg-pink-50/80 backdrop-blur-sm rounded-2xl p-6 border border-pink-100">
+                    <h4 className="text-sm font-semibold text-pink-800 mb-3 uppercase tracking-wide flex items-center gap-2">
+                      <Target className="w-4 h-4" />
+                      {t('campaigns.targetAudience', 'Grupa Docelowa')}
+                    </h4>
+                    <MarkdownRenderer 
+                      content={generatedCampaign.campaign_data.target_audience} 
+                      variant="audience"
+                    />
                   </div>
-                </div>
-              )}
+                )}
 
-              {/* Risks & Recommendations */}
-              {generatedCampaign?.campaign_data?.risks_recommendations && (
-                <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-2">⚠️ Risks & Recommendations</h4>
-                  <MarkdownRenderer 
-                    content={generatedCampaign.campaign_data.risks_recommendations} 
-                    variant="risks"
-                  />
-                </div>
-              )}
+                {/* Sales Funnel */}
+                {generatedCampaign?.campaign_data?.sales_funnel_steps && (
+                  <div className="bg-teal-50/80 backdrop-blur-sm rounded-2xl p-6 border border-teal-100">
+                    <h4 className="text-sm font-semibold text-teal-800 mb-3 uppercase tracking-wide flex items-center gap-2">
+                      <TrendingUp className="w-4 h-4" />
+                      {t('campaigns.salesFunnel', 'Lejek Sprzedażowy')}
+                    </h4>
+                    <MarkdownRenderer 
+                      content={generatedCampaign.campaign_data.sales_funnel_steps} 
+                      variant="funnel"
+                    />
+                  </div>
+                )}
+
+                {/* Budget Recommendation */}
+                {generatedCampaign?.campaign_data?.recommended_budget && (
+                  <div className="bg-emerald-50/80 backdrop-blur-sm rounded-2xl p-6 border border-emerald-100">
+                    <h4 className="text-sm font-semibold text-emerald-800 mb-3 uppercase tracking-wide flex items-center gap-2">
+                      <DollarSign className="w-4 h-4" />
+                      {t('campaigns.budgetRecommendation', 'Rekomendacja Budżetowa')}
+                    </h4>
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-emerald-200">
+                      <div className="flex items-center gap-3">
+                        <div className="p-2 bg-emerald-100 rounded-lg">
+                          <DollarSign className="w-6 h-6 text-emerald-600" />
+                        </div>
+                        <span className="text-2xl font-bold text-emerald-800">
+                          ${generatedCampaign?.campaign_data?.recommended_budget?.toLocaleString()}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* Risks & Recommendations */}
+                {generatedCampaign?.campaign_data?.risks_recommendations && (
+                  <div className="bg-yellow-50/80 backdrop-blur-sm rounded-2xl p-6 border border-yellow-100">
+                    <h4 className="text-sm font-semibold text-yellow-800 mb-3 uppercase tracking-wide flex items-center gap-2">
+                      <AlertCircle className="w-4 h-4" />
+                      {t('campaigns.risksRecommendations', 'Ryzyka i Zalecenia')}
+                    </h4>
+                    <MarkdownRenderer 
+                      content={generatedCampaign.campaign_data.risks_recommendations} 
+                      variant="risks"
+                    />
+                  </div>
+                )}
+              </div>
             </div>
 
-            <div className="mt-8 flex justify-end space-x-3">
+            <div className="flex items-center justify-end gap-4 p-6 border-t border-gray-200">
               <button
                 onClick={() => {
                   setShowGeneratedResult(false);
                   setShowGenerationForm(true);
                 }}
-                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                className="px-6 py-3 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 font-medium rounded-xl transition-colors"
               >
-                Regenerate
+                {t('campaigns.regenerate', 'Generuj ponownie')}
               </button>
               <button
                 onClick={handleSaveCampaign}
-                className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500"
+                className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
               >
-                <Save className="h-4 w-4 mr-2" />
-                Accept & Save
+                <Save className="w-5 h-5" />
+                <span>{t('campaigns.acceptSave', 'Zaakceptuj i Zapisz')}</span>
               </button>
             </div>
           </div>
