@@ -401,7 +401,7 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
             {/* Right - Available Count */}
             <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 border border-gray-200/60 shadow-sm">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg">
+                <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg">
                   <Award className="w-4 h-4 text-white" />
                 </div>
                 <div className="text-right">
@@ -466,8 +466,8 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
             )}
 
             {debouncedSearchQuery && filteredCampaigns.length > 0 && (
-              <div className="flex items-center gap-2 text-sm text-emerald-600">
-                <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+              <div className="flex items-center gap-2 text-sm text-blue-600">
+                <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                 <span className="font-medium">
                   {t('campaigns.searchResults', 'Znaleziono {{count}} {{type}}', {
                     count: filteredCampaigns.length,
@@ -565,10 +565,10 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
                   {/* Campaign Header */}
                   <div className="flex items-start gap-4 mb-6">
                     <div className="relative">
-                      <div className="w-16 h-16 bg-gradient-to-r from-purple-600 to-orange-600 rounded-2xl shadow-lg flex items-center justify-center group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
+                      <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-lg flex items-center justify-center group-hover:shadow-xl group-hover:scale-105 transition-all duration-300">
                         <span className="text-2xl">{getGoalIcon(campaign.goal)}</span>
                       </div>
-                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
+                      <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300">
                         <Target className="w-3 h-3 text-white" />
                       </div>
                     </div>
@@ -649,18 +649,18 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
                   {/* Campaign Budget & Details */}
                   {(campaign.budget || campaign.recommended_budget || campaign.deadline) && (
                     <div className="mb-8">
-                      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 backdrop-blur-sm rounded-2xl p-6 border border-emerald-100 group-hover:from-emerald-100/50 group-hover:to-teal-100/50 group-hover:border-emerald-200/50 transition-all duration-300">
+                      <div className="bg-gradient-to-r from-blue-50 to-purple-50 backdrop-blur-sm rounded-2xl p-6 border border-blue-100 group-hover:from-blue-100/50 group-hover:to-purple-100/50 group-hover:border-blue-200/50 transition-all duration-300">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {campaign.budget && (
                             <div className="flex items-center gap-3">
                               <div className="p-2 bg-white rounded-xl shadow-sm group-hover:shadow-md transition-all duration-300">
-                                <DollarSign className="w-5 h-5 text-emerald-600 group-hover:text-emerald-700 transition-colors" />
+                                <DollarSign className="w-5 h-5 text-blue-600 group-hover:text-blue-700 transition-colors" />
                               </div>
                               <div>
-                                <h4 className="text-sm font-semibold text-emerald-800 mb-1 uppercase tracking-wide">
+                                <h4 className="text-sm font-semibold text-blue-800 mb-1 uppercase tracking-wide">
                                   {t('campaigns.budget', 'Budżet')}
                                 </h4>
-                                <p className="text-lg font-bold text-emerald-700 group-hover:text-emerald-800 transition-colors">
+                                <p className="text-lg font-bold text-blue-700 group-hover:text-blue-800 transition-colors">
                                   ${campaign.budget.toLocaleString()}
                                 </p>
                               </div>
@@ -669,13 +669,13 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
                           {campaign.recommended_budget && (
                             <div className="flex items-center gap-3">
                               <div className="p-2 bg-white rounded-xl shadow-sm group-hover:shadow-md transition-all duration-300">
-                                <TrendingUp className="w-5 h-5 text-emerald-600 group-hover:text-emerald-700 transition-colors" />
+                                <TrendingUp className="w-5 h-5 text-blue-600 group-hover:text-blue-700 transition-colors" />
                               </div>
                               <div>
-                                <h4 className="text-sm font-semibold text-emerald-800 mb-1 uppercase tracking-wide">
+                                <h4 className="text-sm font-semibold text-blue-800 mb-1 uppercase tracking-wide">
                                   {t('campaigns.recommended', 'Zalecane')}
                                 </h4>
-                                <p className="text-lg font-bold text-emerald-700 group-hover:text-emerald-800 transition-colors">
+                                <p className="text-lg font-bold text-blue-700 group-hover:text-blue-800 transition-colors">
                                   ${campaign.recommended_budget.toLocaleString()}
                                 </p>
                               </div>
@@ -684,13 +684,13 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
                           {campaign.deadline && (
                             <div className="flex items-center gap-3 md:col-span-2">
                               <div className="p-2 bg-white rounded-xl shadow-sm group-hover:shadow-md transition-all duration-300">
-                                <Calendar className="w-5 h-5 text-emerald-600 group-hover:text-emerald-700 transition-colors" />
+                                <Calendar className="w-5 h-5 text-blue-600 group-hover:text-blue-700 transition-colors" />
                               </div>
                               <div>
-                                <h4 className="text-sm font-semibold text-emerald-800 mb-1 uppercase tracking-wide">
+                                <h4 className="text-sm font-semibold text-blue-800 mb-1 uppercase tracking-wide">
                                   {t('campaigns.deadline', 'Termin')}
                                 </h4>
-                                <p className="text-lg font-bold text-emerald-700 group-hover:text-emerald-800 transition-colors">
+                                <p className="text-lg font-bold text-blue-700 group-hover:text-blue-800 transition-colors">
                                   {new Date(campaign.deadline).toLocaleDateString()}
                                 </p>
                               </div>
@@ -743,8 +743,8 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
                   {expandedCampaignId === campaign.id && (
                     <div className="mt-6 pt-6 border-t border-gray-200/60 group-hover:border-purple-200/60 transition-all duration-300 space-y-6">
                       {campaign.timeline && (
-                        <div className="bg-orange-50/80 backdrop-blur-sm rounded-2xl p-6 border border-orange-100">
-                          <h4 className="text-sm font-semibold text-orange-800 mb-3 uppercase tracking-wide flex items-center gap-2">
+                        <div className="bg-purple-50/80 backdrop-blur-sm rounded-2xl p-6 border border-purple-100">
+                          <h4 className="text-sm font-semibold text-purple-800 mb-3 uppercase tracking-wide flex items-center gap-2">
                             <Calendar className="w-4 h-4" />
                             {t('campaigns.timeline', 'Harmonogram')}
                           </h4>
@@ -769,8 +769,8 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
                       )}
 
                       {campaign.sales_funnel_steps && (
-                        <div className="bg-teal-50/80 backdrop-blur-sm rounded-2xl p-6 border border-teal-100">
-                          <h4 className="text-sm font-semibold text-teal-800 mb-3 uppercase tracking-wide flex items-center gap-2">
+                        <div className="bg-purple-50/80 backdrop-blur-sm rounded-2xl p-6 border border-purple-100">
+                          <h4 className="text-sm font-semibold text-purple-800 mb-3 uppercase tracking-wide flex items-center gap-2">
                             <TrendingUp className="w-4 h-4" />
                             {t('campaigns.salesFunnel', 'Lejek Sprzedażowy')}
                           </h4>
@@ -1045,7 +1045,7 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
           <div className="bg-white rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden">
             <div className="flex items-center justify-between p-6 border-b border-gray-200">
               <div className="flex items-center gap-4">
-                <div className="p-3 bg-gradient-to-r from-emerald-600 to-teal-600 rounded-xl">
+                <div className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl">
                   <CheckCircle className="w-6 h-6 text-white" />
                 </div>
                 <div>
@@ -1084,8 +1084,8 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
 
                 {/* Timeline */}
                 {generatedCampaign?.campaign_data?.timeline && (
-                  <div className="bg-orange-50/80 backdrop-blur-sm rounded-2xl p-6 border border-orange-100">
-                    <h4 className="text-sm font-semibold text-orange-800 mb-3 uppercase tracking-wide flex items-center gap-2">
+                  <div className="bg-purple-50/80 backdrop-blur-sm rounded-2xl p-6 border border-purple-100">
+                    <h4 className="text-sm font-semibold text-purple-800 mb-3 uppercase tracking-wide flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
                       {t('campaigns.timeline', 'Harmonogram')}
                     </h4>
@@ -1146,8 +1146,8 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
 
                 {/* Sales Funnel */}
                 {generatedCampaign?.campaign_data?.sales_funnel_steps && (
-                  <div className="bg-teal-50/80 backdrop-blur-sm rounded-2xl p-6 border border-teal-100">
-                    <h4 className="text-sm font-semibold text-teal-800 mb-3 uppercase tracking-wide flex items-center gap-2">
+                  <div className="bg-purple-50/80 backdrop-blur-sm rounded-2xl p-6 border border-purple-100">
+                    <h4 className="text-sm font-semibold text-purple-800 mb-3 uppercase tracking-wide flex items-center gap-2">
                       <TrendingUp className="w-4 h-4" />
                       {t('campaigns.salesFunnel', 'Lejek Sprzedażowy')}
                     </h4>
@@ -1160,17 +1160,17 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
 
                 {/* Budget Recommendation */}
                 {generatedCampaign?.campaign_data?.recommended_budget && (
-                  <div className="bg-emerald-50/80 backdrop-blur-sm rounded-2xl p-6 border border-emerald-100">
-                    <h4 className="text-sm font-semibold text-emerald-800 mb-3 uppercase tracking-wide flex items-center gap-2">
+                  <div className="bg-blue-50/80 backdrop-blur-sm rounded-2xl p-6 border border-blue-100">
+                    <h4 className="text-sm font-semibold text-blue-800 mb-3 uppercase tracking-wide flex items-center gap-2">
                       <DollarSign className="w-4 h-4" />
                       {t('campaigns.budgetRecommendation', 'Rekomendacja Budżetowa')}
                     </h4>
-                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-emerald-200">
+                    <div className="bg-white/80 backdrop-blur-sm rounded-xl p-4 border border-blue-200">
                       <div className="flex items-center gap-3">
-                        <div className="p-2 bg-emerald-100 rounded-lg">
-                          <DollarSign className="w-6 h-6 text-emerald-600" />
+                        <div className="p-2 bg-blue-100 rounded-lg">
+                          <DollarSign className="w-6 h-6 text-blue-600" />
                         </div>
-                        <span className="text-2xl font-bold text-emerald-800">
+                        <span className="text-2xl font-bold text-blue-800">
                           ${generatedCampaign?.campaign_data?.recommended_budget?.toLocaleString()}
                         </span>
                       </div>
@@ -1206,7 +1206,7 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
               </button>
               <button
                 onClick={handleSaveCampaign}
-                className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+                className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
               >
                 <Save className="w-5 h-5" />
                 <span>{t('campaigns.acceptSave', 'Zaakceptuj i Zapisz')}</span>
