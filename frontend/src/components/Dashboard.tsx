@@ -4,7 +4,8 @@ import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import {
   User, Building2, Settings, LogOut, Search, Bell,
   Bot, Zap, FileText, Video, Target, TrendingUp, Megaphone,
-  Users, Activity, Clock, CheckCircle, Plus, Menu, Package
+  Users, Activity, Clock, CheckCircle, Plus, Menu, Package,
+  Play, BookOpen, Lightbulb, ChevronLeft, ChevronRight, Check, X
 } from 'lucide-react';
 import { User as UserType } from '../types';
 import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, updateBusinessProfile, getCompetitionsCount, getOffersCount, getCampaignsCount } from '../services/api';
@@ -64,6 +65,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
   const [businessProfiles, setBusinessProfiles] = useState<BusinessProfile[]>([]);
   const [selectedBusinessProfile, setSelectedBusinessProfile] = useState<BusinessProfile | null>(null);
   const [isLoadingProfiles, setIsLoadingProfiles] = useState<boolean>(true);
+
+  // Tips carousel state
+  const [currentTipIndex, setCurrentTipIndex] = useState<number>(0);
 
   // Function to update active profile (only one can be active at a time)
   const updateActiveProfile = useCallback(async (profileId: string) => {
@@ -287,12 +291,55 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
   ];
 
   const stats = [
-    { id: 'agents', label: t('dashboard.stats.totalAgents'), value: isLoadingStats ? '...' : agentsCount.toString(), icon: Bot, bgColor: 'bg-blue-100', textColor: 'text-blue-600', trend: '+2 this week' },
-    { id: 'automations', label: t('dashboard.stats.totalAutomations'), value: '12', icon: Zap, bgColor: 'bg-purple-100', textColor: 'text-purple-600', trend: '+3 this week' },
-    { id: 'prompts', label: t('dashboard.stats.totalPrompts'), value: '28', icon: FileText, bgColor: 'bg-green-100', textColor: 'text-green-600', trend: '+8 this week' },
-    { id: 'campaigns', label: t('dashboard.stats.activeCampaigns'), value: '4', icon: TrendingUp, bgColor: 'bg-orange-100', textColor: 'text-orange-600', trend: '2 running' },
-    { id: 'users', label: t('dashboard.stats.totalUsers'), value: '156', icon: Users, bgColor: 'bg-indigo-100', textColor: 'text-indigo-600', trend: '+12 this month' },
-    { id: 'activity', label: t('dashboard.stats.todayActivity'), value: isLoadingStats ? '...' : interactionsCount.toString(), icon: Activity, bgColor: 'bg-pink-100', textColor: 'text-pink-600', trend: '↑ 23% vs yesterday' },
+    { id: 'profiles', label: t('dashboard.stats.businessProfiles'), value: isLoadingStats ? '...' : businessProfilesCount.toString(), icon: Building2, bgColor: 'bg-blue-100', textColor: 'text-blue-600', trend: 'Active profiles' },
+    { id: 'agents', label: t('dashboard.stats.totalAgents'), value: isLoadingStats ? '...' : agentsCount.toString(), icon: Bot, bgColor: 'bg-purple-100', textColor: 'text-purple-600', trend: 'AI agents available' },
+    { id: 'competitions', label: t('dashboard.stats.competitors'), value: isLoadingStats ? '...' : competitionsCount.toString(), icon: Target, bgColor: 'bg-blue-100', textColor: 'text-blue-600', trend: 'Market insights' },
+    { id: 'offers', label: t('dashboard.stats.offers'), value: isLoadingStats ? '...' : offersCount.toString(), icon: Package, bgColor: 'bg-purple-100', textColor: 'text-purple-600', trend: 'Products & services' },
+    { id: 'campaigns', label: t('dashboard.stats.campaigns'), value: isLoadingStats ? '...' : campaignsCount.toString(), icon: TrendingUp, bgColor: 'bg-blue-100', textColor: 'text-blue-600', trend: 'Marketing strategies' },
+    { id: 'activity', label: t('dashboard.stats.todayActivity'), value: isLoadingStats ? '...' : interactionsCount.toString(), icon: Activity, bgColor: 'bg-purple-100', textColor: 'text-purple-600', trend: 'AI interactions' },
+  ];
+
+  const businessTips = [
+    {
+      id: 1,
+      title: t('dashboard.tips.tip1.title', 'Research Before You Campaign'),
+      content: t('dashboard.tips.tip1.content', 'Always analyze your competitors before creating marketing campaigns. Understanding their strategies helps you position your business more effectively.'),
+      icon: Target,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-100'
+    },
+    {
+      id: 2,
+      title: t('dashboard.tips.tip2.title', 'Optimize Your Offer Catalog'),
+      content: t('dashboard.tips.tip2.content', 'Use AI-generated market insights to refine your product and service offerings. Focus on what your target customers truly desire.'),
+      icon: Package,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-100'
+    },
+    {
+      id: 3,
+      title: t('dashboard.tips.tip3.title', 'Leverage AI Automation'),
+      content: t('dashboard.tips.tip3.content', 'Let AI agents handle repetitive research tasks while you focus on strategy and execution. Automation saves time and improves accuracy.'),
+      icon: Bot,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-100'
+    },
+    {
+      id: 4,
+      title: t('dashboard.tips.tip4.title', 'Monitor Campaign Performance'),
+      content: t('dashboard.tips.tip4.content', 'Track your marketing campaign results and adjust strategies based on real data. Continuous optimization leads to better ROI.'),
+      icon: TrendingUp,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-100'
+    },
+    {
+      id: 5,
+      title: t('dashboard.tips.tip5.title', 'Build Customer Personas'),
+      content: t('dashboard.tips.tip5.content', 'Create detailed customer profiles based on your target audience analysis. Personalized marketing messages convert better.'),
+      icon: Users,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-100'
+    }
   ];
 
   return (
@@ -538,74 +585,231 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
               ))}
             </div>
 
-            {/* Quick Actions & Recent Activity */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Quick Actions */}
+            {/* Onboarding Section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+              {/* Onboarding Checklist */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-100">
                 <div className="p-6 border-b border-gray-100">
-                  <h3 className="text-lg font-semibold text-gray-900">{t('dashboard.quickActions.title')}</h3>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                      <CheckCircle className="w-4 h-4 text-white" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900">{t('dashboard.onboarding.title', 'Getting Started')}</h3>
+                  </div>
                 </div>
                 <div className="p-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <button className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-left">
-                      <Bot className="w-8 h-8 text-blue-600 mb-2" />
-                      <div className="font-medium text-gray-900">{t('dashboard.quickActions.createAgent')}</div>
-                      <div className="text-sm text-gray-600">{t('dashboard.quickActions.createAgentDesc')}</div>
-                    </button>
-                    <button className="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors text-left">
-                      <Zap className="w-8 h-8 text-purple-600 mb-2" />
-                      <div className="font-medium text-gray-900">{t('dashboard.quickActions.createAutomation')}</div>
-                      <div className="text-sm text-gray-600">{t('dashboard.quickActions.createAutomationDesc')}</div>
-                    </button>
-                    <button className="p-4 bg-green-50 rounded-lg hover:bg-green-100 transition-colors text-left">
-                      <TrendingUp className="w-8 h-8 text-green-600 mb-2" />
-                      <div className="font-medium text-gray-900">{t('dashboard.quickActions.createCampaign')}</div>
-                      <div className="text-sm text-gray-600">{t('dashboard.quickActions.createCampaignDesc')}</div>
-                    </button>
-                    <button className="p-4 bg-orange-50 rounded-lg hover:bg-orange-100 transition-colors text-left">
-                      <FileText className="w-8 h-8 text-orange-600 mb-2" />
-                      <div className="font-medium text-gray-900">{t('dashboard.quickActions.createPrompt')}</div>
-                      <div className="text-sm text-gray-600">{t('dashboard.quickActions.createPromptDesc')}</div>
-                    </button>
+                  <div className="space-y-4">
+                    {/* Progress bar */}
+                    <div className="mb-6">
+                      <div className="flex justify-between text-sm mb-2">
+                        <span className="text-gray-600">{t('dashboard.onboarding.progress', 'Progress')}</span>
+                        <span className="font-medium text-blue-600">
+                          {Math.round(((businessProfilesCount > 0 ? 1 : 0) + (competitionsCount > 0 ? 1 : 0) + (offersCount > 0 ? 1 : 0) + (campaignsCount > 0 ? 1 : 0)) / 4 * 100)}%
+                        </span>
+                      </div>
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div 
+                          className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${((businessProfilesCount > 0 ? 1 : 0) + (competitionsCount > 0 ? 1 : 0) + (offersCount > 0 ? 1 : 0) + (campaignsCount > 0 ? 1 : 0)) / 4 * 100}%` }}
+                        ></div>
+                      </div>
+                    </div>
+
+                    {/* Checklist items */}
+                    <Link to="/dashboard/business-profiles" className="flex items-center gap-4 p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-200 group">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${businessProfilesCount > 0 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+                        {businessProfilesCount > 0 ? <Check className="w-4 h-4" /> : <Building2 className="w-4 h-4" />}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.onboarding.step1', 'Create Business Profile')}</div>
+                        <div className="text-sm text-gray-500">{businessProfilesCount > 0 ? t('dashboard.onboarding.step1Complete', 'Profile created') : t('dashboard.onboarding.step1Desc', 'Start by analyzing your business')}</div>
+                      </div>
+                      {businessProfilesCount > 0 && (
+                        <div className="text-sm font-medium text-green-600">{businessProfilesCount} {t('dashboard.onboarding.created', 'created')}</div>
+                      )}
+                    </Link>
+
+                    <Link to="/dashboard/competition" className="flex items-center gap-4 p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-200 group">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${competitionsCount > 0 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+                        {competitionsCount > 0 ? <Check className="w-4 h-4" /> : <Target className="w-4 h-4" />}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.onboarding.step2', 'Find Competitors')}</div>
+                        <div className="text-sm text-gray-500">{competitionsCount > 0 ? t('dashboard.onboarding.step2Complete', 'Competitors analyzed') : t('dashboard.onboarding.step2Desc', 'Research your market competition')}</div>
+                      </div>
+                      {competitionsCount > 0 && (
+                        <div className="text-sm font-medium text-green-600">{competitionsCount} {t('dashboard.onboarding.found', 'found')}</div>
+                      )}
+                    </Link>
+
+                    <Link to="/dashboard/offers" className="flex items-center gap-4 p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-200 group">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${offersCount > 0 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+                        {offersCount > 0 ? <Check className="w-4 h-4" /> : <Package className="w-4 h-4" />}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.onboarding.step3', 'Create Offers')}</div>
+                        <div className="text-sm text-gray-500">{offersCount > 0 ? t('dashboard.onboarding.step3Complete', 'Offers created') : t('dashboard.onboarding.step3Desc', 'Define your products & services')}</div>
+                      </div>
+                      {offersCount > 0 && (
+                        <div className="text-sm font-medium text-green-600">{offersCount} {t('dashboard.onboarding.active', 'active')}</div>
+                      )}
+                    </Link>
+
+                    <Link to="/dashboard/campaigns" className="flex items-center gap-4 p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-200 group">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${campaignsCount > 0 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+                        {campaignsCount > 0 ? <Check className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.onboarding.step4', 'Create Campaign')}</div>
+                        <div className="text-sm text-gray-500">{campaignsCount > 0 ? t('dashboard.onboarding.step4Complete', 'Campaigns launched') : t('dashboard.onboarding.step4Desc', 'Generate marketing strategies')}</div>
+                      </div>
+                      {campaignsCount > 0 && (
+                        <div className="text-sm font-medium text-green-600">{campaignsCount} {t('dashboard.onboarding.running', 'running')}</div>
+                      )}
+                    </Link>
                   </div>
                 </div>
               </div>
 
-              {/* Recent Activity */}
+              {/* Video Placeholder */}
               <div className="bg-white rounded-xl shadow-sm border border-gray-100">
                 <div className="p-6 border-b border-gray-100">
-                  <h3 className="text-lg font-semibold text-gray-900">{t('dashboard.activity.title')}</h3>
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
+                      <Video className="w-4 h-4 text-white" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900">{t('dashboard.video.title', 'Tutorial Video')}</h3>
+                  </div>
                 </div>
                 <div className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center">
-                        <CheckCircle className="w-4 h-4 text-blue-600" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-900">{t('dashboard.activity.profileCreated')}</div>
-                        <div className="text-xs text-gray-500">{t('dashboard.activity.profileCreatedTime')}</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
-                        <Bot className="w-4 h-4 text-green-600" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-900">{t('dashboard.activity.agentsAvailable')}</div>
-                        <div className="text-xs text-gray-500">{t('dashboard.activity.agentsAvailableTime')}</div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-3">
-                      <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center">
-                        <Clock className="w-4 h-4 text-purple-600" />
-                      </div>
-                      <div className="flex-1">
-                        <div className="text-sm font-medium text-gray-900">{t('dashboard.activity.systemReady')}</div>
-                        <div className="text-xs text-gray-500">{t('dashboard.activity.systemReadyTime')}</div>
+                  <div className="relative bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-xl aspect-video mb-4 group cursor-pointer hover:shadow-lg transition-all duration-300 overflow-hidden">
+                    {/* Background pattern */}
+                    <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-purple-600/10"></div>
+                    <div className="absolute top-4 left-4 right-4 bottom-4 border-2 border-dashed border-blue-300/50 rounded-lg flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                          <Play className="w-6 h-6 text-white ml-1" />
+                        </div>
+                        <h4 className="text-lg font-semibold text-gray-900 mb-2">{t('dashboard.video.videoTitle', 'Getting Started with AI Platform')}</h4>
+                        <p className="text-sm text-gray-600 mb-3">{t('dashboard.video.videoDesc', 'Learn how to set up your business profile and create your first AI-powered marketing campaign')}</p>
+                        <div className="flex items-center justify-center gap-2 text-sm text-purple-600 font-medium">
+                          <Clock className="w-4 h-4" />
+                          <span>{t('dashboard.video.duration', '5:32 min')}</span>
+                        </div>
                       </div>
                     </div>
                   </div>
+                  <div className="text-center">
+                    <button className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium text-sm rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200">
+                      <Play className="w-4 h-4" />
+                      {t('dashboard.video.watchNow', 'Watch Now')}
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Quick Actions & Tips */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {/* Quick Actions */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+                <div className="p-6 border-b border-gray-100">
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                      <Zap className="w-4 h-4 text-white" />
+                    </div>
+                    <h3 className="text-lg font-semibold text-gray-900">{t('dashboard.quickActions.title', 'Quick Actions')}</h3>
+                  </div>
+                </div>
+                <div className="p-6">
+                  <div className="grid grid-cols-2 gap-4">
+                    <Link to="/dashboard/agents" className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-left group">
+                      <Bot className="w-8 h-8 text-blue-600 mb-2 group-hover:scale-110 transition-transform" />
+                      <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.quickActions.runAgent', 'Run AI Agent')}</div>
+                      <div className="text-sm text-gray-600">{t('dashboard.quickActions.runAgentDesc', 'Analyze website & generate insights')}</div>
+                    </Link>
+                    <Link to="/dashboard/competition" className="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors text-left group">
+                      <Target className="w-8 h-8 text-purple-600 mb-2 group-hover:scale-110 transition-transform" />
+                      <div className="font-medium text-gray-900 group-hover:text-purple-700 transition-colors">{t('dashboard.quickActions.findCompetitors', 'Find Competitors')}</div>
+                      <div className="text-sm text-gray-600">{t('dashboard.quickActions.findCompetitorsDesc', 'Research market competition')}</div>
+                    </Link>
+                    <Link to="/dashboard/campaigns" className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-left group">
+                      <TrendingUp className="w-8 h-8 text-blue-600 mb-2 group-hover:scale-110 transition-transform" />
+                      <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.quickActions.createCampaign', 'Create Campaign')}</div>
+                      <div className="text-sm text-gray-600">{t('dashboard.quickActions.createCampaignDesc', 'Generate marketing strategy')}</div>
+                    </Link>
+                    <Link to="/dashboard/offers" className="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors text-left group">
+                      <Package className="w-8 h-8 text-purple-600 mb-2 group-hover:scale-110 transition-transform" />
+                      <div className="font-medium text-gray-900 group-hover:text-purple-700 transition-colors">{t('dashboard.quickActions.manageOffers', 'Manage Offers')}</div>
+                      <div className="text-sm text-gray-600">{t('dashboard.quickActions.manageOffersDesc', 'Create products & services')}</div>
+                    </Link>
+                  </div>
+                </div>
+              </div>
+
+              {/* Business Tips */}
+              <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+                <div className="p-6 border-b border-gray-100">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
+                        <Lightbulb className="w-4 h-4 text-white" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900">{t('dashboard.tips.title', 'Business Tips')}</h3>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setCurrentTipIndex(currentTipIndex > 0 ? currentTipIndex - 1 : businessTips.length - 1)}
+                        className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                        disabled={businessTips.length <= 1}
+                      >
+                        <ChevronLeft className="w-4 h-4 text-gray-400" />
+                      </button>
+                      <span className="text-xs text-gray-500 px-2">
+                        {currentTipIndex + 1} / {businessTips.length}
+                      </span>
+                      <button
+                        onClick={() => setCurrentTipIndex(currentTipIndex < businessTips.length - 1 ? currentTipIndex + 1 : 0)}
+                        className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                        disabled={businessTips.length <= 1}
+                      >
+                        <ChevronRight className="w-4 h-4 text-gray-400" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div className="p-6">
+                  {businessTips.length > 0 && (() => {
+                    const IconComponent = businessTips[currentTipIndex].icon;
+                    return (
+                      <div className="transition-all duration-300 ease-in-out">
+                        <div className="flex items-start gap-4 mb-4">
+                          <div className={`w-12 h-12 ${businessTips[currentTipIndex].bgColor} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                            <IconComponent className={`w-6 h-6 ${businessTips[currentTipIndex].color}`} />
+                          </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900 mb-2">{businessTips[currentTipIndex].title}</h4>
+                          <p className="text-sm text-gray-600 leading-relaxed">{businessTips[currentTipIndex].content}</p>
+                          </div>
+                        </div>
+                        
+                        {/* Tip indicators */}
+                        <div className="flex justify-center gap-2 mt-6">
+                          {businessTips.map((_, index) => (
+                            <button
+                              key={index}
+                              onClick={() => setCurrentTipIndex(index)}
+                              className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                                index === currentTipIndex 
+                                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 w-6' 
+                                  : 'bg-gray-300 hover:bg-gray-400'
+                              }`}
+                            />
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })()}
                 </div>
               </div>
             </div>
