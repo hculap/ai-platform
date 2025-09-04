@@ -402,7 +402,7 @@ const AdsComponent: React.FC<AdsProps> = ({
           className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 flex items-center space-x-2 shadow-lg hover:shadow-xl"
         >
           <Brain className="w-5 h-5" />
-          <span>Generate New Ad</span>
+          <span>{t('ads.generateNewAd')}</span>
         </button>
       </div>
 
@@ -411,7 +411,7 @@ const AdsComponent: React.FC<AdsProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Search
+              {t('ads.search')}
             </label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
@@ -419,7 +419,7 @@ const AdsComponent: React.FC<AdsProps> = ({
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search ads..."
+                placeholder={t('ads.searchPlaceholder')}
                 className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />
             </div>
@@ -427,14 +427,14 @@ const AdsComponent: React.FC<AdsProps> = ({
           
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Platform
+              {t('ads.platform')}
             </label>
             <select
               value={platformFilter}
               onChange={(e) => setPlatformFilter(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="">All Platforms</option>
+              <option value="">{t('ads.allPlatforms')}</option>
               {AD_PLATFORMS.map(platform => (
                 <option key={platform} value={platform}>
                   {getPlatformDisplayName(platform)}
@@ -445,17 +445,17 @@ const AdsComponent: React.FC<AdsProps> = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Format
+              {t('ads.format')}
             </label>
             <select
               value={formatFilter}
               onChange={(e) => setFormatFilter(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="">All Formats</option>
+              <option value="">{t('ads.allFormats')}</option>
               {AD_FORMATS.map(format => (
                 <option key={format} value={format}>
-                  {format.charAt(0).toUpperCase() + format.slice(1)}
+                  {getFormatDisplayName(format)}
                 </option>
               ))}
             </select>
@@ -463,17 +463,17 @@ const AdsComponent: React.FC<AdsProps> = ({
 
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-2">
-              Status
+              {t('ads.status')}
             </label>
             <select
               value={statusFilter}
               onChange={(e) => setStatusFilter(e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             >
-              <option value="">All Status</option>
-              <option value="draft">Draft</option>
-              <option value="published">Published</option>
-              <option value="archived">Archived</option>
+              <option value="">{t('ads.allStatuses')}</option>
+              <option value="draft">{t('ads.statuses.draft')}</option>
+              <option value="published">{t('ads.statuses.published')}</option>
+              <option value="archived">{t('ads.statuses.archived')}</option>
             </select>
           </div>
         </div>
@@ -483,11 +483,11 @@ const AdsComponent: React.FC<AdsProps> = ({
       {filteredAds.length === 0 ? (
         <div className="text-center py-12">
           <Megaphone className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No ads found</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">{t('ads.noAdsFound')}</h3>
           <p className="text-gray-600 mb-4">
             {ads.length === 0 
-              ? "Start by generating your first ad creative."
-              : "Try adjusting your search or filter criteria."
+              ? t('ads.startByGenerating')
+              : t('ads.tryAdjustingFilters')
             }
           </p>
           {ads.length === 0 && (
@@ -496,7 +496,7 @@ const AdsComponent: React.FC<AdsProps> = ({
               className="bg-blue-600 text-white px-6 py-3 rounded-xl hover:bg-blue-700 transition-colors inline-flex items-center space-x-2"
             >
               <Brain className="w-5 h-5" />
-              <span>Generate Your First Ad</span>
+              <span>{t('ads.generateFirstAd')}</span>
             </button>
           )}
         </div>
@@ -586,8 +586,8 @@ const AdsComponent: React.FC<AdsProps> = ({
                   </div>
                   
                   <div className="flex items-center space-x-4 mt-4 text-sm text-gray-500">
-                    <span>Action: {getActionDisplayName(ad.action)}</span>
-                    <span>Created: {new Date(ad.created_at).toLocaleDateString()}</span>
+                    <span>{t('ads.action')} {getActionDisplayName(ad.action)}</span>
+                    <span>{t('ads.createdDate')} {new Date(ad.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
                 
@@ -598,7 +598,7 @@ const AdsComponent: React.FC<AdsProps> = ({
                       className="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 transition-colors flex items-center space-x-1"
                     >
                       <CheckCircle className="w-4 h-4" />
-                      <span>Publish</span>
+                      <span>{t('ads.publish')}</span>
                     </button>
                   )}
                   
@@ -643,7 +643,7 @@ const AdsComponent: React.FC<AdsProps> = ({
                   }`}>
                     1
                   </div>
-                  <div className="text-sm font-medium text-gray-700">Setup</div>
+                  <div className="text-sm font-medium text-gray-700">{t('ads.setup')}</div>
                   
                   <div className="w-8 h-px bg-gray-300" />
                   
@@ -654,7 +654,7 @@ const AdsComponent: React.FC<AdsProps> = ({
                   }`}>
                     2
                   </div>
-                  <div className="text-sm font-medium text-gray-700">Headlines</div>
+                  <div className="text-sm font-medium text-gray-700">{t('ads.headlines')}</div>
                   
                   <div className="w-8 h-px bg-gray-300" />
                   
@@ -664,7 +664,7 @@ const AdsComponent: React.FC<AdsProps> = ({
                   }`}>
                     3
                   </div>
-                  <div className="text-sm font-medium text-gray-700">Creative</div>
+                  <div className="text-sm font-medium text-gray-700">{t('ads.creative')}</div>
                 </div>
               </div>
 
@@ -682,7 +682,7 @@ const AdsComponent: React.FC<AdsProps> = ({
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Platform *
+                        {t('ads.platformRequired')}
                       </label>
                       <select
                         value={generationParams.platform}
@@ -719,7 +719,7 @@ const AdsComponent: React.FC<AdsProps> = ({
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Format *
+                        {t('ads.formatRequired')}
                       </label>
                       <select
                         value={generationParams.format}
@@ -749,7 +749,7 @@ const AdsComponent: React.FC<AdsProps> = ({
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Action *
+                        {t('ads.actionRequired')}
                       </label>
                       <select
                         value={generationParams.action}
@@ -766,7 +766,7 @@ const AdsComponent: React.FC<AdsProps> = ({
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Context
+                        {t('ads.context')}
                       </label>
                       
                       
@@ -783,7 +783,7 @@ const AdsComponent: React.FC<AdsProps> = ({
                           }}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
-                          <option value="">Select Offer</option>
+                          <option value="">{t('ads.selectOffer')}</option>
                           {offers.map(offer => (
                             <option key={offer.id} value={offer.id}>
                               {offer.name} - {offer.price} {offer.unit}
@@ -805,10 +805,10 @@ const AdsComponent: React.FC<AdsProps> = ({
                           }}
                           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                         >
-                          <option value="">Select Campaign</option>
+                          <option value="">{t('ads.selectCampaign')}</option>
                           {campaigns.map(campaign => (
                             <option key={campaign.id} value={campaign.id}>
-                              {campaign.goal} Campaign
+                              {campaign.goal} {t('ads.campaignSuffix')}
                             </option>
                           ))}
                         </select>
@@ -822,7 +822,7 @@ const AdsComponent: React.FC<AdsProps> = ({
                       onClick={resetGeneration}
                       className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
                     >
-                      Cancel
+                      {t('ads.cancel')}
                     </button>
                     <button
                       onClick={handleGenerateHeadlines}
@@ -832,12 +832,12 @@ const AdsComponent: React.FC<AdsProps> = ({
                       {isGenerating ? (
                         <>
                           <Loader2 className="w-5 h-5 animate-spin" />
-                          <span>Generating...</span>
+                          <span>{t('ads.generating')}</span>
                         </>
                       ) : (
                         <>
                           <Sparkles className="w-5 h-5" />
-                          <span>Generate Headlines</span>
+                          <span>{t('ads.generateHeadlines')}</span>
                         </>
                       )}
                     </button>
@@ -849,10 +849,10 @@ const AdsComponent: React.FC<AdsProps> = ({
                 <div className="space-y-6">
                   <div>
                     <h3 className="text-lg font-semibold text-gray-900 mb-4">
-                      Select Headlines for Full Creative Generation
+                      {t('ads.selectHeadlines')}
                     </h3>
                     <p className="text-gray-600 mb-6">
-                      Choose the headlines you want to develop into full creatives. We generated {generatedHeadlines.headline_count} options for you.
+                      {t('ads.chooseHeadlines', { count: generatedHeadlines.headline_count })}
                     </p>
                   </div>
 
@@ -904,7 +904,7 @@ const AdsComponent: React.FC<AdsProps> = ({
                       onClick={() => setGenerationStep('setup')}
                       className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
                     >
-                      Back
+                      {t('ads.back')}
                     </button>
                     <button
                       onClick={handleGenerateCreative}
@@ -914,12 +914,12 @@ const AdsComponent: React.FC<AdsProps> = ({
                       {isGenerating ? (
                         <>
                           <Loader2 className="w-5 h-5 animate-spin" />
-                          <span>Generating...</span>
+                          <span>{t('ads.generating')}</span>
                         </>
                       ) : (
                         <>
                           <Sparkles className="w-5 h-5" />
-                          <span>Generate Creative ({selectedHeadlines.length})</span>
+                          <span>{t('ads.generateCreativeCount', { count: selectedHeadlines.length })}</span>
                         </>
                       )}
                     </button>
@@ -932,10 +932,10 @@ const AdsComponent: React.FC<AdsProps> = ({
                   <div className="text-center">
                     <CheckCircle className="w-16 h-16 text-green-600 mx-auto mb-4" />
                     <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                      Creative Generation Complete!
+                      {t('ads.creativeGenerationComplete')}
                     </h3>
                     <p className="text-gray-600 mb-6">
-                      Review the generated ad creatives below and select which ones you want to save to your ads library.
+                      {t('ads.reviewCreatives')}
                     </p>
                   </div>
 
@@ -1040,13 +1040,13 @@ const AdsComponent: React.FC<AdsProps> = ({
                       onClick={() => setGenerationStep('headlines')}
                       className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
                     >
-                      Back to Headlines
+                      {t('ads.backToHeadlines')}
                     </button>
                     <button
                       onClick={resetGeneration}
                       className="px-6 py-3 border border-gray-300 text-gray-700 rounded-xl hover:bg-gray-50 transition-colors"
                     >
-                      Cancel
+                      {t('ads.cancel')}
                     </button>
                     <button
                       onClick={handleSaveSelectedCreatives}
@@ -1056,12 +1056,12 @@ const AdsComponent: React.FC<AdsProps> = ({
                       {isGenerating ? (
                         <>
                           <Loader2 className="w-5 h-5 animate-spin" />
-                          <span>Saving...</span>
+                          <span>{t('ads.saving')}</span>
                         </>
                       ) : (
                         <>
                           <Save className="w-5 h-5" />
-                          <span>Save Selected Ads ({selectedCreatives.length})</span>
+                          <span>{t('ads.saveSelectedAds', { count: selectedCreatives.length })}</span>
                         </>
                       )}
                     </button>
