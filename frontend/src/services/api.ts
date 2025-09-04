@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { BusinessProfile, BusinessProfileApi, AnalysisResult, AuthResponse, Offer, Campaign, CampaignGenerationParams, CampaignGenerationResult, CampaignGoal } from '../types';
+import { BusinessProfile, BusinessProfileApi, AnalysisResult, AuthResponse, Offer, Campaign, CampaignGenerationParams, CampaignGenerationResult, CampaignGoal, Ad, AdGenerationParams, HeadlineGenerationResult, CreativeGenerationResult } from '../types';
 import { tokenManager } from './tokenManager';
 
 // API Configuration
@@ -1879,6 +1879,648 @@ export const getCampaignsCount = async (authToken: string, businessProfileId?: s
     return {
       success: false,
       error: error.response?.data?.message || error.message || 'Failed to get campaigns count'
+    };
+  }
+};
+
+// =======================================
+// ADS API FUNCTIONS
+// =======================================
+
+/**
+ * Get all ads for a business profile
+ */
+export const getAds = async (
+  businessProfileId: string,
+  authToken: string,
+  filters?: {
+    platform?: string;
+    format?: string;
+    status?: string;
+    context_type?: 'offer' | 'campaign';
+    context_id?: string;
+  }
+): Promise<{ success: boolean; data?: Ad[]; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.get(`/business-profiles/${businessProfileId}/ads`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      },
+      params: filters
+    });
+    
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (error: any) {
+    console.error('Error getting ads:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to get ads'
+    };
+  }
+};
+
+/**
+ * Get a specific ad by ID
+ */
+export const getAd = async (
+  adId: string,
+  authToken: string
+): Promise<{ success: boolean; data?: Ad; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.get(`/ads/${adId}`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+    
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (error: any) {
+    console.error('Error getting ad:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to get ad'
+    };
+  }
+};
+
+/**
+ * Create a new ad manually
+ */
+export const createAd = async (
+  businessProfileId: string,
+  adData: Partial<Ad>,
+  authToken: string
+): Promise<{ success: boolean; data?: Ad; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.post(`/business-profiles/${businessProfileId}/ads`, adData, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+    
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (error: any) {
+    console.error('Error creating ad:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to create ad'
+    };
+  }
+};
+
+/**
+ * Update an existing ad
+ */
+export const updateAd = async (
+  adId: string,
+  updateData: Partial<Ad>,
+  authToken: string
+): Promise<{ success: boolean; data?: Ad; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.put(`/ads/${adId}`, updateData, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+    
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (error: any) {
+    console.error('Error updating ad:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to update ad'
+    };
+  }
+};
+
+/**
+ * Delete an ad
+ */
+export const deleteAd = async (
+  adId: string,
+  authToken: string
+): Promise<{ success: boolean; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    await api.delete(`/ads/${adId}`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+    
+    return {
+      success: true
+    };
+  } catch (error: any) {
+    console.error('Error deleting ad:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to delete ad'
+    };
+  }
+};
+
+/**
+ * Start background headline generation using AI agent
+ */
+export const startHeadlineGeneration = async (
+  businessProfileId: string,
+  params: AdGenerationParams,
+  authToken: string
+): Promise<{ success: boolean; openaiResponseId?: string; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.post('/agents/ads-agent/tools/generate-headlines/call', {
+      input: {
+        business_profile_id: businessProfileId,
+        ...params
+      },
+      background: true
+    }, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+
+    if (response.data.status === 'pending' && response.data.data?.openai_response_id) {
+      return {
+        success: true,
+        openaiResponseId: response.data.data.openai_response_id
+      };
+    } else {
+      return {
+        success: false,
+        error: response.data.error || 'Failed to start headline generation'
+      };
+    }
+  } catch (error: any) {
+    console.error('Error starting headline generation:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to start headline generation'
+    };
+  }
+};
+
+/**
+ * Check headline generation status
+ */
+export const checkHeadlineGenerationStatus = async (
+  openaiResponseId: string,
+  authToken: string
+): Promise<{
+  status: 'pending' | 'queued' | 'in_progress' | 'completed' | 'failed' | 'canceled' | 'error';
+  data?: HeadlineGenerationResult;
+  error?: string;
+  isTokenExpired?: boolean;
+}> => {
+  try {
+    const response = await api.get(`/agents/ads-agent/tools/generate-headlines/call?job_id=${openaiResponseId}`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+
+    if (response.data && response.data.data) {
+      const generationData = response.data.data;
+
+      if (generationData.status === 'completed') {
+        return {
+          status: 'completed',
+          data: generationData
+        };
+      } else if (generationData.status === 'pending' || generationData.status === 'queued' || generationData.status === 'in_progress') {
+        return {
+          status: generationData.status
+        };
+      } else {
+        return {
+          status: 'error',
+          error: generationData.error || generationData.message || 'Unknown status'
+        };
+      }
+    } else if (response.data?.error) {
+      return {
+        status: 'failed',
+        error: response.data.error || 'Headline generation failed'
+      };
+    } else {
+      return {
+        status: 'error',
+        error: 'Failed to check generation status'
+      };
+    }
+  } catch (error: any) {
+    console.error('Error checking headline generation status:', error);
+    if (error.response?.status === 401) {
+      return {
+        status: 'error',
+        isTokenExpired: true,
+        error: 'Authentication token expired. Please log in again.'
+      };
+    }
+    
+    return {
+      status: 'error',
+      error: error instanceof Error ? error.message : 'Failed to check generation status'
+    };
+  }
+};
+
+/**
+ * Generate ad headlines using AI agent (legacy synchronous version - kept for backward compatibility)
+ */
+export const generateHeadlines = async (
+  businessProfileId: string,
+  params: AdGenerationParams,
+  authToken: string
+): Promise<{ success: boolean; data?: HeadlineGenerationResult; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    // Start generation in background
+    const startResult = await startHeadlineGeneration(businessProfileId, params, authToken);
+    if (!startResult.success) {
+      return {
+        success: false,
+        error: startResult.error,
+        isTokenExpired: startResult.isTokenExpired
+      };
+    }
+
+    // Poll for completion
+    const openaiResponseId = startResult.openaiResponseId!;
+    let attempts = 0;
+    const maxAttempts = 60; // 5 minutes max
+    
+    while (attempts < maxAttempts) {
+      const statusResult = await checkHeadlineGenerationStatus(openaiResponseId, authToken);
+      
+      if (statusResult.status === 'completed') {
+        return {
+          success: true,
+          data: statusResult.data
+        };
+      } else if (statusResult.status === 'failed' || statusResult.status === 'error') {
+        return {
+          success: false,
+          error: statusResult.error || 'Generation failed',
+          isTokenExpired: statusResult.isTokenExpired
+        };
+      }
+      
+      // Wait 5 seconds before next check
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      attempts++;
+    }
+    
+    // Timeout
+    return {
+      success: false,
+      error: 'Generation timed out. Please try again.'
+    };
+  } catch (error: any) {
+    console.error('Error generating headlines:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to generate headlines'
+    };
+  }
+};
+
+/**
+ * Start background creative generation using AI agent
+ */
+export const startCreativeGeneration = async (
+  selectedHeadlines: string[],
+  generationParams: AdGenerationParams,
+  businessProfileId: string,
+  authToken: string
+): Promise<{ success: boolean; openaiResponseId?: string; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.post('/agents/ads-agent/tools/generate-full-creative/call', {
+      input: {
+        selected_headlines: selectedHeadlines,
+        business_profile_id: businessProfileId,
+        platform: generationParams.platform,
+        format: generationParams.format,
+        action: generationParams.action,
+        offer_id: generationParams.offer_id,
+        campaign_id: generationParams.campaign_id,
+        landing_url: generationParams.landing_url
+      },
+      background: true
+    }, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+
+    if (response.data.status === 'pending' && response.data.data?.openai_response_id) {
+      return {
+        success: true,
+        openaiResponseId: response.data.data.openai_response_id
+      };
+    } else {
+      return {
+        success: false,
+        error: response.data.error || 'Failed to start creative generation'
+      };
+    }
+  } catch (error: any) {
+    console.error('Error starting creative generation:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to start creative generation'
+    };
+  }
+};
+
+/**
+ * Check creative generation status
+ */
+export const checkCreativeGenerationStatus = async (
+  openaiResponseId: string,
+  authToken: string
+): Promise<{
+  status: 'pending' | 'queued' | 'in_progress' | 'completed' | 'failed' | 'canceled' | 'error';
+  data?: CreativeGenerationResult;
+  error?: string;
+  isTokenExpired?: boolean;
+}> => {
+  try {
+    const response = await api.get(`/agents/ads-agent/tools/generate-full-creative/call?job_id=${openaiResponseId}`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+
+    if (response.data && response.data.data) {
+      const generationData = response.data.data;
+
+      if (generationData.status === 'completed') {
+        return {
+          status: 'completed',
+          data: generationData
+        };
+      } else if (generationData.status === 'pending' || generationData.status === 'queued' || generationData.status === 'in_progress') {
+        return {
+          status: generationData.status
+        };
+      } else {
+        return {
+          status: 'error',
+          error: generationData.error || generationData.message || 'Unknown status'
+        };
+      }
+    } else if (response.data?.error) {
+      return {
+        status: 'failed',
+        error: response.data.error || 'Creative generation failed'
+      };
+    } else {
+      return {
+        status: 'error',
+        error: 'Failed to check generation status'
+      };
+    }
+  } catch (error: any) {
+    console.error('Error checking creative generation status:', error);
+    if (error.response?.status === 401) {
+      return {
+        status: 'error',
+        isTokenExpired: true,
+        error: 'Authentication token expired. Please log in again.'
+      };
+    }
+    
+    return {
+      status: 'error',
+      error: error instanceof Error ? error.message : 'Failed to check generation status'
+    };
+  }
+};
+
+/**
+ * Generate full creative for selected headlines using AI agent (legacy synchronous version - kept for backward compatibility)
+ */
+export const generateCreative = async (
+  selectedHeadlines: string[],
+  generationParams: AdGenerationParams,
+  businessProfileId: string,
+  authToken: string
+): Promise<{ success: boolean; data?: CreativeGenerationResult; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    // Start generation in background
+    const startResult = await startCreativeGeneration(selectedHeadlines, generationParams, businessProfileId, authToken);
+    if (!startResult.success) {
+      return {
+        success: false,
+        error: startResult.error,
+        isTokenExpired: startResult.isTokenExpired
+      };
+    }
+
+    // Poll for completion
+    const openaiResponseId = startResult.openaiResponseId!;
+    let attempts = 0;
+    const maxAttempts = 60; // 5 minutes max
+    
+    while (attempts < maxAttempts) {
+      const statusResult = await checkCreativeGenerationStatus(openaiResponseId, authToken);
+      
+      if (statusResult.status === 'completed') {
+        return {
+          success: true,
+          data: statusResult.data
+        };
+      } else if (statusResult.status === 'failed' || statusResult.status === 'error') {
+        return {
+          success: false,
+          error: statusResult.error || 'Generation failed',
+          isTokenExpired: statusResult.isTokenExpired
+        };
+      }
+      
+      // Wait 5 seconds before next check
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      attempts++;
+    }
+    
+    // Timeout
+    return {
+      success: false,
+      error: 'Generation timed out. Please try again.'
+    };
+  } catch (error: any) {
+    console.error('Error generating creative:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to generate creative'
+    };
+  }
+};
+
+/**
+ * Save selected creatives as new Ad records
+ */
+export const saveSelectedCreatives = async (
+  selectedCreatives: Array<{
+    headline?: string;
+    primary_text?: string;
+    visual_brief?: string;
+    overlay_text?: string;
+    script_text?: string;
+    cta?: string;
+    landing_url?: string;
+    asset_url?: string;
+  }>,
+  generationParams: AdGenerationParams,
+  businessProfileId: string,
+  authToken: string
+): Promise<{ success: boolean; data?: Ad[]; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.post(`/business-profiles/${businessProfileId}/ads/batch`, {
+      ads: selectedCreatives.map(creative => ({
+        ...creative,
+        platform: generationParams.platform,
+        format: generationParams.format,
+        action: generationParams.action,
+        offer_id: generationParams.offer_id,
+        campaign_id: generationParams.campaign_id,
+        landing_url: creative.landing_url || generationParams.landing_url,
+        status: 'draft'
+      }))
+    }, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+
+    if (response.data?.data) {
+      return {
+        success: true,
+        data: response.data.data
+      };
+    }
+
+    return {
+      success: false,
+      error: 'Invalid response format'
+    };
+  } catch (error: any) {
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to save selected ads'
+    };
+  }
+};
+
+/**
+ * Get count of ads for dashboard
+ */
+export const getAdsCount = async (
+  businessProfileId: string,
+  authToken: string,
+  params?: Record<string, any>
+): Promise<{ success: boolean; data?: number; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.get(`/business-profiles/${businessProfileId}/ads`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      },
+      params
+    });
+    
+    return {
+      success: true,
+      data: response.data.data?.length || 0
+    };
+  } catch (error: any) {
+    console.error('Error getting ads count:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to get ads count'
     };
   }
 };

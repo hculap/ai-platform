@@ -14,6 +14,7 @@ from werkzeug.exceptions import NotFound, BadRequest
 
 from ..agents.base import AgentRegistry, AgentInput
 from ..models.interaction import Interaction
+from ..models.ad import Ad
 from .. import db
 from ..utils.messages import (
     get_message, ERROR_VALIDATION_ERROR, ERROR_UNAUTHORIZED,
@@ -22,6 +23,61 @@ from ..utils.messages import (
 
 # Create logger for this module
 logger = logging.getLogger('app.routes.agents')
+
+
+def _process_headlines_result(headlines_data: Dict[str, Any], request_data: Dict[str, Any], user_id: str) -> Dict[str, Any]:
+    """
+    Process headlines result by creating Ad records in the database.
+    
+    Args:
+        headlines_data: The headlines data from the AI agent
+        request_data: The original request data
+        user_id: The user ID
+    
+    Returns:
+        Processed data with created_ads array
+    """
+    input_params = request_data.get('input', {})
+    headlines = headlines_data.get('headlines', [])
+    
+    created_ads = []
+    business_profile_id = input_params.get('business_profile_id')
+    
+    for headline_data in headlines:
+        headline_text = headline_data.get('headline', '') if isinstance(headline_data, dict) else str(headline_data)
+        
+        if headline_text.strip():
+            ad = Ad(
+                business_profile_id=business_profile_id,
+                user_id=user_id,
+                platform=input_params.get('platform'),
+                format=input_params.get('format'),
+                action=input_params.get('action'),
+                offer_id=input_params.get('offer_id'),
+                campaign_id=input_params.get('campaign_id'),
+                headline=headline_text.strip(),
+                status='draft'
+            )
+            
+            # Add landing_url if provided
+            if input_params.get('landing_url'):
+                ad.landing_url = input_params['landing_url']
+            
+            db.session.add(ad)
+            created_ads.append(ad)
+    
+    # Commit to database
+    db.session.commit()
+    
+    # Convert to dict for response
+    ads_data = [ad.to_dict() for ad in created_ads]
+    
+    return {
+        'headlines': headlines,
+        'created_ads': ads_data,
+        'ads_count': len(created_ads),
+        'business_profile_id': business_profile_id
+    }
 
 
 # Create blueprint for agent routes
@@ -255,7 +311,7 @@ def execute_tool(slug: str, tool_slug: str):
             )
 
             # Check for background mode
-            background_mode = data.get('background', False) and tool_slug in ['analyze-website', 'find-competitors', 'enrich-competitor', 'generate-campaign']
+            background_mode = data.get('background', False) and tool_slug in ['analyze-website', 'find-competitors', 'enrich-competitor', 'generate-campaign', 'generate-headlines', 'generate-full-creative']
             
             # Execute tool synchronously
             import asyncio
@@ -307,6 +363,15 @@ def execute_tool(slug: str, tool_slug: str):
                     except Exception as profile_error:
                         print(f'Error updating business profile: {profile_error}')
                         # Don't fail the entire request if profile update fails
+                
+                # Process ads agent tool results - create Ad records in database
+                if tool_slug == 'generate-headlines' and not background_mode:
+                    try:
+                        # Create Ad records for each generated headline
+                        result.data = _process_headlines_result(result.data, data, current_user_id)
+                    except Exception as ads_error:
+                        print(f'Error processing headlines: {ads_error}')
+                        # Don't fail the entire request if ads processing fails
 
                 # Mark interaction as completed (if it exists)
                 if interaction and interaction_id:
@@ -419,9 +484,17 @@ def handle_tool_status_check(slug: str, tool_slug: str):
             execution_time = time.time() - start_time
 
             if result.success:
+                # Process ads agent tool results for async completion
+                processed_data = result.data
+                if tool_slug == 'generate-headlines' and result.data.get('status') == 'completed':
+                    # For async headlines, we can't easily create Ad records without original parameters
+                    # For now, return the headlines data as-is and let frontend handle it
+                    # TODO: Implement proper parameter storage for async jobs
+                    pass
+                
                 response_data = {
                     'status': 'completed',
-                    'data': result.data
+                    'data': processed_data
                 }
                 return jsonify(response_data)
             else:

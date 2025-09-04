@@ -5,15 +5,16 @@ import {
   User, Building2, Settings, LogOut, Search, Bell,
   Bot, Zap, FileText, Video, Target, TrendingUp, Megaphone,
   Users, Activity, Clock, CheckCircle, Plus, Menu, Package,
-  Play, BookOpen, Lightbulb, ChevronLeft, ChevronRight, Check, X
+  Play, BookOpen, Lightbulb, ChevronLeft, ChevronRight, Check, X, Home
 } from 'lucide-react';
 import { User as UserType } from '../types';
-import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, updateBusinessProfile, getCompetitionsCount, getOffersCount, getCampaignsCount } from '../services/api';
+import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, updateBusinessProfile, getCompetitionsCount, getOffersCount, getCampaignsCount, getAdsCount } from '../services/api';
 import BusinessProfiles from './BusinessProfiles';
 import Agents from './Agents';
 import Competition from './Competition';
 import Offers from './Offers';
 import Campaigns from './Campaigns';
+import Ads from './Ads';
 
 interface DashboardProps {
   user: UserType;
@@ -58,6 +59,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
   const [competitionsCount, setCompetitionsCount] = useState<number>(0);
   const [offersCount, setOffersCount] = useState<number>(0);
   const [campaignsCount, setCampaignsCount] = useState<number>(0);
+  const [adsCount, setAdsCount] = useState<number>(0);
   const [interactionsCount, setInteractionsCount] = useState<number>(0);
   const [isLoadingStats, setIsLoadingStats] = useState<boolean>(true);
 
@@ -179,6 +181,22 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     }
   }, [authToken, selectedBusinessProfile?.id]);
 
+  // Function to refresh ads count
+  const refreshAdsCount = useCallback(async () => {
+    if (!selectedBusinessProfile?.id) {
+      setAdsCount(0);
+      return;
+    }
+    try {
+      const adsResult = await getAdsCount(selectedBusinessProfile.id, authToken);
+      if (adsResult.success && adsResult.data !== undefined) {
+        setAdsCount(adsResult.data);
+      }
+    } catch (error) {
+      console.error('Error refreshing ads count:', error);
+    }
+  }, [authToken, selectedBusinessProfile?.id]);
+
   // Fetch real dashboard data
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -200,6 +218,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
         // Fetch campaigns count (will use selectedBusinessProfile?.id automatically)
         await refreshCampaignsCount();
 
+        // Fetch ads count (will use selectedBusinessProfile?.id automatically)
+        await refreshAdsCount();
+
         // Fetch interactions count
         const interactionsResult = await getInteractionsCount(authToken);
         if (interactionsResult.success && interactionsResult.data !== undefined) {
@@ -213,7 +234,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     };
 
     fetchDashboardData();
-  }, [authToken, refreshCompetitionsCount, refreshOffersCount, refreshCampaignsCount]);
+  }, [authToken, refreshCompetitionsCount, refreshOffersCount, refreshCampaignsCount, refreshAdsCount]);
 
   // Fetch business profiles separately
   useEffect(() => {
@@ -242,6 +263,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     refreshCampaignsCount();
   }, [refreshCampaignsCount]);
 
+  // Refresh ads count when component mounts or business profile changes
+  useEffect(() => {
+    refreshAdsCount();
+  }, [refreshAdsCount]);
+
   // Also refresh competitions count when selectedBusinessProfile changes
   useEffect(() => {
     if (selectedBusinessProfile?.id) {
@@ -263,20 +289,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     }
   }, [selectedBusinessProfile?.id, authToken, refreshCampaignsCount]);
 
+  // Also refresh ads count when selectedBusinessProfile changes
+  useEffect(() => {
+    if (selectedBusinessProfile?.id) {
+      refreshAdsCount();
+    }
+  }, [selectedBusinessProfile?.id, authToken, refreshAdsCount]);
+
 
 
   // Update navigation sections with current data
   const navigationSections: NavSection[] = [
-    {
-      id: 'ai-tools',
-      title: t('dashboard.nav.aiTools'),
-      items: [
-        { id: 'agents', label: t('dashboard.nav.agents'), icon: Bot, count: agentsCount },
-        { id: 'automations', label: t('dashboard.nav.automations'), icon: Zap, count: 12 },
-        { id: 'prompts', label: t('dashboard.nav.prompts'), icon: FileText, count: 28 },
-        { id: 'videos', label: t('dashboard.nav.videos'), icon: Video, count: 3 },
-      ]
-    },
     {
       id: 'business',
       title: t('dashboard.nav.business'),
@@ -285,7 +308,17 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
         { id: 'competition', label: t('dashboard.nav.competition'), icon: Target, count: competitionsCount },
         { id: 'offers', label: t('dashboard.nav.offers'), icon: Package, count: offersCount },
         { id: 'campaigns', label: t('dashboard.nav.campaigns'), icon: TrendingUp, count: campaignsCount },
-        { id: 'ads', label: t('dashboard.nav.ads'), icon: Megaphone, count: 15 },
+        { id: 'ads', label: t('dashboard.nav.ads'), icon: Megaphone, count: adsCount },
+      ]
+    },
+    {
+      id: 'ai-tools',
+      title: t('dashboard.nav.aiTools'),
+      items: [
+        { id: 'agents', label: t('dashboard.nav.agents'), icon: Bot, count: agentsCount },
+        { id: 'automations', label: t('dashboard.nav.automations'), icon: Zap, count: 12 },
+        { id: 'prompts', label: t('dashboard.nav.prompts'), icon: FileText, count: 28 },
+        { id: 'videos', label: t('dashboard.nav.videos'), icon: Video, count: 3 },
       ]
     }
   ];
@@ -362,64 +395,116 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
           </button>
         </div>
 
-        {/* Navigation */}
-        <div className="flex-1 overflow-y-auto py-4">
-          {navigationSections.map((section) => (
-            <div key={section.id} className="mb-6">
-              {!sidebarCollapsed && (
-                <h3 className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
-                  {section.title}
-                </h3>
-              )}
+        {/* Navigation Container */}
+        <div className="flex-1 flex flex-col">
+          {/* Main Navigation - Scrollable */}
+          <div className="flex-1 overflow-y-auto py-4">
+            {/* Dashboard Overview Link */}
+            <div className="mb-6">
               <nav className="space-y-1 px-2">
-                {section.items.map((item) => (
-                  <Link
-                    key={item.id}
-                    to={`/dashboard/${item.id}`}
-                    className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                      activeSection === item.id
-                        ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600'
-                        : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-                    }`}
-                  >
-                    <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
-                    {!sidebarCollapsed && (
-                      <>
-                        <span className="flex-1 text-left">{item.label}</span>
-                        {item.count !== undefined && item.count !== null && (
-                          <span className="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full">
-                            {item.count}
-                          </span>
-                        )}
-                      </>
-                    )}
-                  </Link>
-                ))}
+                <Link
+                  to="/dashboard/overview"
+                  className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                    activeSection === 'overview' || activeSection === ''
+                      ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600'
+                      : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                  }`}
+                >
+                  <Home className="w-5 h-5 mr-3 flex-shrink-0" />
+                  {!sidebarCollapsed && (
+                    <span className="flex-1 text-left">{t('dashboard.nav.overview', 'Dashboard')}</span>
+                  )}
+                </Link>
               </nav>
             </div>
-          ))}
 
-          {/* Bottom Navigation */}
-          {!sidebarCollapsed && (
-            <div className="mt-auto pt-4 border-t border-gray-200">
-              <nav className="space-y-1 px-2">
-                <Link
-                  to="/dashboard/settings"
+            {navigationSections.map((section) => (
+              <div key={section.id} className="mb-6">
+                {!sidebarCollapsed && (
+                  <h3 className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                    {section.title}
+                  </h3>
+                )}
+                <nav className="space-y-1 px-2">
+                  {section.items.map((item) => (
+                    <Link
+                      key={item.id}
+                      to={`/dashboard/${item.id}`}
+                      className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                        activeSection === item.id
+                          ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600'
+                          : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
+                      }`}
+                    >
+                      <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
+                      {!sidebarCollapsed && (
+                        <>
+                          <span className="flex-1 text-left">{item.label}</span>
+                          {item.count !== undefined && item.count !== null && (
+                            <span className="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full">
+                              {item.count}
+                            </span>
+                          )}
+                        </>
+                      )}
+                    </Link>
+                  ))}
+                </nav>
+              </div>
+            ))}
+          </div>
+
+          {/* Bottom Navigation - Fixed at Bottom */}
+          <div className="border-t border-gray-200 pt-4 pb-2">
+            {/* Navigation Links */}
+            <nav className="space-y-1 px-2 mb-3">
+              <Link
+                to="/dashboard/settings"
+                className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors"
+              >
+                <Settings className="w-5 h-5 mr-3 flex-shrink-0" />
+                {!sidebarCollapsed && t('dashboard.nav.settings')}
+              </Link>
+              <Link
+                to="/dashboard/profile"
+                className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors"
+              >
+                <User className="w-5 h-5 mr-3 flex-shrink-0" />
+                {!sidebarCollapsed && t('dashboard.nav.profile')}
+              </Link>
+              {onLogout && (
+                <button
+                  onClick={onLogout}
                   className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors"
+                  title={t('dashboard.logout')}
                 >
-                  <Settings className="w-5 h-5 mr-3" />
-                  {t('dashboard.nav.settings')}
-                </Link>
-                <Link
-                  to="/dashboard/profile"
-                  className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors"
-                >
-                  <User className="w-5 h-5 mr-3" />
-                  {t('dashboard.nav.profile')}
-                </Link>
-              </nav>
+                  <LogOut className="w-5 h-5 mr-3 flex-shrink-0" />
+                  {!sidebarCollapsed && t('dashboard.logout')}
+                </button>
+              )}
+            </nav>
+
+            {/* User Identity - Very Compact and Subtle */}
+            <div className="px-2">
+              <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'px-2 py-1.5'}`}>
+                {sidebarCollapsed ? (
+                  <div className="w-6 h-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
+                    <User className="w-3 h-3 text-white" />
+                  </div>
+                ) : (
+                  <>
+                    <div className="w-6 h-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mr-2 flex-shrink-0">
+                      <User className="w-3 h-3 text-white" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="text-xs text-gray-600 truncate">{user.email}</div>
+                      <div className="text-xs text-gray-400">{t('dashboard.userRole.admin')}</div>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
 
@@ -481,26 +566,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                 <Bell className="w-5 h-5 text-gray-600" />
                 <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
               </button>
-
-              {/* User Menu */}
-              <div className="flex items-center space-x-3">
-                <div className="text-right">
-                  <div className="text-sm font-medium text-gray-900">{user.email}</div>
-                  <div className="text-xs text-gray-500">{t('dashboard.userRole.admin')}</div>
-                </div>
-                <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
-                  <User className="w-4 h-4 text-white" />
-                </div>
-                {onLogout && (
-                  <button
-                    onClick={onLogout}
-                    className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                    title={t('dashboard.logout')}
-                  >
-                    <LogOut className="w-4 h-4 text-gray-600" />
-                  </button>
-                )}
-              </div>
             </div>
           </div>
         </header>
@@ -604,13 +669,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                       <div className="flex justify-between text-sm mb-2">
                         <span className="text-gray-600">{t('dashboard.onboarding.progress', 'Progress')}</span>
                         <span className="font-medium text-blue-600">
-                          {Math.round(((businessProfilesCount > 0 ? 1 : 0) + (competitionsCount > 0 ? 1 : 0) + (offersCount > 0 ? 1 : 0) + (campaignsCount > 0 ? 1 : 0)) / 4 * 100)}%
+                          {Math.round(((businessProfilesCount > 0 ? 1 : 0) + (competitionsCount > 0 ? 1 : 0) + (offersCount > 0 ? 1 : 0) + (campaignsCount > 0 ? 1 : 0) + (adsCount > 0 ? 1 : 0)) / 5 * 100)}%
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div 
                           className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${((businessProfilesCount > 0 ? 1 : 0) + (competitionsCount > 0 ? 1 : 0) + (offersCount > 0 ? 1 : 0) + (campaignsCount > 0 ? 1 : 0)) / 4 * 100}%` }}
+                          style={{ width: `${((businessProfilesCount > 0 ? 1 : 0) + (competitionsCount > 0 ? 1 : 0) + (offersCount > 0 ? 1 : 0) + (campaignsCount > 0 ? 1 : 0) + (adsCount > 0 ? 1 : 0)) / 5 * 100}%` }}
                         ></div>
                       </div>
                     </div>
@@ -830,7 +895,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                   onCampaignsChanged={refreshCampaignsCount}
                 />
               } />
-              <Route path="ads" element={<div className="text-center py-12"><p>{t('dashboard.sections.ads.comingSoon', 'Sekcja Reklam już wkrótce')}</p></div>} />
+              <Route path="ads" element={
+                <Ads
+                  businessProfileId={selectedBusinessProfile?.id}
+                  authToken={authToken}
+                  onTokenRefreshed={onTokenRefreshed}
+                  onAdsChanged={refreshAdsCount}
+                />
+              } />
               <Route path="settings" element={<div className="text-center py-12"><p>{t('dashboard.sections.settings.comingSoon', 'Sekcja Ustawień już wkrótce')}</p></div>} />
               <Route path="profile" element={<div className="text-center py-12"><p>{t('dashboard.sections.profile.comingSoon', 'Sekcja Profilu już wkrótce')}</p></div>} />
             </Routes>

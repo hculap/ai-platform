@@ -126,6 +126,7 @@ const resources = {
       "dashboard.logout": "Wyloguj",
       
       // Navigation
+      "dashboard.nav.overview": "Panel Główny",
       "dashboard.nav.aiTools": "Narzędzia AI",
       "dashboard.nav.business": "Biznes",
       "dashboard.nav.agents": "Agenci",
@@ -560,6 +561,7 @@ const resources = {
       "dashboard.logout": "Logout",
       
       // Navigation
+      "dashboard.nav.overview": "Dashboard",
       "dashboard.nav.aiTools": "AI Tools",
       "dashboard.nav.business": "Business",
       "dashboard.nav.agents": "Agents",
