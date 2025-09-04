@@ -296,6 +296,7 @@ const resources = {
       "dashboard.stats.competitors": "Konkurenci",
       "dashboard.stats.offers": "Oferty",
       "dashboard.stats.campaigns": "Kampanie",
+      "dashboard.stats.ads": "Reklamy",
       "dashboard.stats.todayActivity": "Aktywność AI",
       
       // Onboarding
@@ -313,6 +314,9 @@ const resources = {
       "dashboard.onboarding.step4": "Utwórz Kampanię",
       "dashboard.onboarding.step4Complete": "Kampanie uruchomione",
       "dashboard.onboarding.step4Desc": "Generuj strategie marketingowe",
+      "dashboard.onboarding.step5": "Utwórz pierwszą Reklamę",
+      "dashboard.onboarding.step5Complete": "Reklamy utworzone",
+      "dashboard.onboarding.step5Desc": "Generuj kreacje reklamowe",
       "dashboard.onboarding.created": "utworzonych",
       "dashboard.onboarding.found": "znalezionych",
       "dashboard.onboarding.active": "aktywnych",
@@ -352,6 +356,8 @@ const resources = {
       "dashboard.quickActions.createCampaignDesc": "Generuj strategię marketingową",
       "dashboard.quickActions.manageOffers": "Zarządzaj Ofertami",
       "dashboard.quickActions.manageOffersDesc": "Twórz produkty i usługi",
+      "dashboard.quickActions.generateAds": "Generuj Reklamy",
+      "dashboard.quickActions.generateAdsDesc": "Twórz kreacje reklamowe",
       
       // Activity
       "dashboard.activity.title": "Ostatnia Aktywność",
@@ -493,6 +499,24 @@ const resources = {
       "ads.startByGenerating": "Rozpocznij od wygenerowania swojej pierwszej kreatywnej reklamy.",
       "ads.tryAdjustingFilters": "Spróbuj dostosować kryteria wyszukiwania lub filtrów.",
       "ads.generateFirstAd": "Generuj Swoją Pierwszą Reklamę",
+      "ads.viewDetails": "Zobacz Szczegóły",
+      "ads.modal.title": "Szczegóły Reklamy",
+      "ads.modal.headline": "Nagłówek",
+      "ads.modal.primaryText": "Tekst Główny",
+      "ads.modal.visualBrief": "Opis Wizualny",
+      "ads.modal.overlayText": "Tekst Nakładki",
+      "ads.modal.scriptText": "Skrypt",
+      "ads.modal.callToAction": "Wezwanie do Działania",
+      "ads.modal.landingUrl": "URL Docelowy",
+      "ads.modal.platform": "Platforma",
+      "ads.modal.format": "Format",
+      "ads.modal.action": "Akcja",
+      "ads.modal.context": "Kontekst",
+      "ads.modal.status": "Status",
+      "ads.modal.createdAt": "Data Utworzenia",
+      "ads.modal.updatedAt": "Data Modyfikacji",
+      "ads.allCampaigns": "Wszystkie kampanie",
+      "ads.allOffers": "Wszystkie oferty",
 
       // Common
       "common.save": "Zapisz",
@@ -758,6 +782,7 @@ const resources = {
       "dashboard.stats.competitors": "Competitors",
       "dashboard.stats.offers": "Offers",
       "dashboard.stats.campaigns": "Campaigns",
+      "dashboard.stats.ads": "Ads",
       "dashboard.stats.todayActivity": "AI Activity",
       
       // Onboarding
@@ -775,6 +800,9 @@ const resources = {
       "dashboard.onboarding.step4": "Create Campaign",
       "dashboard.onboarding.step4Complete": "Campaigns launched",
       "dashboard.onboarding.step4Desc": "Generate marketing strategies",
+      "dashboard.onboarding.step5": "Create first Ad",
+      "dashboard.onboarding.step5Complete": "Ads created",
+      "dashboard.onboarding.step5Desc": "Generate advertisement creatives",
       "dashboard.onboarding.created": "created",
       "dashboard.onboarding.found": "found",
       "dashboard.onboarding.active": "active",
@@ -814,6 +842,8 @@ const resources = {
       "dashboard.quickActions.createCampaignDesc": "Generate marketing strategy",
       "dashboard.quickActions.manageOffers": "Manage Offers",
       "dashboard.quickActions.manageOffersDesc": "Create products & services",
+      "dashboard.quickActions.generateAds": "Generate Ads",
+      "dashboard.quickActions.generateAdsDesc": "Create advertisement creatives",
       
       // Activity
       "dashboard.activity.title": "Recent Activity",
@@ -1056,6 +1086,24 @@ const resources = {
       "ads.startByGenerating": "Start by generating your first ad creative.",
       "ads.tryAdjustingFilters": "Try adjusting your search or filter criteria.",
       "ads.generateFirstAd": "Generate Your First Ad",
+      "ads.viewDetails": "View Details",
+      "ads.modal.title": "Ad Details",
+      "ads.modal.headline": "Headline",
+      "ads.modal.primaryText": "Primary Text",
+      "ads.modal.visualBrief": "Visual Brief",
+      "ads.modal.overlayText": "Overlay Text",
+      "ads.modal.scriptText": "Script",
+      "ads.modal.callToAction": "Call to Action",
+      "ads.modal.landingUrl": "Landing URL",
+      "ads.modal.platform": "Platform",
+      "ads.modal.format": "Format",
+      "ads.modal.action": "Action",
+      "ads.modal.context": "Context",
+      "ads.modal.status": "Status",
+      "ads.modal.createdAt": "Created At",
+      "ads.modal.updatedAt": "Updated At",
+      "ads.allCampaigns": "All campaigns",
+      "ads.allOffers": "All offers",
 
       // Common
       "common.save": "Save",

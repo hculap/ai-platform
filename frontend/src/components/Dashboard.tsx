@@ -329,7 +329,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     { id: 'competitions', label: t('dashboard.stats.competitors'), value: isLoadingStats ? '...' : competitionsCount.toString(), icon: Target, bgColor: 'bg-blue-100', textColor: 'text-blue-600', trend: 'Market insights' },
     { id: 'offers', label: t('dashboard.stats.offers'), value: isLoadingStats ? '...' : offersCount.toString(), icon: Package, bgColor: 'bg-purple-100', textColor: 'text-purple-600', trend: 'Products & services' },
     { id: 'campaigns', label: t('dashboard.stats.campaigns'), value: isLoadingStats ? '...' : campaignsCount.toString(), icon: TrendingUp, bgColor: 'bg-blue-100', textColor: 'text-blue-600', trend: 'Marketing strategies' },
-    { id: 'activity', label: t('dashboard.stats.todayActivity'), value: isLoadingStats ? '...' : interactionsCount.toString(), icon: Activity, bgColor: 'bg-purple-100', textColor: 'text-purple-600', trend: 'AI interactions' },
+    { id: 'ads', label: t('dashboard.stats.ads'), value: isLoadingStats ? '...' : adsCount.toString(), icon: Megaphone, bgColor: 'bg-purple-100', textColor: 'text-purple-600', trend: 'Advertisement creatives' },
   ];
 
   const businessTips = [
@@ -632,18 +632,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                 </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-6 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
               {stats.map((stat) => (
-                <div key={stat.id} className="bg-white rounded-xl p-6 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className={`w-10 h-10 ${stat.bgColor} rounded-lg flex items-center justify-center`}>
-                      <stat.icon className={`w-5 h-5 ${stat.textColor}`} />
+                <div key={stat.id} className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
+                  <div className="flex items-center justify-between mb-3">
+                    <div className={`w-8 h-8 ${stat.bgColor} rounded-lg flex items-center justify-center`}>
+                      <stat.icon className={`w-4 h-4 ${stat.textColor}`} />
                     </div>
-                    <Plus className="w-4 h-4 text-gray-400 hover:text-gray-600 cursor-pointer" />
+                    <Plus className="w-3 h-3 text-gray-400 hover:text-gray-600 cursor-pointer" />
                   </div>
                   <div>
-                    <div className="text-2xl font-bold text-gray-900 mb-1">{stat.value}</div>
-                    <div className="text-sm font-medium text-gray-600 mb-2">{stat.label}</div>
+                    <div className="text-xl font-bold text-gray-900 mb-1">{stat.value}</div>
+                    <div className="text-xs font-medium text-gray-600 mb-1">{stat.label}</div>
                     <div className="text-xs text-gray-500">{stat.trend}</div>
                   </div>
                 </div>
@@ -732,6 +732,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                         <div className="text-sm font-medium text-green-600">{campaignsCount} {t('dashboard.onboarding.running', 'running')}</div>
                       )}
                     </Link>
+
+                    <Link to="/dashboard/ads" className="flex items-center gap-4 p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-200 group">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${adsCount > 0 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+                        {adsCount > 0 ? <Check className="w-4 h-4" /> : <Megaphone className="w-4 h-4" />}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.onboarding.step5', 'Create first Ad')}</div>
+                        <div className="text-sm text-gray-500">{adsCount > 0 ? t('dashboard.onboarding.step5Complete', 'Ads created') : t('dashboard.onboarding.step5Desc', 'Generate advertisement creatives')}</div>
+                      </div>
+                      {adsCount > 0 && (
+                        <div className="text-sm font-medium text-green-600">{adsCount} {t('dashboard.onboarding.created', 'created')}</div>
+                      )}
+                    </Link>
                   </div>
                 </div>
               </div>
@@ -787,7 +800,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                   </div>
                 </div>
                 <div className="p-6">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
                     <Link to="/dashboard/agents" className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-left group">
                       <Bot className="w-8 h-8 text-blue-600 mb-2 group-hover:scale-110 transition-transform" />
                       <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.quickActions.runAgent', 'Run AI Agent')}</div>
@@ -807,6 +820,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                       <Package className="w-8 h-8 text-purple-600 mb-2 group-hover:scale-110 transition-transform" />
                       <div className="font-medium text-gray-900 group-hover:text-purple-700 transition-colors">{t('dashboard.quickActions.manageOffers', 'Manage Offers')}</div>
                       <div className="text-sm text-gray-600">{t('dashboard.quickActions.manageOffersDesc', 'Create products & services')}</div>
+                    </Link>
+                    <Link to="/dashboard/ads" className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-left group">
+                      <Megaphone className="w-8 h-8 text-blue-600 mb-2 group-hover:scale-110 transition-transform" />
+                      <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.quickActions.generateAds', 'Generate Ads')}</div>
+                      <div className="text-sm text-gray-600">{t('dashboard.quickActions.generateAdsDesc', 'Create advertisement creatives')}</div>
                     </Link>
                   </div>
                 </div>
