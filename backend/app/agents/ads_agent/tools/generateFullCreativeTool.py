@@ -259,33 +259,22 @@ class GenerateFullCreativeTool(PromptBasedTool):
             if related_offers:
                 message_parts.append(f"\nRelated Products/Services:")
                 for i, offer in enumerate(related_offers, 1):
-                    message_parts.append(f"{i}. {offer.get('name', 'N/A')} - {offer.get('price', 'N/A')} {offer.get('unit', '')}")
+                    offer_type = offer.get('type', '')
+                    type_text = f"({offer_type}) " if offer_type and offer_type != 'N/A' else ""
+                    description = offer.get('description', '')
+                    desc_text = f" - {description}" if description and description != 'N/A' else ""
+                    message_parts.append(f"{i}. {offer.get('name', 'N/A')} {type_text}{desc_text} - {offer.get('price', 'N/A')} {offer.get('unit', '')}")
         
         # Ad Specifications
         message_parts.append(f"\n=== AD SPECIFICATIONS ===")
         message_parts.append(f"Platform: {platform}")
         message_parts.append(f"Format: {format}")
         message_parts.append(f"Action: {action}")
-        if landing_url:
-            message_parts.append(f"Landing URL: {landing_url}")
         
         # Selected Headlines
         message_parts.append(f"\n=== SELECTED HEADLINES FOR CREATIVE EXPANSION ===")
         for i, headline in enumerate(selected_headlines, 1):
             message_parts.append(f"{i}. {headline}")
-        
-        # Final instruction
-        message_parts.append(f"\n=== INSTRUCTION ===")
-        message_parts.append("For each headline listed above, please generate complete creative content including:")
-        message_parts.append("1. Primary text (post copy)")
-        message_parts.append("2. Visual brief (image description or video storyboard)")
-        message_parts.append("3. Call-to-action (CTA) button text")
-        message_parts.append("4. Overlay text (optional on-image/video text)")
-        message_parts.append("5. If video format: script text for voiceover")
-        message_parts.append("6. If landing URL is missing and action requires it: suggest landing URL")
-        message_parts.append("")
-        message_parts.append("Consider the platform, format, target audience, and business context.")
-        message_parts.append("Maintain consistency with the business brand tone and communication language.")
         
         return "\n".join(message_parts)
 

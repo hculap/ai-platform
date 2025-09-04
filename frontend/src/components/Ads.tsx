@@ -42,6 +42,15 @@ import {
   Campaign
 } from '../types';
 import MarkdownRenderer from './MarkdownRenderer';
+import {
+  getAvailableFormats,
+  getAvailableActions,
+  getDefaultFormat,
+  getDefaultAction,
+  getPlatformDisplayName,
+  getFormatDisplayName,
+  getActionDisplayName
+} from '../utils/adPlatformConfig';
 
 interface AdsProps {
   businessProfileId?: string;
@@ -57,10 +66,6 @@ const AD_PLATFORMS: AdPlatform[] = [
 
 const AD_FORMATS: AdFormat[] = ['video', 'image', 'text', 'carousel'];
 
-const AD_ACTIONS: AdAction[] = [
-  'visit_page', 'submit_form', 'purchase', 'download',
-  'message', 'call', 'like', 'follow'
-];
 
 const AdsComponent: React.FC<AdsProps> = ({
   businessProfileId,
@@ -355,23 +360,6 @@ const AdsComponent: React.FC<AdsProps> = ({
     });
   };
 
-  const formatPlatformName = (platform: string) => {
-    const names: Record<string, string> = {
-      'facebook': 'Facebook',
-      'instagram': 'Instagram',
-      'google_search': 'Google Search',
-      'google_display': 'Google Display',
-      'youtube': 'YouTube',
-      'tiktok': 'TikTok',
-      'linkedin': 'LinkedIn',
-      'x': 'X (Twitter)'
-    };
-    return names[platform] || platform;
-  };
-
-  const formatActionName = (action: string) => {
-    return action.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-  };
 
   const getContextInfo = (ad: Ad) => {
     if (ad.offer_id) {
@@ -449,7 +437,7 @@ const AdsComponent: React.FC<AdsProps> = ({
               <option value="">All Platforms</option>
               {AD_PLATFORMS.map(platform => (
                 <option key={platform} value={platform}>
-                  {formatPlatformName(platform)}
+                  {getPlatformDisplayName(platform)}
                 </option>
               ))}
             </select>
@@ -529,10 +517,10 @@ const AdsComponent: React.FC<AdsProps> = ({
                       {ad.status.charAt(0).toUpperCase() + ad.status.slice(1)}
                     </span>
                     <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                      {formatPlatformName(ad.platform)}
+                      {getPlatformDisplayName(ad.platform)}
                     </span>
                     <span className="px-2 py-1 bg-purple-100 text-purple-800 rounded-full text-xs font-medium">
-                      {ad.format.charAt(0).toUpperCase() + ad.format.slice(1)}
+                      {getFormatDisplayName(ad.format)}
                     </span>
                     <span className="text-sm text-gray-500">
                       {getContextInfo(ad)}
@@ -555,7 +543,9 @@ const AdsComponent: React.FC<AdsProps> = ({
                     {ad.visual_brief && (
                       <div>
                         <span className="font-medium text-gray-700">Visual Brief:</span>
-                        <p className="text-gray-600 mt-1">{ad.visual_brief}</p>
+                        <div className="text-gray-600 mt-1">
+                          <MarkdownRenderer content={ad.visual_brief} />
+                        </div>
                       </div>
                     )}
                     
@@ -596,7 +586,7 @@ const AdsComponent: React.FC<AdsProps> = ({
                   </div>
                   
                   <div className="flex items-center space-x-4 mt-4 text-sm text-gray-500">
-                    <span>Action: {formatActionName(ad.action)}</span>
+                    <span>Action: {getActionDisplayName(ad.action)}</span>
                     <span>Created: {new Date(ad.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
@@ -696,12 +686,32 @@ const AdsComponent: React.FC<AdsProps> = ({
                       </label>
                       <select
                         value={generationParams.platform}
-                        onChange={(e) => setGenerationParams(prev => ({ ...prev, platform: e.target.value as AdPlatform }))}
+                        onChange={(e) => {
+                          const newPlatform = e.target.value as AdPlatform;
+                          const availableFormats = getAvailableFormats(newPlatform);
+                          const currentFormat = generationParams.format;
+                          const newFormat = availableFormats.includes(currentFormat) 
+                            ? currentFormat 
+                            : getDefaultFormat(newPlatform) || availableFormats[0];
+                          
+                          const availableActions = getAvailableActions(newPlatform, newFormat);
+                          const currentAction = generationParams.action;
+                          const newAction = availableActions.includes(currentAction)
+                            ? currentAction
+                            : getDefaultAction(newPlatform, newFormat) || availableActions[0];
+                          
+                          setGenerationParams(prev => ({ 
+                            ...prev, 
+                            platform: newPlatform,
+                            format: newFormat,
+                            action: newAction
+                          }));
+                        }}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
                         {AD_PLATFORMS.map(platform => (
                           <option key={platform} value={platform}>
-                            {formatPlatformName(platform)}
+                            {getPlatformDisplayName(platform)}
                           </option>
                         ))}
                       </select>
@@ -713,12 +723,25 @@ const AdsComponent: React.FC<AdsProps> = ({
                       </label>
                       <select
                         value={generationParams.format}
-                        onChange={(e) => setGenerationParams(prev => ({ ...prev, format: e.target.value as AdFormat }))}
+                        onChange={(e) => {
+                          const newFormat = e.target.value as AdFormat;
+                          const availableActions = getAvailableActions(generationParams.platform, newFormat);
+                          const currentAction = generationParams.action;
+                          const newAction = availableActions.includes(currentAction)
+                            ? currentAction
+                            : getDefaultAction(generationParams.platform, newFormat) || availableActions[0];
+                          
+                          setGenerationParams(prev => ({ 
+                            ...prev, 
+                            format: newFormat,
+                            action: newAction
+                          }));
+                        }}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
-                        {AD_FORMATS.map(format => (
+                        {getAvailableFormats(generationParams.platform).map(format => (
                           <option key={format} value={format}>
-                            {format.charAt(0).toUpperCase() + format.slice(1)}
+                            {getFormatDisplayName(format)}
                           </option>
                         ))}
                       </select>
@@ -733,9 +756,9 @@ const AdsComponent: React.FC<AdsProps> = ({
                         onChange={(e) => setGenerationParams(prev => ({ ...prev, action: e.target.value as AdAction }))}
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                       >
-                        {AD_ACTIONS.map(action => (
+                        {getAvailableActions(generationParams.platform, generationParams.format).map(action => (
                           <option key={action} value={action}>
-                            {formatActionName(action)}
+                            {getActionDisplayName(action)}
                           </option>
                         ))}
                       </select>
@@ -746,10 +769,6 @@ const AdsComponent: React.FC<AdsProps> = ({
                         Context
                       </label>
                       
-                      {/* Debug info - remove this after fixing */}
-                      <div className="text-xs text-gray-500 mb-2">
-                        Debug: Offers: {offers.length}, Campaigns: {campaigns.length}, BusinessProfileId: {businessProfileId || 'None'}
-                      </div>
                       
                       <div className="space-y-2">
                         <select
@@ -797,21 +816,6 @@ const AdsComponent: React.FC<AdsProps> = ({
                     </div>
                   </div>
 
-                  {/* Landing URL field (conditional) */}
-                  {['visit_page', 'submit_form', 'purchase', 'download'].includes(generationParams.action) && (
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Landing URL *
-                      </label>
-                      <input
-                        type="url"
-                        value={generationParams.landing_url || ''}
-                        onChange={(e) => setGenerationParams(prev => ({ ...prev, landing_url: e.target.value }))}
-                        placeholder="https://example.com/landing-page"
-                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                      />
-                    </div>
-                  )}
 
                   <div className="flex justify-end space-x-3">
                     <button
@@ -822,7 +826,7 @@ const AdsComponent: React.FC<AdsProps> = ({
                     </button>
                     <button
                       onClick={handleGenerateHeadlines}
-                      disabled={isGenerating || !generationParams.offer_id && !generationParams.campaign_id}
+                      disabled={isGenerating || (!generationParams.offer_id && !generationParams.campaign_id)}
                       className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-6 py-3 rounded-xl hover:from-blue-700 hover:to-purple-700 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed flex items-center space-x-2"
                     >
                       {isGenerating ? (
@@ -874,10 +878,10 @@ const AdsComponent: React.FC<AdsProps> = ({
                             <h4 className="font-medium text-gray-900">{headline}</h4>
                             <div className="flex items-center space-x-2 mt-1">
                               <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
-                                {formatPlatformName(generatedHeadlines.generation_params?.platform || generationParams.platform)}
+                                {getPlatformDisplayName(generatedHeadlines.generation_params?.platform || generationParams.platform)}
                               </span>
                               <span className="text-xs px-2 py-1 bg-purple-100 text-purple-800 rounded">
-                                {(generatedHeadlines.generation_params?.format || generationParams.format).charAt(0).toUpperCase() + (generatedHeadlines.generation_params?.format || generationParams.format).slice(1)}
+                                {getFormatDisplayName(generatedHeadlines.generation_params?.format || generationParams.format)}
                               </span>
                             </div>
                           </div>
@@ -967,13 +971,13 @@ const AdsComponent: React.FC<AdsProps> = ({
                             {/* Platform and Format Tags */}
                             <div className="flex items-center space-x-2">
                               <span className="text-xs px-2 py-1 bg-blue-100 text-blue-800 rounded">
-                                {formatPlatformName(generatedHeadlines?.generation_params?.platform || generationParams.platform)}
+                                {getPlatformDisplayName(generatedHeadlines?.generation_params?.platform || generationParams.platform)}
                               </span>
                               <span className="text-xs px-2 py-1 bg-purple-100 text-purple-800 rounded">
-                                {(generatedHeadlines?.generation_params?.format || generationParams.format).charAt(0).toUpperCase() + (generatedHeadlines?.generation_params?.format || generationParams.format).slice(1)}
+                                {getFormatDisplayName(generatedHeadlines?.generation_params?.format || generationParams.format)}
                               </span>
                               <span className="text-xs px-2 py-1 bg-green-100 text-green-800 rounded">
-                                {formatActionName(generatedHeadlines?.generation_params?.action || generationParams.action)}
+                                {getActionDisplayName(generatedHeadlines?.generation_params?.action || generationParams.action)}
                               </span>
                             </div>
 
@@ -991,9 +995,9 @@ const AdsComponent: React.FC<AdsProps> = ({
                             {creative.visual_brief && (
                               <div>
                                 <span className="text-sm font-medium text-gray-700">Visual Brief:</span>
-                                <p className="text-sm text-gray-600 mt-1 max-h-16 overflow-y-auto">
-                                  {creative.visual_brief}
-                                </p>
+                                <div className="text-sm text-gray-600 mt-1 max-h-16 overflow-y-auto">
+                                  <MarkdownRenderer content={creative.visual_brief} />
+                                </div>
                               </div>
                             )}
 

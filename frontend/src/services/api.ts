@@ -2262,8 +2262,7 @@ export const startCreativeGeneration = async (
         format: generationParams.format,
         action: generationParams.action,
         offer_id: generationParams.offer_id,
-        campaign_id: generationParams.campaign_id,
-        landing_url: generationParams.landing_url
+        campaign_id: generationParams.campaign_id
       },
       background: true
     }, {
@@ -2452,7 +2451,6 @@ export const saveSelectedCreatives = async (
         action: generationParams.action,
         offer_id: generationParams.offer_id,
         campaign_id: generationParams.campaign_id,
-        landing_url: creative.landing_url || generationParams.landing_url,
         status: 'draft'
       }))
     }, {

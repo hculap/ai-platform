@@ -169,13 +169,6 @@ def create_ad(business_profile_id):
                     'message': 'Campaign not found'
                 }), 404
         
-        # Validate landing_url requirement
-        landing_url = data.get('landing_url')
-        if not Ad.validate_landing_url_requirement(data['action'], landing_url):
-            return jsonify({
-                'error': ERROR_VALIDATION_ERROR,
-                'message': f'Landing URL is required for action: {data["action"]}'
-            }), 400
         
         # Create ad
         ad = Ad(
@@ -430,13 +423,6 @@ def create_ads_batch(business_profile_id):
                         'message': f'Campaign not found: {campaign_id}'
                     }), 404
             
-            # Validate landing_url requirement
-            landing_url = ad_data.get('landing_url')
-            if not Ad.validate_landing_url_requirement(ad_data['action'], landing_url):
-                return jsonify({
-                    'error': ERROR_VALIDATION_ERROR,
-                    'message': f'Landing URL is required for action: {ad_data["action"]}'
-                }), 400
             
             # Create ad
             ad = Ad(

@@ -189,7 +189,6 @@ export interface AdGenerationParams {
   action: AdAction;
   offer_id?: string;
   campaign_id?: string;
-  landing_url?: string;
 }
 
 export interface HeadlineGenerationResult {

@@ -56,8 +56,6 @@ class Ad(db.Model):
         'message', 'call', 'like', 'follow'
     ]
     
-    # Actions that require landing_url
-    ACTIONS_REQUIRING_URL = ['visit_page', 'submit_form', 'purchase', 'download']
 
     def __init__(self, business_profile_id, user_id, platform, format, action,
                  offer_id=None, campaign_id=None, headline=None, status='draft'):
@@ -131,16 +129,6 @@ class Ad(db.Model):
         """Validate that exactly one context is provided"""
         return bool(offer_id) != bool(campaign_id)  # XOR - exactly one should be True
     
-    @staticmethod
-    def validate_landing_url_requirement(action, landing_url):
-        """Validate that landing_url is provided when required by action"""
-        if action in Ad.ACTIONS_REQUIRING_URL:
-            return landing_url is not None and landing_url.strip() != ''
-        return True  # Landing URL not required for this action
-
-    def requires_landing_url(self):
-        """Check if this ad's action requires a landing URL"""
-        return self.action in self.ACTIONS_REQUIRING_URL
 
     def get_context_type(self):
         """Get the type of context (offer or campaign)"""

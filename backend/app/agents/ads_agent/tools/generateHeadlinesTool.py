@@ -267,22 +267,17 @@ class GenerateHeadlinesTool(PromptBasedTool):
             if related_offers:
                 message_parts.append(f"\nRelated Products/Services:")
                 for i, offer in enumerate(related_offers, 1):
-                    message_parts.append(f"{i}. {offer.get('name', 'N/A')} - {offer.get('price', 'N/A')} {offer.get('unit', '')}")
+                    offer_type = offer.get('type', '')
+                    type_text = f"({offer_type}) " if offer_type and offer_type != 'N/A' else ""
+                    description = offer.get('description', '')
+                    desc_text = f" - {description}" if description and description != 'N/A' else ""
+                    message_parts.append(f"{i}. {offer.get('name', 'N/A')} {type_text}{desc_text} - {offer.get('price', 'N/A')} {offer.get('unit', '')}")
         
         # Ad Specifications
         message_parts.append(f"\n=== AD SPECIFICATIONS ===")
         message_parts.append(f"Platform: {platform}")
         message_parts.append(f"Format: {format}")
         message_parts.append(f"Action: {action}")
-        if landing_url:
-            message_parts.append(f"Landing URL: {landing_url}")
-        
-        # Final instruction
-        message_parts.append(f"\n=== INSTRUCTION ===")
-        message_parts.append(f"Please generate 6-10 compelling headlines for a {format} ad on {platform}.")
-        message_parts.append(f"The ad should encourage users to {action.replace('_', ' ')}.")
-        message_parts.append("Each headline should include a short angle or promise.")
-        message_parts.append("Consider the business profile, target audience, and context when creating headlines.")
         
         return "\n".join(message_parts)
 
