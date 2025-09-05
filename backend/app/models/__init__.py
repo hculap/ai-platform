@@ -6,3 +6,5 @@ from .competition import Competition
 from .offer import Offer
 from .campaign import Campaign
 from .ad import Ad
+from .user_style import UserStyle
+from .script import Script

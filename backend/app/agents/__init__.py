@@ -9,6 +9,7 @@ from .competitors_researcher import CompetitorsResearcherAgent
 from .offer_assistant import OfferAssistantAgent
 from .campaign_generator import CampaignGeneratorAgent
 from .ads_agent import AdsAgent
+from .writer_agent import WriterAgent
 
 
 def initialize_agents() -> None:
@@ -31,6 +32,9 @@ def initialize_agents() -> None:
     # Register Ads Agent (uses prompt_id approach)
     AgentRegistry.register('ads-agent', AdsAgent)
 
+    # Register Writer Agent (uses system message approach)
+    AgentRegistry.register('writer-agent', WriterAgent)
+
     print('✅ Agent system initialized')
     agent_types = [agent_type for agent_type, _ in AgentRegistry.list_agents()]
     print(f'📋 Available agents: {agent_types}')
@@ -51,6 +55,7 @@ __all__ = [
     'OfferAssistantAgent',
     'CampaignGeneratorAgent',
     'AdsAgent',
+    'WriterAgent',
 
     # Initialization function
     'initialize_agents'

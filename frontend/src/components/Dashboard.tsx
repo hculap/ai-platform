@@ -8,13 +8,14 @@ import {
   Play, BookOpen, Lightbulb, ChevronLeft, ChevronRight, Check, X, Home
 } from 'lucide-react';
 import { User as UserType } from '../types';
-import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, updateBusinessProfile, getCompetitionsCount, getOffersCount, getCampaignsCount, getAdsCount } from '../services/api';
+import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, updateBusinessProfile, getCompetitionsCount, getOffersCount, getCampaignsCount, getAdsCount, getScriptsCount } from '../services/api';
 import BusinessProfiles from './BusinessProfiles';
 import Agents from './Agents';
 import Competition from './Competition';
 import Offers from './Offers';
 import Campaigns from './Campaigns';
 import Ads from './Ads';
+import Scripts from './Scripts';
 
 interface DashboardProps {
   user: UserType;
@@ -60,6 +61,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
   const [offersCount, setOffersCount] = useState<number>(0);
   const [campaignsCount, setCampaignsCount] = useState<number>(0);
   const [adsCount, setAdsCount] = useState<number>(0);
+  const [scriptsCount, setScriptsCount] = useState<number>(0);
   const [interactionsCount, setInteractionsCount] = useState<number>(0);
   const [isLoadingStats, setIsLoadingStats] = useState<boolean>(true);
 
@@ -197,6 +199,22 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     }
   }, [authToken, selectedBusinessProfile?.id]);
 
+  // Function to refresh scripts count
+  const refreshScriptsCount = useCallback(async () => {
+    if (!selectedBusinessProfile?.id) {
+      setScriptsCount(0);
+      return;
+    }
+    try {
+      const scriptsResult = await getScriptsCount(authToken, selectedBusinessProfile.id);
+      if (scriptsResult.success && scriptsResult.data !== undefined) {
+        setScriptsCount(scriptsResult.data);
+      }
+    } catch (error) {
+      console.error('Error refreshing scripts count:', error);
+    }
+  }, [authToken, selectedBusinessProfile?.id]);
+
   // Fetch real dashboard data
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -221,6 +239,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
         // Fetch ads count (will use selectedBusinessProfile?.id automatically)
         await refreshAdsCount();
 
+        // Fetch scripts count (will use selectedBusinessProfile?.id automatically)
+        await refreshScriptsCount();
+
         // Fetch interactions count
         const interactionsResult = await getInteractionsCount(authToken);
         if (interactionsResult.success && interactionsResult.data !== undefined) {
@@ -234,7 +255,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     };
 
     fetchDashboardData();
-  }, [authToken, refreshCompetitionsCount, refreshOffersCount, refreshCampaignsCount, refreshAdsCount]);
+  }, [authToken, refreshCompetitionsCount, refreshOffersCount, refreshCampaignsCount, refreshAdsCount, refreshScriptsCount]);
 
   // Fetch business profiles separately
   useEffect(() => {
@@ -268,6 +289,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     refreshAdsCount();
   }, [refreshAdsCount]);
 
+  // Refresh scripts count when component mounts or business profile changes
+  useEffect(() => {
+    refreshScriptsCount();
+  }, [refreshScriptsCount]);
+
   // Also refresh competitions count when selectedBusinessProfile changes
   useEffect(() => {
     if (selectedBusinessProfile?.id) {
@@ -296,6 +322,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     }
   }, [selectedBusinessProfile?.id, authToken, refreshAdsCount]);
 
+  // Also refresh scripts count when selectedBusinessProfile changes
+  useEffect(() => {
+    if (selectedBusinessProfile?.id) {
+      refreshScriptsCount();
+    }
+  }, [selectedBusinessProfile?.id, authToken, refreshScriptsCount]);
+
 
 
   // Update navigation sections with current data
@@ -309,6 +342,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
         { id: 'offers', label: t('dashboard.nav.offers'), icon: Package, count: offersCount },
         { id: 'campaigns', label: t('dashboard.nav.campaigns'), icon: TrendingUp, count: campaignsCount },
         { id: 'ads', label: t('dashboard.nav.ads'), icon: Megaphone, count: adsCount },
+        { id: 'scripts', label: t('dashboard.nav.scripts'), icon: FileText, count: scriptsCount },
       ]
     },
     {
@@ -330,6 +364,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     { id: 'offers', label: t('dashboard.stats.offers'), value: isLoadingStats ? '...' : offersCount.toString(), icon: Package, bgColor: 'bg-purple-100', textColor: 'text-purple-600', trend: 'Products & services' },
     { id: 'campaigns', label: t('dashboard.stats.campaigns'), value: isLoadingStats ? '...' : campaignsCount.toString(), icon: TrendingUp, bgColor: 'bg-blue-100', textColor: 'text-blue-600', trend: 'Marketing strategies' },
     { id: 'ads', label: t('dashboard.stats.ads'), value: isLoadingStats ? '...' : adsCount.toString(), icon: Megaphone, bgColor: 'bg-purple-100', textColor: 'text-purple-600', trend: 'Advertisement creatives' },
+    { id: 'scripts', label: t('dashboard.stats.scripts'), value: isLoadingStats ? '...' : scriptsCount.toString(), icon: FileText, bgColor: 'bg-blue-100', textColor: 'text-blue-600', trend: 'Content pieces' },
   ];
 
   const businessTips = [
@@ -800,7 +835,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                   </div>
                 </div>
                 <div className="p-6">
-                  <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-2 gap-4">
                     <Link to="/dashboard/agents" className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-left group">
                       <Bot className="w-8 h-8 text-blue-600 mb-2 group-hover:scale-110 transition-transform" />
                       <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.quickActions.runAgent', 'Run AI Agent')}</div>
@@ -825,6 +860,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                       <Megaphone className="w-8 h-8 text-blue-600 mb-2 group-hover:scale-110 transition-transform" />
                       <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.quickActions.generateAds', 'Generate Ads')}</div>
                       <div className="text-sm text-gray-600">{t('dashboard.quickActions.generateAdsDesc', 'Create advertisement creatives')}</div>
+                    </Link>
+                    <Link to="/dashboard/scripts" className="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors text-left group">
+                      <FileText className="w-8 h-8 text-purple-600 mb-2 group-hover:scale-110 transition-transform" />
+                      <div className="font-medium text-gray-900 group-hover:text-purple-700 transition-colors">{t('dashboard.quickActions.generateScripts', 'Write Content')}</div>
+                      <div className="text-sm text-gray-600">{t('dashboard.quickActions.generateScriptsDesc', 'Create content with AI assistant')}</div>
                     </Link>
                   </div>
                 </div>
@@ -919,6 +959,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                   authToken={authToken}
                   onTokenRefreshed={onTokenRefreshed}
                   onAdsChanged={refreshAdsCount}
+                />
+              } />
+              <Route path="scripts" element={
+                <Scripts
+                  businessProfileId={selectedBusinessProfile?.id}
+                  authToken={authToken}
+                  onTokenRefreshed={onTokenRefreshed}
+                  onScriptsChanged={refreshScriptsCount}
                 />
               } />
               <Route path="settings" element={<div className="text-center py-12"><p>{t('dashboard.sections.settings.comingSoon', 'Sekcja Ustawień już wkrótce')}</p></div>} />

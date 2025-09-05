@@ -163,6 +163,7 @@ def create_app(config_name='development'):
     from .routes.offers import offers_bp
     from .routes.campaigns import campaigns_bp
     from .routes.ads import ads_bp
+    from .routes.scripts import scripts_bp
 
     app.register_blueprint(auth_bp, url_prefix='/api/auth')
     app.register_blueprint(business_profiles_bp, url_prefix='/api')
@@ -171,6 +172,7 @@ def create_app(config_name='development'):
     app.register_blueprint(offers_bp, url_prefix='/api')
     app.register_blueprint(campaigns_bp, url_prefix='/api')
     app.register_blueprint(ads_bp, url_prefix='/api')
+    app.register_blueprint(scripts_bp, url_prefix='/api')
 
     # Import models to ensure they are registered with SQLAlchemy
     from .models.user import User
@@ -180,6 +182,8 @@ def create_app(config_name='development'):
     from .models.offer import Offer
     from .models.campaign import Campaign
     from .models.ad import Ad
+    from .models.user_style import UserStyle
+    from .models.script import Script
 
     # Initialize agents
     from .agents import initialize_agents

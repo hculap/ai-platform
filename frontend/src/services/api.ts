@@ -2523,4 +2523,320 @@ export const getAdsCount = async (
   }
 };
 
+// ============================================================================
+// SCRIPTS API FUNCTIONS
+// ============================================================================
+
+// Scripts Management
+export const getScripts = async (businessProfileId: string, authToken: string, filters?: any) => {
+  try {
+    const params: any = {};
+    if (filters?.script_type) params.script_type = filters.script_type;
+    if (filters?.status) params.status = filters.status;
+    
+    const response = await api.get(`/business-profiles/${businessProfileId}/scripts`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      },
+      params
+    });
+    
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (error: any) {
+    console.error('Error getting scripts:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to get scripts'
+    };
+  }
+};
+
+export const getScript = async (scriptId: string, authToken: string) => {
+  try {
+    const response = await api.get(`/scripts/${scriptId}`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+    
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (error: any) {
+    console.error('Error getting script:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to get script'
+    };
+  }
+};
+
+export const createScript = async (businessProfileId: string, scriptData: any, authToken: string) => {
+  try {
+    const response = await api.post(`/business-profiles/${businessProfileId}/scripts`, scriptData, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+    
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (error: any) {
+    console.error('Error creating script:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to create script'
+    };
+  }
+};
+
+export const updateScript = async (scriptId: string, scriptData: any, authToken: string) => {
+  try {
+    const response = await api.put(`/scripts/${scriptId}`, scriptData, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+    
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (error: any) {
+    console.error('Error updating script:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to update script'
+    };
+  }
+};
+
+export const deleteScript = async (scriptId: string, authToken: string) => {
+  try {
+    const response = await api.delete(`/scripts/${scriptId}`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+    
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (error: any) {
+    console.error('Error deleting script:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to delete script'
+    };
+  }
+};
+
+export const getScriptsCount = async (authToken: string, businessProfileId?: string) => {
+  try {
+    const params: any = {};
+    if (businessProfileId) params.business_profile_id = businessProfileId;
+    
+    const response = await api.get(`/scripts/count`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      },
+      params
+    });
+    
+    return {
+      success: true,
+      data: response.data.data || 0
+    };
+  } catch (error: any) {
+    console.error('Error getting scripts count:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to get scripts count'
+    };
+  }
+};
+
+// User Styles (Style Copy Tool) - now using agent execution API
+export const analyzeStyle = async (styleData: any, authToken: string) => {
+  try {
+    // Transform the data to match the agent execution API format
+    const agentInput = {
+      input: {
+        user_id: styleData.user_id || 'current-user', // This will be set by the backend from JWT
+        samples: styleData.samples,
+        content_types: styleData.content_types,
+        banlist_seed: styleData.banlist_seed
+      }
+    };
+    
+    // Call the agent execution API instead of the old endpoint
+    const response = await api.post('/agents/writer-agent/tools/analyze-style/call', agentInput, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+    
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (error: any) {
+    console.error('Error analyzing style:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to analyze style'
+    };
+  }
+};
+
+export const getUserStyles = async (authToken: string) => {
+  try {
+    const response = await api.get('/user-styles', {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+    
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (error: any) {
+    console.error('Error getting user styles:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to get user styles'
+    };
+  }
+};
+
+export const getUserStyle = async (styleId: string, authToken: string) => {
+  try {
+    const response = await api.get(`/user-styles/${styleId}`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+    
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (error: any) {
+    console.error('Error getting user style:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to get user style'
+    };
+  }
+};
+
+export const deleteUserStyle = async (styleId: string, authToken: string) => {
+  try {
+    const response = await api.delete(`/user-styles/${styleId}`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+    
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (error: any) {
+    console.error('Error deleting user style:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to delete user style'
+    };
+  }
+};
+
 export default api;
