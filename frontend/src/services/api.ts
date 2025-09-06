@@ -2717,7 +2717,7 @@ export const analyzeStyle = async (styleData: any, authToken: string) => {
     // Transform the data to match the agent execution API format
     const agentInput = {
       input: {
-        user_id: styleData.user_id || 'current-user', // This will be set by the backend from JWT
+        // user_id is automatically extracted from JWT by the backend
         samples: styleData.samples,
         content_types: styleData.content_types,
         banlist_seed: styleData.banlist_seed

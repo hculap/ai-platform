@@ -38,8 +38,9 @@ interface Script {
 interface UserStyle {
   id: string;
   user_id: string;
-  author_name: string;
   language: string;
+  style_name?: string; // Optional for backward compatibility with legacy records
+  sample_texts?: string[] | string; // Optional for backward compatibility
   style_card: any;
   created_at: string;
   updated_at: string;

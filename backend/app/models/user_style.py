@@ -10,6 +10,12 @@ class UserStyle(db.Model):
     user_id = db.Column(db.String(36), db.ForeignKey('users.id'), nullable=False)
     language = db.Column(db.String(10), nullable=False)
     
+    # User-defined name for the style (e.g., "My Blog Voice", "Professional Emails")
+    style_name = db.Column(db.String(255), nullable=True)
+    
+    # Store original sample texts for reference
+    sample_texts = db.Column(db.Text, nullable=True)  # JSON string
+    
     # Store the complete style analysis as JSON
     style_card = db.Column(db.Text, nullable=False)  # JSON string
     
@@ -21,9 +27,11 @@ class UserStyle(db.Model):
     user = db.relationship('User', backref=db.backref('user_styles', lazy=True))
     scripts = db.relationship('Script', backref='style', lazy=True)
 
-    def __init__(self, user_id, language, style_card):
+    def __init__(self, user_id, language, style_card, style_name=None, sample_texts=None):
         self.user_id = user_id
         self.language = language
+        self.style_name = style_name
+        self.sample_texts = json.dumps(sample_texts) if isinstance(sample_texts, (dict, list)) else sample_texts
         self.style_card = json.dumps(style_card) if isinstance(style_card, dict) else style_card
 
     @property
@@ -36,11 +44,23 @@ class UserStyle(db.Model):
         """Set style_card from a dictionary"""
         self.style_card = json.dumps(value) if isinstance(value, dict) else value
 
+    @property
+    def sample_texts_dict(self):
+        """Get sample_texts as a dictionary/list"""
+        return json.loads(self.sample_texts) if self.sample_texts else []
+
+    @sample_texts_dict.setter
+    def sample_texts_dict(self, value):
+        """Set sample_texts from a dictionary/list"""
+        self.sample_texts = json.dumps(value) if isinstance(value, (dict, list)) else value
+
     def to_dict(self):
         return {
             'id': self.id,
             'user_id': self.user_id,
             'language': self.language,
+            'style_name': self.style_name,
+            'sample_texts': self.sample_texts_dict,
             'style_card': self.style_card_dict,
             'created_at': self.created_at.isoformat() if self.created_at else None,
             'updated_at': self.updated_at.isoformat() if self.updated_at else None
@@ -48,11 +68,13 @@ class UserStyle(db.Model):
 
     def update_from_dict(self, data):
         """Update user style fields from dictionary data"""
-        allowed_fields = ['language', 'style_card']
+        allowed_fields = ['language', 'style_card', 'style_name', 'sample_texts']
         for field in allowed_fields:
             if field in data:
                 if field == 'style_card':
                     self.style_card_dict = data[field]
+                elif field == 'sample_texts':
+                    self.sample_texts_dict = data[field]
                 else:
                     setattr(self, field, data[field])
         self.updated_at = datetime.now(timezone.utc)

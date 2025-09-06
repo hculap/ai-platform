@@ -44,13 +44,33 @@ def get_user_styles():
     """Get all style cards for the current user"""
     try:
         user_id = get_jwt_identity()
+        logger.info(f"Getting user styles for user_id: {user_id}")
         
-        user_styles = UserStyle.query.filter_by(user_id=user_id).order_by(UserStyle.created_at.desc()).all()
-        
-        return jsonify({
-            'success': True,
-            'data': [style.to_dict() for style in user_styles]
-        }), 200
+        try:
+            user_styles = UserStyle.query.filter_by(user_id=user_id).order_by(UserStyle.created_at.desc()).all()
+            logger.info(f"Found {len(user_styles)} styles for user {user_id}")
+            
+            # Convert to dict and log the response data
+            style_dicts = []
+            for style in user_styles:
+                try:
+                    style_dict = style.to_dict()
+                    style_dicts.append(style_dict)
+                except Exception as style_error:
+                    logger.error(f"Error converting style {style.id} to dict: {style_error}")
+                    continue
+            
+            logger.info(f"Successfully converted {len(style_dicts)} styles to dict")
+            logger.info(f"Response data length: {len(style_dicts)}")
+            
+            return jsonify({
+                'success': True,
+                'data': style_dicts
+            }), 200
+            
+        except Exception as db_error:
+            logger.error(f"Database query error: {db_error}")
+            raise db_error
         
     except Exception as e:
         logger.error(f"Get user styles error: {str(e)}")
