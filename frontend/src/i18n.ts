@@ -368,7 +368,7 @@ const resources = {
       "scripts.subtitle": "Twórz treści z narzędziami AI",
       "scripts.loading": "Ładowanie skryptów...",
       "scripts.styleCopyTool": "Narzędzie Analizy Stylu",
-      "scripts.headlineGenerator": "Generator Nagłówków",
+      "scripts.scriptHooksGenerator": "Generator Haków Skryptowych",
       "scripts.scriptWriter": "Pisarz Skryptów",
       "scripts.headlineGeneratorDesc": "Już wkrótce - Generuj przyciągające nagłówki dla twoich treści",
       "scripts.scriptWriterDesc": "Już wkrótce - Twórz skrypty używając przeanalizowanego stylu pisania",
@@ -390,6 +390,21 @@ const resources = {
       "scripts.noScripts": "Brak utworzonych skryptów",
       "scripts.edit": "Edytuj",
       "scripts.delete": "Usuń",
+      
+      // Script Hooks Generator
+      "scriptHooks.title": "Generator Haków Skryptowych",
+      "scriptHooks.description": "Generuj przyciągające haki treści oparte na sprawdzonych kategoriach",
+      "scriptHooks.selectCategory": "Wybierz Kategorię Treści",
+      "scriptHooks.chooseCategoryPlaceholder": "Wybierz kategorię...",
+      "scriptHooks.additionalContext": "Dodatkowy Kontekst",
+      "scriptHooks.optional": "(opcjonalnie)",
+      "scriptHooks.contextPlaceholder": "Dodaj szczegóły, ostatnie wydarzenia lub obszary zainteresowania...",
+      "scriptHooks.generating": "Generowanie Haków...",
+      "scriptHooks.generateHooks": "Generuj Haki Skryptowe",
+      "scriptHooks.hooksGenerated": "Haki Skryptowe Wygenerowane",
+      "scriptHooks.selectToUse": "Kliknij na dowolny hak, aby skopiować go do schowka",
+      "scriptHooks.generateMore": "Generuj Więcej Haków",
+      "scriptHooks.noBusinessProfile": "Najpierw utwórz profil biznesowy, aby generować haki skryptowe.",
       
       // Style Copy Tool
       "styleCopyTool.existingStyles": "Twoje Style Pisania",
@@ -930,7 +945,7 @@ const resources = {
       "scripts.subtitle": "Create content with AI-powered writing tools",
       "scripts.loading": "Loading scripts...",
       "scripts.styleCopyTool": "Style Copy Tool",
-      "scripts.headlineGenerator": "Headline Generator",
+      "scripts.scriptHooksGenerator": "Script Hooks Generator",
       "scripts.scriptWriter": "Script Writer",
       "scripts.headlineGeneratorDesc": "Coming soon - Generate compelling headlines for your content",
       "scripts.scriptWriterDesc": "Coming soon - Create scripts using your analyzed writing style",
@@ -952,6 +967,21 @@ const resources = {
       "scripts.noScripts": "No scripts created yet",
       "scripts.edit": "Edit",
       "scripts.delete": "Delete",
+      
+      // Script Hooks Generator
+      "scriptHooks.title": "Script Hooks Generator",
+      "scriptHooks.description": "Generate compelling content hooks based on proven categories",
+      "scriptHooks.selectCategory": "Select Content Category",
+      "scriptHooks.chooseCategoryPlaceholder": "Choose a category...",
+      "scriptHooks.additionalContext": "Additional Context",
+      "scriptHooks.optional": "(optional)",
+      "scriptHooks.contextPlaceholder": "Add any specific details, recent events, or focus areas...",
+      "scriptHooks.generating": "Generating Hooks...",
+      "scriptHooks.generateHooks": "Generate Script Hooks",
+      "scriptHooks.hooksGenerated": "Script Hooks Generated",
+      "scriptHooks.selectToUse": "Click on any hook to copy it to your clipboard",
+      "scriptHooks.generateMore": "Generate More Hooks",
+      "scriptHooks.noBusinessProfile": "Please create a business profile first to generate script hooks.",
       
       // Style Copy Tool
       "styleCopyTool.existingStyles": "Your Writing Styles",

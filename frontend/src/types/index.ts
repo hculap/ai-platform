@@ -213,3 +213,25 @@ export interface CreativeGenerationResult {
   ads_count: number;
   business_profile_id: string;
 }
+
+// Script Hooks Generation Types
+export interface ScriptHookCategory {
+  number: string;
+  name: string;
+  purpose: string;
+  example: string;
+}
+
+export interface ScriptHookGenerationParams {
+  business_profile_id: string;
+  category: string;
+  additional_context?: string;
+}
+
+export interface ScriptHookGenerationResult {
+  hooks: string[];
+  hook_count: number;
+  business_profile_id: string;
+  category: ScriptHookCategory;
+  generation_params: ScriptHookGenerationParams;
+}

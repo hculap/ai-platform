@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { BusinessProfile, BusinessProfileApi, AnalysisResult, AuthResponse, Offer, Campaign, CampaignGenerationParams, CampaignGenerationResult, CampaignGoal, Ad, AdGenerationParams, HeadlineGenerationResult, CreativeGenerationResult } from '../types';
+import { BusinessProfile, BusinessProfileApi, AnalysisResult, AuthResponse, Offer, Campaign, CampaignGenerationParams, CampaignGenerationResult, CampaignGoal, Ad, AdGenerationParams, HeadlineGenerationResult, CreativeGenerationResult, ScriptHookGenerationParams, ScriptHookGenerationResult } from '../types';
 import { tokenManager } from './tokenManager';
 
 // API Configuration
@@ -2420,6 +2420,68 @@ export const generateCreative = async (
     return {
       success: false,
       error: error.message || 'Failed to generate creative'
+    };
+  }
+};
+
+/**
+ * Generate script hooks using Writer Agent
+ */
+export const generateScriptHooks = async (
+  params: ScriptHookGenerationParams,
+  authToken?: string
+): Promise<{ success: boolean; data?: ScriptHookGenerationResult; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    console.log('Generating script hooks with params:', params);
+    
+    // Structure the data correctly for the agent call
+    const requestData = {
+      input: params,
+      background: false  // Run synchronously for immediate results
+    };
+    
+    // Execute the writer-agent with generate-script-hooks tool
+    const result = await executeAgent('writer-agent', 'generate-script-hooks', requestData, authToken);
+    
+    if (result.success && result.data) {
+      console.log('Script hooks generation successful:', result.data);
+      
+      // Handle the actual response structure from the API
+      let hookData;
+      if (result.data.data) {
+        // Response is wrapped in a data object
+        hookData = result.data.data;
+      } else {
+        // Direct response
+        hookData = result.data;
+      }
+      
+      return {
+        success: true,
+        data: hookData as ScriptHookGenerationResult
+      };
+    } else {
+      console.error('Script hooks generation failed:', result.error);
+      return {
+        success: false,
+        error: result.error || 'Failed to generate script hooks',
+        isTokenExpired: result.isTokenExpired
+      };
+    }
+  } catch (error: any) {
+    console.error('Error generating script hooks:', error);
+    
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to generate script hooks'
     };
   }
 };

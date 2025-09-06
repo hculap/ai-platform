@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { getScripts, getUserStyles, getScriptsCount } from '../services/api';
 import StyleCopyTool from './StyleCopyTool';
+import ScriptHooksGenerator from './ScriptHooksGenerator';
 
 interface Script {
   id: string;
@@ -182,7 +183,7 @@ const Scripts: React.FC<ScriptsProps> = ({
               >
                 <div className="flex items-center gap-2">
                   <Target className="w-4 h-4" />
-                  {t('scripts.headlineGenerator', 'Headline Generator')}
+                  {t('scripts.scriptHooksGenerator', 'Script Hooks Generator')}
                 </div>
               </button>
               <button
@@ -213,17 +214,11 @@ const Scripts: React.FC<ScriptsProps> = ({
         )}
 
         {activeTab === 'headlineGenerator' && (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-100 p-8">
-            <div className="text-center py-12">
-              <Target className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                {t('scripts.headlineGenerator', 'Headline Generator')}
-              </h3>
-              <p className="text-gray-600 mb-6">
-                {t('scripts.headlineGeneratorDesc', 'Coming soon - Generate compelling headlines for your content')}
-              </p>
-            </div>
-          </div>
+          <ScriptHooksGenerator
+            businessProfileId={businessProfileId}
+            authToken={authToken}
+            onTokenRefreshed={onTokenRefreshed}
+          />
         )}
 
         {activeTab === 'scriptWriter' && (
