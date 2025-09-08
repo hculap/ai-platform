@@ -189,7 +189,8 @@ const StyleCopyTool: React.FC<StyleCopyToolProps> = ({
       const analysisData = {
         content_types: formData.content_types,
         samples: validSamples,
-        banlist_seed: formData.banlist_seed
+        banlist_seed: formData.banlist_seed,
+        style_name: formData.style_name.trim() || null // Include user-provided style name or explicit null
       };
       
       const result = await analyzeStyle(analysisData, authToken, businessProfileId);

@@ -3036,6 +3036,7 @@ export const analyzeStyle = async (styleData: any, authToken: string, businessPr
         samples: styleData.samples,
         content_types: styleData.content_types,
         banlist_seed: styleData.banlist_seed,
+        style_name: styleData.style_name, // Pass user-provided style name
         business_profile_id: businessProfileId
       }
     };

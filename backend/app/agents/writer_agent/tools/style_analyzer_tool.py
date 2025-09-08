@@ -121,10 +121,13 @@ class StyleAnalysisValidator(BaseValidator):
         
         # Optional style_name
         style_name = parameters.get('style_name')
-        if style_name and isinstance(style_name, str) and len(style_name.strip()) > 0:
+        if style_name is not None and isinstance(style_name, str) and len(style_name.strip()) > 0:
             result.set_validated_value('style_name', style_name.strip())
         else:
             result.set_validated_value('style_name', None)
+        
+        # Optional business_profile_id - preserve it in validated result
+        result.set_validated_value('business_profile_id', business_profile_id)
         
         logger.debug(f"Validation completed. is_valid: {result.is_valid}")
         logger.debug(f"Validation errors: {result.errors}")

@@ -53,11 +53,8 @@ def get_user_styles():
             
             # Filter by business profile if provided
             if business_profile_id:
-                # Show styles for this business profile OR styles with no business profile (legacy)
-                query = query.filter(
-                    (UserStyle.business_profile_id == business_profile_id) | 
-                    (UserStyle.business_profile_id.is_(None))
-                )
+                # Show only styles for this specific business profile (exclude legacy global styles)
+                query = query.filter(UserStyle.business_profile_id == business_profile_id)
             
             user_styles = query.order_by(UserStyle.created_at.desc()).all()
             logger.info(f"Found {len(user_styles)} styles for user {user_id}")
