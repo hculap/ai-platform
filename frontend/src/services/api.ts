@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { BusinessProfile, BusinessProfileApi, AnalysisResult, AuthResponse, Offer, Campaign, CampaignGenerationParams, CampaignGenerationResult, CampaignGoal, Ad, AdGenerationParams, HeadlineGenerationResult, CreativeGenerationResult, ScriptHookGenerationParams, ScriptHookGenerationResult } from '../types';
+import { BusinessProfile, BusinessProfileApi, AnalysisResult, AuthResponse, Offer, Campaign, CampaignGenerationParams, CampaignGenerationResult, CampaignGoal, Ad, AdGenerationParams, HeadlineGenerationResult, CreativeGenerationResult, ScriptHookGenerationParams, ScriptHookGenerationResult, ScriptGenerationParams, ScriptGenerationResult } from '../types';
 import { tokenManager } from './tokenManager';
 
 // API Configuration
@@ -2425,51 +2425,35 @@ export const generateCreative = async (
 };
 
 /**
- * Generate script hooks using Writer Agent
+ * Start script hooks generation in background
  */
-export const generateScriptHooks = async (
+export const startScriptHooksGeneration = async (
   params: ScriptHookGenerationParams,
-  authToken?: string
-): Promise<{ success: boolean; data?: ScriptHookGenerationResult; error?: string; isTokenExpired?: boolean }> => {
+  authToken: string
+): Promise<{ success: boolean; openaiResponseId?: string; error?: string; isTokenExpired?: boolean }> => {
   try {
-    console.log('Generating script hooks with params:', params);
-    
-    // Structure the data correctly for the agent call
-    const requestData = {
+    const response = await api.post('/agents/writer-agent/tools/generate-script-hooks/call', {
       input: params,
-      background: false  // Run synchronously for immediate results
-    };
-    
-    // Execute the writer-agent with generate-script-hooks tool
-    const result = await executeAgent('writer-agent', 'generate-script-hooks', requestData, authToken);
-    
-    if (result.success && result.data) {
-      console.log('Script hooks generation successful:', result.data);
-      
-      // Handle the actual response structure from the API
-      let hookData;
-      if (result.data.data) {
-        // Response is wrapped in a data object
-        hookData = result.data.data;
-      } else {
-        // Direct response
-        hookData = result.data;
+      background: true
+    }, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
       }
-      
+    });
+
+    if (response.data.status === 'pending' && response.data.data?.openai_response_id) {
       return {
         success: true,
-        data: hookData as ScriptHookGenerationResult
+        openaiResponseId: response.data.data.openai_response_id
       };
     } else {
-      console.error('Script hooks generation failed:', result.error);
       return {
         success: false,
-        error: result.error || 'Failed to generate script hooks',
-        isTokenExpired: result.isTokenExpired
+        error: response.data.error || 'Failed to start script hooks generation'
       };
     }
   } catch (error: any) {
-    console.error('Error generating script hooks:', error);
+    console.error('Error starting script hooks generation:', error);
     
     if (error.response?.status === 401) {
       return {
@@ -2481,7 +2465,276 @@ export const generateScriptHooks = async (
     
     return {
       success: false,
-      error: error.response?.data?.message || error.message || 'Failed to generate script hooks'
+      error: error.response?.data?.message || error.message || 'Failed to start script hooks generation'
+    };
+  }
+};
+
+/**
+ * Check script hooks generation status
+ */
+export const checkScriptHooksGenerationStatus = async (
+  openaiResponseId: string,
+  authToken: string
+): Promise<{
+  status: 'pending' | 'queued' | 'in_progress' | 'completed' | 'failed' | 'canceled' | 'error';
+  data?: ScriptHookGenerationResult;
+  error?: string;
+  isTokenExpired?: boolean;
+}> => {
+  try {
+    const response = await api.get(`/agents/writer-agent/tools/generate-script-hooks/call?job_id=${openaiResponseId}`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+
+    if (response.data && response.data.data) {
+      const generationData = response.data.data;
+      
+      if (generationData.status === 'completed') {
+        return {
+          status: 'completed',
+          data: generationData
+        };
+      } else if (generationData.status === 'pending' || generationData.status === 'queued' || generationData.status === 'in_progress') {
+        return {
+          status: generationData.status
+        };
+      } else if (generationData.status === 'failed' || generationData.status === 'error') {
+        return {
+          status: generationData.status,
+          error: generationData.error || 'Script hooks generation failed'
+        };
+      } else {
+        // Still in progress (fallback)
+        return {
+          status: 'in_progress'
+        };
+      }
+    } else {
+      return {
+        status: 'error',
+        error: 'Invalid response format'
+      };
+    }
+  } catch (error: any) {
+    console.error('Error checking script hooks generation status:', error);
+    
+    if (error.response?.status === 401) {
+      return {
+        status: 'error',
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+    
+    return {
+      status: 'error',
+      error: error.response?.data?.message || error.message || 'Failed to check generation status'
+    };
+  }
+};
+
+/**
+ * Generate script hooks using Writer Agent
+ */
+export const generateScriptHooks = async (
+  params: ScriptHookGenerationParams,
+  authToken: string
+): Promise<{ success: boolean; data?: ScriptHookGenerationResult; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    console.log('Generating script hooks with params:', params);
+    
+    // Start generation in background
+    const startResult = await startScriptHooksGeneration(params, authToken);
+    if (!startResult.success) {
+      return {
+        success: false,
+        error: startResult.error,
+        isTokenExpired: startResult.isTokenExpired
+      };
+    }
+
+    // Poll for completion
+    const openaiResponseId = startResult.openaiResponseId!;
+    let attempts = 0;
+    const maxAttempts = 60; // 5 minutes max
+    
+    while (attempts < maxAttempts) {
+      const statusResult = await checkScriptHooksGenerationStatus(openaiResponseId, authToken);
+      
+      if (statusResult.status === 'completed') {
+        return {
+          success: true,
+          data: statusResult.data
+        };
+      } else if (statusResult.status === 'failed' || statusResult.status === 'error') {
+        return {
+          success: false,
+          error: statusResult.error || 'Script hooks generation failed',
+          isTokenExpired: statusResult.isTokenExpired
+        };
+      }
+      
+      // Wait 5 seconds before next check
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      attempts++;
+    }
+    
+    // Timeout
+    return {
+      success: false,
+      error: 'Script hooks generation timed out. Please try again.'
+    };
+  } catch (error: any) {
+    console.error('Error generating script hooks:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to generate script hooks'
+    };
+  }
+};
+
+/**
+ * Start script generation using Writer Agent
+ */
+const startScriptGeneration = async (
+  params: ScriptGenerationParams,
+  authToken: string
+): Promise<{ success: boolean; openaiResponseId?: string; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.post('/agents/writer-agent/tools/generate-script/call', {
+      input: params,
+      background: true
+    }, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+
+    if (response.data.status === 'pending' && response.data.data?.openai_response_id) {
+      return {
+        success: true,
+        openaiResponseId: response.data.data.openai_response_id
+      };
+    } else {
+      return {
+        success: false,
+        error: response.data.error || 'Failed to start script generation',
+        isTokenExpired: false
+      };
+    }
+  } catch (error: any) {
+    console.error('Error starting script generation:', error);
+    const isTokenExpired = error.response?.status === 401;
+    return {
+      success: false,
+      error: error.response?.data?.error || error.message || 'Failed to start script generation',
+      isTokenExpired
+    };
+  }
+};
+
+/**
+ * Check script generation status
+ */
+const checkScriptGenerationStatus = async (
+  openaiResponseId: string,
+  authToken: string
+): Promise<{ status: string; data?: ScriptGenerationResult; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.get(`/agents/writer-agent/tools/generate-script/status/${openaiResponseId}`, {
+      headers: {
+        Authorization: `Bearer ${authToken}`
+      }
+    });
+
+    if (response.data.status === 'completed' && response.data.data) {
+      return {
+        status: 'completed',
+        data: response.data.data,
+        error: response.data.error
+      };
+    } else if (response.data.status === 'failed' || response.data.status === 'error') {
+      return {
+        status: response.data.status,
+        error: response.data.error || 'Script generation failed',
+        isTokenExpired: false
+      };
+    } else {
+      return {
+        status: response.data.status || 'pending',
+        error: response.data.error
+      };
+    }
+  } catch (error: any) {
+    console.error('Error checking script generation status:', error);
+    const isTokenExpired = error.response?.status === 401;
+    return {
+      status: 'error',
+      error: error.response?.data?.error || error.message || 'Failed to check script generation status',
+      isTokenExpired
+    };
+  }
+};
+
+/**
+ * Generate complete script using Writer Agent
+ */
+export const generateScript = async (
+  params: ScriptGenerationParams,
+  authToken: string
+): Promise<{ success: boolean; data?: ScriptGenerationResult; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    console.log('Generating script with params:', params);
+    
+    // Start generation in background
+    const startResult = await startScriptGeneration(params, authToken);
+    if (!startResult.success) {
+      return {
+        success: false,
+        error: startResult.error,
+        isTokenExpired: startResult.isTokenExpired
+      };
+    }
+
+    // Poll for completion
+    const openaiResponseId = startResult.openaiResponseId!;
+    let attempts = 0;
+    const maxAttempts = 60; // 5 minutes max
+    
+    while (attempts < maxAttempts) {
+      const statusResult = await checkScriptGenerationStatus(openaiResponseId, authToken);
+      
+      if (statusResult.status === 'completed') {
+        return {
+          success: true,
+          data: statusResult.data
+        };
+      } else if (statusResult.status === 'failed' || statusResult.status === 'error') {
+        return {
+          success: false,
+          error: statusResult.error || 'Script generation failed',
+          isTokenExpired: statusResult.isTokenExpired
+        };
+      }
+      
+      // Wait 5 seconds before next check
+      await new Promise(resolve => setTimeout(resolve, 5000));
+      attempts++;
+    }
+    
+    // Timeout
+    return {
+      success: false,
+      error: 'Script generation timed out. Please try again.'
+    };
+  } catch (error: any) {
+    console.error('Error generating script:', error);
+    return {
+      success: false,
+      error: error.message || 'Failed to generate script'
     };
   }
 };
@@ -2774,7 +3027,7 @@ export const getScriptsCount = async (authToken: string, businessProfileId?: str
 };
 
 // User Styles (Style Copy Tool) - now using agent execution API
-export const analyzeStyle = async (styleData: any, authToken: string) => {
+export const analyzeStyle = async (styleData: any, authToken: string, businessProfileId?: string) => {
   try {
     // Transform the data to match the agent execution API format
     const agentInput = {
@@ -2782,7 +3035,8 @@ export const analyzeStyle = async (styleData: any, authToken: string) => {
         // user_id is automatically extracted from JWT by the backend
         samples: styleData.samples,
         content_types: styleData.content_types,
-        banlist_seed: styleData.banlist_seed
+        banlist_seed: styleData.banlist_seed,
+        business_profile_id: businessProfileId
       }
     };
     
@@ -2814,12 +3068,18 @@ export const analyzeStyle = async (styleData: any, authToken: string) => {
   }
 };
 
-export const getUserStyles = async (authToken: string) => {
+export const getUserStyles = async (authToken: string, businessProfileId?: string) => {
   try {
+    const params: any = {};
+    if (businessProfileId) {
+      params.business_profile_id = businessProfileId;
+    }
+
     const response = await api.get('/user-styles', {
       headers: {
         Authorization: `Bearer ${authToken}`
-      }
+      },
+      params
     });
     
     return {

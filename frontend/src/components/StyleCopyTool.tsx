@@ -33,6 +33,7 @@ interface StyleCopyToolProps {
   authToken: string;
   onStyleCreated: () => void;
   onTokenRefreshed?: (newToken: string) => void;
+  businessProfileId?: string;
 }
 
 interface StyleFormData {
@@ -46,7 +47,8 @@ const StyleCopyTool: React.FC<StyleCopyToolProps> = ({
   userStyles, 
   authToken, 
   onStyleCreated, 
-  onTokenRefreshed 
+  onTokenRefreshed,
+  businessProfileId
 }) => {
   const { t, i18n } = useTranslation();
   
@@ -190,7 +192,7 @@ const StyleCopyTool: React.FC<StyleCopyToolProps> = ({
         banlist_seed: formData.banlist_seed
       };
       
-      const result = await analyzeStyle(analysisData, authToken);
+      const result = await analyzeStyle(analysisData, authToken, businessProfileId);
       
       if (result.success) {
         setSuccess(t('styleCopyTool.success', 'Style analysis completed successfully!'));

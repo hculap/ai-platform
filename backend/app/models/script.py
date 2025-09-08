@@ -31,7 +31,7 @@ class Script(db.Model):
     campaign = db.relationship('Campaign', backref=db.backref('scripts', lazy=True))
 
     # Script type options
-    SCRIPT_TYPE_OPTIONS = ['post', 'blog', 'script', 'general']
+    SCRIPT_TYPE_OPTIONS = ['post', 'blog', 'script', 'script_youtube', 'script_tiktok_reel', 'script_vsl', 'general']
     
     # Status options
     STATUS_OPTIONS = ['draft', 'published', 'archived']

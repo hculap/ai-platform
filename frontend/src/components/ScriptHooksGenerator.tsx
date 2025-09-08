@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import {
   Target,
   Loader2,
@@ -8,13 +9,15 @@ import {
   AlertCircle,
   Sparkles,
   ArrowRight,
-  MessageSquare
+  MessageSquare,
+  FileText
 } from 'lucide-react';
 import { generateScriptHooks } from '../services/api';
 import {
   ScriptHookGenerationParams,
   ScriptHookGenerationResult,
-  ScriptHookCategory
+  ScriptHookCategory,
+  ScriptHook
 } from '../types';
 
 // Define the 15 content categories
@@ -123,6 +126,7 @@ const ScriptHooksGenerator: React.FC<ScriptHooksGeneratorProps> = ({
   onTokenRefreshed
 }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
 
   // State
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -174,9 +178,10 @@ const ScriptHooksGenerator: React.FC<ScriptHooksGeneratorProps> = ({
   };
 
   // Handle copy hook
-  const handleCopyHook = async (hook: string, index: number) => {
+  const handleCopyHook = async (hook: ScriptHook | string, index: number) => {
     try {
-      await navigator.clipboard.writeText(hook);
+      const hookText = typeof hook === 'string' ? hook : hook.hook;
+      await navigator.clipboard.writeText(hookText);
       setCopiedHooks(prev => new Set(prev).add(index));
       
       // Remove from copied set after 2 seconds
@@ -190,6 +195,13 @@ const ScriptHooksGenerator: React.FC<ScriptHooksGeneratorProps> = ({
     } catch (error) {
       console.error('Failed to copy hook:', error);
     }
+  };
+
+  // Handle use hook for script generation
+  const handleUseHook = (hook: ScriptHook | string) => {
+    const hookText = typeof hook === 'string' ? hook : hook.hook;
+    const encodedHook = encodeURIComponent(hookText);
+    navigate(`/dashboard/scripts/generate?hook=${encodedHook}`);
   };
 
   // Reset form
@@ -329,7 +341,7 @@ const ScriptHooksGenerator: React.FC<ScriptHooksGeneratorProps> = ({
                 {generatedHooks.hook_count} hooks for "{generatedHooks.category?.name || 'Selected Category'}"
               </h4>
               <p className="text-gray-600 text-sm">
-                {t('scriptHooks.selectToUse', 'Click on any hook to copy it to your clipboard')}
+                {t('scriptHooks.selectToUse', 'Copy hooks to your clipboard or use them to generate complete scripts')}
               </p>
             </div>
 
@@ -339,19 +351,42 @@ const ScriptHooksGenerator: React.FC<ScriptHooksGeneratorProps> = ({
                 generatedHooks.hooks.map((hook, index) => (
                   <div
                     key={index}
-                    className="border border-gray-200 rounded-lg p-4 hover:border-purple-300 hover:shadow-sm transition-all cursor-pointer group"
-                    onClick={() => handleCopyHook(hook, index)}
+                    className="border border-gray-200 rounded-lg p-4 hover:border-purple-300 hover:shadow-sm transition-all group"
                   >
                     <div className="flex items-start justify-between gap-3">
                       <p className="text-gray-900 flex-1 leading-relaxed">
-                        {hook}
+                        {typeof hook === 'string' ? hook : (hook as ScriptHook).hook}
                       </p>
-                      <div className="flex-shrink-0">
-                        {copiedHooks.has(index) ? (
-                          <CheckCircle className="w-5 h-5 text-green-600" />
-                        ) : (
-                          <Copy className="w-5 h-5 text-gray-400 group-hover:text-purple-600 transition-colors" />
-                        )}
+                      
+                      <div className="flex items-center gap-2 flex-shrink-0">
+                        {/* Copy Button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCopyHook(hook, index);
+                          }}
+                          className="p-2 rounded-lg hover:bg-gray-100 transition-colors group/copy"
+                          title={t('scriptHooks.copyHook', 'Copy hook')}
+                        >
+                          {copiedHooks.has(index) ? (
+                            <CheckCircle className="w-4 h-4 text-green-600" />
+                          ) : (
+                            <Copy className="w-4 h-4 text-gray-400 group-hover/copy:text-gray-600 transition-colors" />
+                          )}
+                        </button>
+                        
+                        {/* Use Hook Button */}
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleUseHook(hook);
+                          }}
+                          className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg text-sm font-medium hover:from-blue-700 hover:to-purple-700 transition-all shadow-sm flex items-center gap-1.5"
+                          title={t('scriptHooks.useHook', 'Use this hook to generate a script')}
+                        >
+                          <FileText className="w-3 h-3" />
+                          {t('scriptHooks.useHook', 'Use Hook')}
+                        </button>
                       </div>
                     </div>
                   </div>

@@ -37,10 +37,12 @@ class StyleAnalysisValidator(BaseValidator):
         # Required fields (user_id comes from JWT, not from parameters)
         samples = parameters.get('samples')
         content_types = parameters.get('content_types', ['general'])
+        business_profile_id = parameters.get('business_profile_id')  # Optional
         
         # Debug: Log extracted values
         logger.debug(f"Extracted samples: {samples} (type: {type(samples)}, length: {len(samples) if samples else 'N/A'})")
         logger.debug(f"Extracted content_types: {content_types}")
+        logger.debug(f"Extracted business_profile_id: {business_profile_id}")
         
         # Validate samples
         if not samples or not isinstance(samples, list):
@@ -415,7 +417,8 @@ Return ONLY the JSON object, nothing else."""
                     language=style_card.get('language', 'unknown'),
                     style_card=style_card,
                     style_name=validated_params.get('style_name', default_name),
-                    sample_texts=sample_texts
+                    sample_texts=sample_texts,
+                    business_profile_id=validated_params.get('business_profile_id')
                 )
                 db.session.add(user_style)
                 db.session.commit()

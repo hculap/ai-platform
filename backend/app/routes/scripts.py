@@ -41,13 +41,25 @@ scripts_bp = Blueprint('scripts', __name__)
 @scripts_bp.route('/user-styles', methods=['GET'])
 @jwt_required()
 def get_user_styles():
-    """Get all style cards for the current user"""
+    """Get all style cards for the current user, optionally filtered by business_profile_id"""
     try:
         user_id = get_jwt_identity()
-        logger.info(f"Getting user styles for user_id: {user_id}")
+        business_profile_id = request.args.get('business_profile_id')
+        
+        logger.info(f"Getting user styles for user_id: {user_id}, business_profile_id: {business_profile_id}")
         
         try:
-            user_styles = UserStyle.query.filter_by(user_id=user_id).order_by(UserStyle.created_at.desc()).all()
+            query = UserStyle.query.filter_by(user_id=user_id)
+            
+            # Filter by business profile if provided
+            if business_profile_id:
+                # Show styles for this business profile OR styles with no business profile (legacy)
+                query = query.filter(
+                    (UserStyle.business_profile_id == business_profile_id) | 
+                    (UserStyle.business_profile_id.is_(None))
+                )
+            
+            user_styles = query.order_by(UserStyle.created_at.desc()).all()
             logger.info(f"Found {len(user_styles)} styles for user {user_id}")
             
             # Convert to dict and log the response data

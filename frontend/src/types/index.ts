@@ -228,10 +228,63 @@ export interface ScriptHookGenerationParams {
   additional_context?: string;
 }
 
+export interface ScriptHook {
+  category: string;
+  hook: string;
+  purpose: string;
+}
+
 export interface ScriptHookGenerationResult {
-  hooks: string[];
+  hooks: ScriptHook[];
   hook_count: number;
   business_profile_id: string;
   category: ScriptHookCategory;
   generation_params: ScriptHookGenerationParams;
+}
+
+// Script Generation Types
+export type ScriptType = 'post' | 'blog' | 'script_youtube' | 'script_tiktok_reel' | 'script_vsl' | 'general';
+
+export interface ScriptGenerationParams {
+  selected_hook: string;
+  script_type: ScriptType;
+  business_profile_id: string;
+  style_id?: string;
+  additional_context?: string;
+  offer_id?: string;
+  campaign_id?: string;
+}
+
+export interface GeneratedScript {
+  id: string;
+  user_id: string;
+  business_profile_id: string;
+  style_id?: string;
+  title: string;
+  content: string;
+  script_type: ScriptType;
+  offer_id?: string;
+  campaign_id?: string;
+  status: 'draft' | 'published' | 'archived';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ScriptGenerationResult {
+  script: GeneratedScript | null;
+  success?: boolean;
+  error?: string;
+  business_profile_id: string;
+  generation_params: {
+    selected_hook: string;
+    script_type: ScriptType;
+    style_id?: string;
+    additional_context: string;
+  };
+}
+
+export interface ScriptTypeInfo {
+  name: string;
+  description: string;
+  max_length: string;
 }

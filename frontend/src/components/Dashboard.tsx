@@ -8,7 +8,7 @@ import {
   Play, BookOpen, Lightbulb, ChevronLeft, ChevronRight, Check, X, Home
 } from 'lucide-react';
 import { User as UserType } from '../types';
-import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, updateBusinessProfile, getCompetitionsCount, getOffersCount, getCampaignsCount, getAdsCount, getScriptsCount } from '../services/api';
+import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, updateBusinessProfile, getCompetitionsCount, getOffersCount, getCampaignsCount, getAdsCount, getScriptsCount, getOffers, getCampaigns, getUserStyles } from '../services/api';
 import BusinessProfiles from './BusinessProfiles';
 import Agents from './Agents';
 import Competition from './Competition';
@@ -16,6 +16,7 @@ import Offers from './Offers';
 import Campaigns from './Campaigns';
 import Ads from './Ads';
 import Scripts from './Scripts';
+import ScriptGenerator from './ScriptGenerator';
 
 interface DashboardProps {
   user: UserType;
@@ -961,7 +962,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                   onAdsChanged={refreshAdsCount}
                 />
               } />
-              <Route path="scripts" element={
+              <Route path="scripts/*" element={
                 <Scripts
                   businessProfileId={selectedBusinessProfile?.id}
                   authToken={authToken}
