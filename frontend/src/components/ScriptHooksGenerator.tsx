@@ -20,97 +20,97 @@ import {
   ScriptHook
 } from '../types';
 
-// Define the 15 content categories
-const SCRIPT_HOOK_CATEGORIES: ScriptHookCategory[] = [
+// Define the 15 content categories using translations
+const getScriptHookCategories = (t: any): ScriptHookCategory[] => [
   {
     number: '1',
-    name: 'Trends / Industry Insight',
-    purpose: 'build authority',
-    example: '3 AI go-to-market shifts we\'re seeing this quarter (and how to respond).'
+    name: t('scriptHooks.categories.1.name', 'Trends / Industry Insight'),
+    purpose: t('scriptHooks.categories.1.purpose', 'build authority'),
+    example: t('scriptHooks.categories.1.example', '3 AI go-to-market shifts we\'re seeing this quarter (and how to respond).')
   },
   {
     number: '2',
-    name: 'Education / How-To / Playbook',
-    purpose: 'drive value & saves',
-    example: 'How to turn a landing page into a lead engine in 5 steps (templates inside).'
+    name: t('scriptHooks.categories.2.name', 'Education / How-To / Playbook'),
+    purpose: t('scriptHooks.categories.2.purpose', 'drive value & saves'),
+    example: t('scriptHooks.categories.2.example', 'How to turn a landing page into a lead engine in 5 steps (templates inside).')
   },
   {
     number: '3',
-    name: 'Use Case / Case Study',
-    purpose: 'prove ROI',
-    example: 'How ACME cut CAC by 27% using agentic outreach (stack + numbers).'
+    name: t('scriptHooks.categories.3.name', 'Use Case / Case Study'),
+    purpose: t('scriptHooks.categories.3.purpose', 'prove ROI'),
+    example: t('scriptHooks.categories.3.example', 'How ACME cut CAC by 27% using agentic outreach (stack + numbers).')
   },
   {
     number: '4',
-    name: 'Failure Story / Lessons Learned',
-    purpose: 'authenticity & engagement',
-    example: 'We shipped the wrong feature first. Here\'s the post-mortem and the 3 guardrails we added.'
+    name: t('scriptHooks.categories.4.name', 'Failure Story / Lessons Learned'),
+    purpose: t('scriptHooks.categories.4.purpose', 'authenticity & engagement'),
+    example: t('scriptHooks.categories.4.example', 'We shipped the wrong feature first. Here\'s the post-mortem and the 3 guardrails we added.')
   },
   {
     number: '5',
-    name: 'News / Announcements',
-    purpose: 'awareness',
-    example: 'We\'ve just shipped Windows support—why it matters for consumer GPUs.'
+    name: t('scriptHooks.categories.5.name', 'News / Announcements'),
+    purpose: t('scriptHooks.categories.5.purpose', 'awareness'),
+    example: t('scriptHooks.categories.5.example', 'We\'ve just shipped Windows support—why it matters for consumer GPUs.')
   },
   {
     number: '6',
-    name: 'Review / Testimonial / Social Proof',
-    purpose: 'reduce risk',
-    example: '\'Saved us 12h/week.\' — PM at Golem. Full quote + context.'
+    name: t('scriptHooks.categories.6.name', 'Review / Testimonial / Social Proof'),
+    purpose: t('scriptHooks.categories.6.purpose', 'reduce risk'),
+    example: t('scriptHooks.categories.6.example', '\'Saved us 12h/week.\' — PM at Golem. Full quote + context.')
   },
   {
     number: '7',
-    name: 'Feature Spotlight / Mini-Demo',
-    purpose: 'activate demand',
-    example: '60-sec screen capture: competitor mapping → ICP brief → outreach script.'
+    name: t('scriptHooks.categories.7.name', 'Feature Spotlight / Mini-Demo'),
+    purpose: t('scriptHooks.categories.7.purpose', 'activate demand'),
+    example: t('scriptHooks.categories.7.example', '60-sec screen capture: competitor mapping → ICP brief → outreach script.')
   },
   {
     number: '8',
-    name: 'Comparison / Benchmark',
-    purpose: 'help decisions',
-    example: 'Open-source image editors vs hosted: quality, TCO, and edit latency (charts).'
+    name: t('scriptHooks.categories.8.name', 'Comparison / Benchmark'),
+    purpose: t('scriptHooks.categories.8.purpose', 'help decisions'),
+    example: t('scriptHooks.categories.8.example', 'Open-source image editors vs hosted: quality, TCO, and edit latency (charts).')
   },
   {
     number: '9',
-    name: 'Myth-Busting / Hot Take',
-    purpose: 'spark discussion',
-    example: 'Hot take: \'Agents replace SDRs\' is wrong. Here\'s the right split of work.'
+    name: t('scriptHooks.categories.9.name', 'Myth-Busting / Hot Take'),
+    purpose: t('scriptHooks.categories.9.purpose', 'spark discussion'),
+    example: t('scriptHooks.categories.9.example', 'Hot take: \'Agents replace SDRs\' is wrong. Here\'s the right split of work.')
   },
   {
     number: '10',
-    name: 'Data Drop / Research Snippet',
-    purpose: 'credibility & shares',
-    example: 'From 2147 analyzed sites: top 5 conversion blockers (with examples).'
+    name: t('scriptHooks.categories.10.name', 'Data Drop / Research Snippet'),
+    purpose: t('scriptHooks.categories.10.purpose', 'credibility & shares'),
+    example: t('scriptHooks.categories.10.example', 'From 2147 analyzed sites: top 5 conversion blockers (with examples).')
   },
   {
     number: '11',
-    name: 'Behind the Scenes / Build in Public',
-    purpose: 'trust',
-    example: 'Our roadmap Kanban this week + what slipped (and why).'
+    name: t('scriptHooks.categories.11.name', 'Behind the Scenes / Build in Public'),
+    purpose: t('scriptHooks.categories.11.purpose', 'trust'),
+    example: t('scriptHooks.categories.11.example', 'Our roadmap Kanban this week + what slipped (and why).')
   },
   {
     number: '12',
-    name: 'Community Question / Poll',
-    purpose: 'comments & reach',
-    example: 'If you had to cut one GTM tool today, which goes first? (Poll)'
+    name: t('scriptHooks.categories.12.name', 'Community Question / Poll'),
+    purpose: t('scriptHooks.categories.12.purpose', 'comments & reach'),
+    example: t('scriptHooks.categories.12.example', 'If you had to cut one GTM tool today, which goes first? (Poll)')
   },
   {
     number: '13',
-    name: 'Templates / Checklists / Notion drops',
-    purpose: 'saves & bookmarks',
-    example: 'Free: AI Growth OS audit checklist (15 checks, copy link inside).'
+    name: t('scriptHooks.categories.13.name', 'Templates / Checklists / Notion drops'),
+    purpose: t('scriptHooks.categories.13.purpose', 'saves & bookmarks'),
+    example: t('scriptHooks.categories.13.example', 'Free: AI Growth OS audit checklist (15 checks, copy link inside).')
   },
   {
     number: '14',
-    name: 'Events: Live, Recap, Slides',
-    purpose: 'FOMO + authority',
-    example: 'Slides from my NBX talk: \'Fixing the centralized AI market\' (download).'
+    name: t('scriptHooks.categories.14.name', 'Events: Live, Recap, Slides'),
+    purpose: t('scriptHooks.categories.14.purpose', 'FOMO + authority'),
+    example: t('scriptHooks.categories.14.example', 'Slides from my NBX talk: \'Fixing the centralized AI market\' (download).')
   },
   {
     number: '15',
-    name: 'Culture / Hiring / Team Spotlight',
-    purpose: 'employer brand',
-    example: 'Why we hire \'systems\' thinkers first—3 signals from interviews.'
+    name: t('scriptHooks.categories.15.name', 'Culture / Hiring / Team Spotlight'),
+    purpose: t('scriptHooks.categories.15.purpose', 'employer brand'),
+    example: t('scriptHooks.categories.15.example', 'Why we hire \'systems\' thinkers first—3 signals from interviews.')
   }
 ];
 
@@ -118,15 +118,20 @@ interface ScriptHooksGeneratorProps {
   businessProfileId?: string;
   authToken: string;
   onTokenRefreshed?: (newToken: string) => void;
+  onHookSelected?: (hook: string) => void;
 }
 
 const ScriptHooksGenerator: React.FC<ScriptHooksGeneratorProps> = ({
   businessProfileId,
   authToken,
-  onTokenRefreshed
+  onTokenRefreshed,
+  onHookSelected
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+
+  // Get localized categories
+  const SCRIPT_HOOK_CATEGORIES = getScriptHookCategories(t);
 
   // State
   const [selectedCategory, setSelectedCategory] = useState('');
@@ -200,8 +205,15 @@ const ScriptHooksGenerator: React.FC<ScriptHooksGeneratorProps> = ({
   // Handle use hook for script generation
   const handleUseHook = (hook: ScriptHook | string) => {
     const hookText = typeof hook === 'string' ? hook : hook.hook;
-    const encodedHook = encodeURIComponent(hookText);
-    navigate(`/dashboard/scripts/generate?hook=${encodedHook}`);
+    
+    // Use callback if available (modal-based approach)
+    if (onHookSelected) {
+      onHookSelected(hookText);
+    } else {
+      // Fallback to navigation (route-based approach for backward compatibility)
+      const encodedHook = encodeURIComponent(hookText);
+      navigate(`/dashboard/scripts/generate?hook=${encodedHook}`);
+    }
   };
 
   // Reset form
@@ -341,7 +353,7 @@ const ScriptHooksGenerator: React.FC<ScriptHooksGeneratorProps> = ({
                 {generatedHooks.hook_count} hooks for "{generatedHooks.category?.name || 'Selected Category'}"
               </h4>
               <p className="text-gray-600 text-sm">
-                {t('scriptHooks.selectToUse', 'Copy hooks to your clipboard or use them to generate complete scripts')}
+                {t('scriptHooks.selectToUse', 'Kopiuj hooki do schowka lub użyj ich do generowania pełnych skryptów')}
               </p>
             </div>
 
@@ -366,7 +378,7 @@ const ScriptHooksGenerator: React.FC<ScriptHooksGeneratorProps> = ({
                             handleCopyHook(hook, index);
                           }}
                           className="p-2 rounded-lg hover:bg-gray-100 transition-colors group/copy"
-                          title={t('scriptHooks.copyHook', 'Copy hook')}
+                          title={t('scriptHooks.copyHook', 'Kopiuj hook')}
                         >
                           {copiedHooks.has(index) ? (
                             <CheckCircle className="w-4 h-4 text-green-600" />
@@ -382,10 +394,10 @@ const ScriptHooksGenerator: React.FC<ScriptHooksGeneratorProps> = ({
                             handleUseHook(hook);
                           }}
                           className="px-3 py-1.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg text-sm font-medium hover:from-blue-700 hover:to-purple-700 transition-all shadow-sm flex items-center gap-1.5"
-                          title={t('scriptHooks.useHook', 'Use this hook to generate a script')}
+                          title={t('scriptHooks.useHook', 'Użyj tego hooka do generowania skryptu')}
                         >
                           <FileText className="w-3 h-3" />
-                          {t('scriptHooks.useHook', 'Use Hook')}
+                          {t('scriptHooks.useHook', 'Użyj Hook')}
                         </button>
                       </div>
                     </div>

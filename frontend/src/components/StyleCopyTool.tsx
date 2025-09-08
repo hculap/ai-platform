@@ -15,7 +15,7 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
-import { analyzeStyle } from '../services/api';
+import { analyzeStyle, deleteUserStyle } from '../services/api';
 
 interface UserStyle {
   id: string;
@@ -87,8 +87,7 @@ const StyleCopyTool: React.FC<StyleCopyToolProps> = ({
   }, []);
 
   // State
-  const [isCreating, setIsCreating] = useState(false);
-  const [showCreateForm, setShowCreateForm] = useState(false);
+  const [activeTab, setActiveTab] = useState<'create' | 'browse'>(userStyles.length === 0 ? 'create' : 'browse');
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -197,7 +196,7 @@ const StyleCopyTool: React.FC<StyleCopyToolProps> = ({
       
       if (result.success) {
         setSuccess(t('styleCopyTool.success', 'Style analysis completed successfully!'));
-        setShowCreateForm(false);
+        setActiveTab('browse');
         onStyleCreated();
         
         // Reset form with language-aware defaults
@@ -246,6 +245,21 @@ const StyleCopyTool: React.FC<StyleCopyToolProps> = ({
   }, [i18n.language, getDefaultBanlist, formData.banlist_seed]);
   
   // Toggle style card expansion
+  const handleDeleteStyle = useCallback(async (styleId: string) => {
+    if (!window.confirm(t('styleCopyTool.confirmDelete', 'Are you sure you want to delete this style? This action cannot be undone.'))) {
+      return;
+    }
+
+    try {
+      await deleteUserStyle(styleId, authToken);
+      setSuccess(t('styleCopyTool.deleteSuccess', 'Style deleted successfully'));
+      onStyleCreated(); // Refresh the styles list
+    } catch (error: any) {
+      console.error('Failed to delete style:', error);
+      setError(error.message || t('styleCopyTool.deleteError', 'Failed to delete style'));
+    }
+  }, [authToken, onStyleCreated, t]);
+
   const toggleStyleExpansion = useCallback((styleId: string) => {
     setExpandedStyle(expandedStyle === styleId ? null : styleId);
   }, [expandedStyle]);
@@ -287,232 +301,247 @@ const StyleCopyTool: React.FC<StyleCopyToolProps> = ({
         </div>
       )}
       
-      {/* Existing Styles */}
+      {/* Tabbed Interface */}
       <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-        <div className="p-6 border-b border-gray-100">
-          <div className="flex items-center justify-between">
-            <div>
-              <h3 className="text-xl font-semibold text-gray-900">
-                {t('styleCopyTool.existingStyles', 'Your Writing Styles')}
-              </h3>
-              <p className="text-gray-600 mt-1">
-                {t('styleCopyTool.existingStylesDesc', 'Previously analyzed writing styles')}
-              </p>
-            </div>
-            
+        {/* Tab Navigation */}
+        <div className="border-b border-gray-100">
+          <div className="flex">
             <button
-              onClick={() => setShowCreateForm(!showCreateForm)}
-              className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+              onClick={() => setActiveTab('browse')}
+              className={`flex-1 px-6 py-4 text-sm font-medium rounded-tl-xl transition-colors ${
+                activeTab === 'browse'
+                  ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-500'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              }`}
             >
-              <Plus className="w-4 h-4" />
-              {t('styleCopyTool.analyzeNewStyle', 'Analyze New Style')}
+              {t('styleCopyTool.browseStyles', 'Browse Styles')} ({userStyles.length})
+            </button>
+            <button
+              onClick={() => setActiveTab('create')}
+              className={`flex-1 px-6 py-4 text-sm font-medium rounded-tr-xl transition-colors ${
+                activeTab === 'create'
+                  ? 'bg-blue-50 text-blue-700 border-b-2 border-blue-500'
+                  : 'text-gray-500 hover:text-gray-700 hover:bg-gray-50'
+              }`}
+            >
+              {t('styleCopyTool.createNewStyle', 'Create New Style')}
             </button>
           </div>
         </div>
         
+        {/* Tab Content */}
         <div className="p-6">
-          {userStyles.length === 0 ? (
-            <div className="text-center py-12">
-              <Bot className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-              <h4 className="text-lg font-medium text-gray-900 mb-2">
-                {t('styleCopyTool.noStyles', 'No Writing Styles Yet')}
-              </h4>
-              <p className="text-gray-600 mb-6">
-                {t('styleCopyTool.noStylesDesc', 'Create your first writing style analysis to get started')}
-              </p>
+          {activeTab === 'browse' ? (
+            /* Browse Styles Tab */
+            <div>
+              <div className="mb-6">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                  {t('styleCopyTool.existingStyles', 'Your Writing Styles')}
+                </h3>
+                <p className="text-gray-600">
+                  {t('styleCopyTool.existingStylesDesc', 'Previously analyzed writing styles')}
+                </p>
+              </div>
+
+              {userStyles.length === 0 ? (
+                <div className="text-center py-12">
+                  <Bot className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">
+                    {t('styleCopyTool.noStyles', 'No writing styles analyzed yet')}
+                  </h3>
+                  <p className="text-gray-500 mb-4">
+                    {t('styleCopyTool.noStylesDesc', 'Create your first writing style analysis to get started')}
+                  </p>
+                  <button
+                    onClick={() => setActiveTab('create')}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors"
+                  >
+                    <Plus className="w-4 h-4" />
+                    {t('styleCopyTool.createNewStyle', 'Create New Style')}
+                  </button>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {userStyles.map((style) => (
+                    <StyleCard
+                      key={style.id}
+                      style={style}
+                      isExpanded={expandedStyle === style.id}
+                      onToggleExpansion={() => toggleStyleExpansion(style.id)}
+                      onDelete={handleDeleteStyle}
+                    />
+                  ))}
+                </div>
+              )}
             </div>
           ) : (
-            <div className="space-y-4">
-              {userStyles.map((style) => (
-                <StyleCard
-                  key={style.id}
-                  style={style}
-                  isExpanded={expandedStyle === style.id}
-                  onToggleExpansion={() => toggleStyleExpansion(style.id)}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-      </div>
-      
-      {/* Create New Style Form */}
-      {showCreateForm && (
-        <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-          <div className="p-6 border-b border-gray-100">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="text-xl font-semibold text-gray-900">
+            /* Create New Style Tab */
+            <div>
+              <div className="mb-6">
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">
                   {t('styleCopyTool.createNewStyle', 'Analyze Writing Style')}
                 </h3>
-                <p className="text-gray-600 mt-1">
+                <p className="text-gray-600">
                   {t('styleCopyTool.createNewStyleDesc', 'Upload writing samples to analyze your unique style')}
                 </p>
               </div>
               
-              <button
-                onClick={() => setShowCreateForm(false)}
-                className="text-gray-400 hover:text-gray-600"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-          </div>
-          
-          <div className="p-6 space-y-6">
-            {/* Note about automatic language detection */}
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
-              <div className="flex items-center gap-2">
-                <Bot className="w-4 h-4 text-blue-600" />
-                <p className="text-sm text-blue-700">
-                  {t('styleCopyTool.autoDetectionNote', 'Language will be automatically detected from your writing samples using AI analysis.')}
-                </p>
+              {/* Note about automatic language detection */}
+              <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
+                <div className="flex items-center gap-2">
+                  <Bot className="w-4 h-4 text-blue-600" />
+                  <p className="text-sm text-blue-700">
+                    {t('styleCopyTool.autoDetectionNote', 'Language will be automatically detected from your writing samples using AI analysis.')}
+                  </p>
+                </div>
               </div>
-            </div>
-            
-            {/* Style Name */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('styleCopyTool.styleName', 'Style Name')} ({t('styleCopyTool.optional', 'optional')})
-              </label>
-              <p className="text-sm text-gray-500 mb-2">
-                {t('styleCopyTool.styleNameDesc', 'Give your style a memorable name like "My Blog Voice" or "Professional Emails"')}
-              </p>
-              <input
-                type="text"
-                value={formData.style_name}
-                onChange={(e) => handleInputChange('style_name', e.target.value)}
-                placeholder={t('styleCopyTool.styleNamePlaceholder', 'My Writing Style')}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            
-            {/* Content Types */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('styleCopyTool.contentTypes', 'Content Types')} *
-              </label>
-              <div className="flex flex-wrap gap-2">
-                {['post', 'blog', 'script', 'general'].map((type) => (
-                  <button
-                    key={type}
-                    onClick={() => handleContentTypeToggle(type)}
-                    className={`px-3 py-1 rounded-lg text-sm transition-colors ${
-                      formData.content_types.includes(type)
-                        ? 'bg-blue-100 text-blue-700 border border-blue-200'
-                        : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
-                    }`}
-                  >
-                    {t(`styleCopyTool.contentType.${type}`, type)}
-                  </button>
-                ))}
-              </div>
-            </div>
-            
-            {/* Writing Samples */}
-            <div>
-              <div className="flex items-center justify-between mb-2">
-                <label className="block text-sm font-medium text-gray-700">
-                  {t('styleCopyTool.writingSamples', 'Writing Samples')} *
-                </label>
-                <button
-                  onClick={addSample}
-                  className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
-                >
-                  <Plus className="w-4 h-4" />
-                  {t('styleCopyTool.addSample', 'Add Sample')}
-                </button>
-              </div>
-              <p className="text-sm text-gray-500 mb-3">
-                {t('styleCopyTool.samplesDesc', 'Provide 1-20 text samples (100-400 words each). The more samples, the better the analysis.')}
-              </p>
               
-              <div className="space-y-3">
-                {formData.samples.map((sample, index) => (
-                  <div key={index} className="relative">
-                    <div className="flex items-start gap-2">
-                      <div className="flex-1">
-                        <textarea
-                          value={sample}
-                          onChange={(e) => handleSampleChange(index, e.target.value)}
-                          placeholder={t('styleCopyTool.samplePlaceholder', 'Paste a writing sample here (minimum 50 characters)...')}
-                          rows={4}
-                          className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical"
-                        />
-                        <div className="flex items-center justify-between mt-1">
-                          <span className={`text-xs ${sample.length >= 50 ? 'text-green-600' : 'text-red-500'}`}>
-                            {sample.length} {t('styleCopyTool.characters', 'characters')}
-                            {sample.length < 50 && ` (${t('styleCopyTool.minimum', 'minimum')} 50)`}
-                          </span>
+              <div className="space-y-6">
+                {/* Style Name */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('styleCopyTool.styleName', 'Style Name')} ({t('styleCopyTool.optional', 'optional')})
+                  </label>
+                  <p className="text-sm text-gray-500 mb-2">
+                    {t('styleCopyTool.styleNameDesc', 'Give your style a memorable name like "My Blog Voice" or "Professional Emails"')}
+                  </p>
+                  <input
+                    type="text"
+                    value={formData.style_name}
+                    onChange={(e) => handleInputChange('style_name', e.target.value)}
+                    placeholder={t('styleCopyTool.styleNamePlaceholder', 'My Writing Style')}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                {/* Content Types */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('styleCopyTool.contentTypes', 'Content Types')} *
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {['post', 'blog', 'script', 'general'].map((type) => (
+                      <button
+                        key={type}
+                        onClick={() => handleContentTypeToggle(type)}
+                        className={`px-3 py-1 rounded-lg text-sm transition-colors ${
+                          formData.content_types.includes(type)
+                            ? 'bg-blue-100 text-blue-700 border border-blue-200'
+                            : 'bg-gray-100 text-gray-600 border border-gray-200 hover:bg-gray-200'
+                        }`}
+                      >
+                        {t(`styleCopyTool.contentType.${type}`, type)}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Writing Samples */}
+                <div>
+                  <div className="flex items-center justify-between mb-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      {t('styleCopyTool.writingSamples', 'Writing Samples')} *
+                    </label>
+                    <button
+                      onClick={addSample}
+                      className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
+                    >
+                      <Plus className="w-4 h-4" />
+                      {t('styleCopyTool.addSample', 'Add Sample')}
+                    </button>
+                  </div>
+                  <p className="text-sm text-gray-500 mb-3">
+                    {t('styleCopyTool.samplesDesc', 'Provide 1-20 text samples (100-400 words each). The more samples, the better the analysis.')}
+                  </p>
+                  
+                  <div className="space-y-3">
+                    {formData.samples.map((sample, index) => (
+                      <div key={index} className="relative">
+                        <div className="flex items-start gap-2">
+                          <div className="flex-1">
+                            <textarea
+                              value={sample}
+                              onChange={(e) => handleSampleChange(index, e.target.value)}
+                              placeholder={t('styleCopyTool.samplePlaceholder', 'Paste a writing sample here (minimum 50 characters)...')}
+                              rows={4}
+                              className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-vertical"
+                            />
+                            <div className="flex items-center justify-between mt-1">
+                              <span className={`text-xs ${sample.length >= 50 ? 'text-green-600' : 'text-red-500'}`}>
+                                {sample.length} {t('styleCopyTool.characters', 'characters')}
+                                {sample.length < 50 && ` (${t('styleCopyTool.minimum', 'minimum')} 50)`}
+                              </span>
+                            </div>
+                          </div>
+                          
+                          {formData.samples.length > 1 && (
+                            <button
+                              onClick={() => removeSample(index)}
+                              className="text-red-500 hover:text-red-700 mt-2"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          )}
                         </div>
                       </div>
-                      
-                      {formData.samples.length > 1 && (
-                        <button
-                          onClick={() => removeSample(index)}
-                          className="text-red-500 hover:text-red-700 mt-2"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      )}
-                    </div>
+                    ))}
                   </div>
-                ))}
+                </div>
+                
+                {/* Banlist (Advanced) */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    {t('styleCopyTool.banlist', 'Avoid These Phrases')} ({t('styleCopyTool.optional', 'optional')})
+                  </label>
+                  <p className="text-sm text-gray-500 mb-2">
+                    {t('styleCopyTool.banlistDesc', 'Phrases to avoid in generated content (one per line)')}
+                  </p>
+                  <textarea
+                    value={formData.banlist_seed.join('\n')}
+                    onChange={(e) => handleBanlistChange(e.target.value)}
+                    placeholder={
+                      i18n.language === 'pl' 
+                        ? t('styleCopyTool.banlistPlaceholderPl', 'ponadto\nadditionally\nco więcej\nkompleksowy')
+                        : t('styleCopyTool.banlistPlaceholderEn', 'across\nadditionally\nmoreover\ncomprehensive')
+                    }
+                    rows={4}
+                    className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                
+                {/* Submit Button */}
+                <div className="flex items-center gap-4">
+                  <button
+                    onClick={handleAnalyzeStyle}
+                    disabled={isAnalyzing}
+                    className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors"
+                  >
+                    {isAnalyzing ? (
+                      <>
+                        <Loader className="w-4 h-4 animate-spin" />
+                        {t('styleCopyTool.analyzing', 'Analyzing...')}
+                      </>
+                    ) : (
+                      <>
+                        <Bot className="w-4 h-4" />
+                        {t('styleCopyTool.analyzeButton', 'Analyze Writing Style')}
+                      </>
+                    )}
+                  </button>
+                  
+                  <button
+                    onClick={() => setActiveTab('browse')}
+                    disabled={isAnalyzing}
+                    className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
+                  >
+                    {t('styleCopyTool.cancel', 'Cancel')}
+                  </button>
+                </div>
               </div>
             </div>
-            
-            {/* Banlist (Advanced) */}
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                {t('styleCopyTool.banlist', 'Avoid These Phrases')} ({t('styleCopyTool.optional', 'optional')})
-              </label>
-              <p className="text-sm text-gray-500 mb-2">
-                {t('styleCopyTool.banlistDesc', 'Phrases to avoid in generated content (one per line)')}
-              </p>
-              <textarea
-                value={formData.banlist_seed.join('\n')}
-                onChange={(e) => handleBanlistChange(e.target.value)}
-                placeholder={
-                  i18n.language === 'pl' 
-                    ? t('styleCopyTool.banlistPlaceholderPl', 'ponadto\nadditionally\nco więcej\nkompleksowy')
-                    : t('styleCopyTool.banlistPlaceholderEn', 'across\nadditionally\nmoreover\ncomprehensive')
-                }
-                rows={4}
-                className="w-full border border-gray-200 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              />
-            </div>
-            
-            {/* Submit Button */}
-            <div className="flex items-center gap-4">
-              <button
-                onClick={handleAnalyzeStyle}
-                disabled={isAnalyzing}
-                className="flex items-center gap-2 px-6 py-2 bg-blue-600 hover:bg-blue-700 disabled:bg-blue-400 text-white rounded-lg transition-colors"
-              >
-                {isAnalyzing ? (
-                  <>
-                    <Loader className="w-4 h-4 animate-spin" />
-                    {t('styleCopyTool.analyzing', 'Analyzing...')}
-                  </>
-                ) : (
-                  <>
-                    <Bot className="w-4 h-4" />
-                    {t('styleCopyTool.analyzeButton', 'Analyze Writing Style')}
-                  </>
-                )}
-              </button>
-              
-              <button
-                onClick={() => setShowCreateForm(false)}
-                disabled={isAnalyzing}
-                className="px-4 py-2 text-gray-600 hover:text-gray-800 transition-colors"
-              >
-                {t('styleCopyTool.cancel', 'Cancel')}
-              </button>
-            </div>
-          </div>
+          )}
         </div>
-      )}
+      </div>
     </div>
   );
 };
@@ -522,7 +551,8 @@ const StyleCard: React.FC<{
   style: UserStyle;
   isExpanded: boolean;
   onToggleExpansion: () => void;
-}> = ({ style, isExpanded, onToggleExpansion }) => {
+  onDelete: (styleId: string) => void;
+}> = ({ style, isExpanded, onToggleExpansion, onDelete }) => {
   const { t } = useTranslation();
   
   const formatDate = (dateString: string) => {
@@ -576,24 +606,33 @@ const StyleCard: React.FC<{
             </p>
           </div>
           
-          <button
-            onClick={onToggleExpansion}
-            className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
-          >
-            {isExpanded ? (
-              <>
-                <EyeOff className="w-4 h-4" />
-                {t('styleCopyTool.hide', 'Hide Details')}
-                <ChevronUp className="w-4 h-4" />
-              </>
-            ) : (
-              <>
-                <Eye className="w-4 h-4" />
-                {t('styleCopyTool.viewDetails', 'View Details')}
-                <ChevronDown className="w-4 h-4" />
-              </>
-            )}
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => onDelete(style.id)}
+              className="flex items-center gap-1 text-sm text-red-600 hover:text-red-700 hover:bg-red-50 px-2 py-1 rounded-md transition-colors"
+              title={t('styleCopyTool.deleteStyle', 'Delete style')}
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+            <button
+              onClick={onToggleExpansion}
+              className="flex items-center gap-1 text-sm text-blue-600 hover:text-blue-700"
+            >
+              {isExpanded ? (
+                <>
+                  <EyeOff className="w-4 h-4" />
+                  {t('styleCopyTool.hide', 'Hide Details')}
+                  <ChevronUp className="w-4 h-4" />
+                </>
+              ) : (
+                <>
+                  <Eye className="w-4 h-4" />
+                  {t('styleCopyTool.viewDetails', 'View Details')}
+                  <ChevronDown className="w-4 h-4" />
+                </>
+              )}
+            </button>
+          </div>
         </div>
         
         {isExpanded && (

@@ -22,38 +22,38 @@ import {
 } from '../types';
 
 // Define script type information
-const SCRIPT_TYPES: Record<ScriptType, ScriptTypeInfo> = {
+const getScriptTypes = (t: any): Record<ScriptType, ScriptTypeInfo> => ({
   post: {
-    name: 'Social Media Post',
-    description: 'Short-form content for social media platforms',
-    max_length: '1-3 paragraphs'
+    name: t('scriptGenerator.types.post', 'Social Media Post'),
+    description: t('scriptGenerator.types.postDesc', 'Short-form content for social media platforms'),
+    max_length: t('scriptGenerator.types.postLength', '1-3 paragraphs')
   },
   blog: {
-    name: 'Blog Article',
-    description: 'Long-form content for blogs and websites',
-    max_length: '500-2000 words'
+    name: t('scriptGenerator.types.blog', 'Blog Article'),
+    description: t('scriptGenerator.types.blogDesc', 'Long-form content for blogs and websites'),
+    max_length: t('scriptGenerator.types.blogLength', '500-2000 words')
   },
   script_youtube: {
-    name: 'YouTube Script',
-    description: 'Video script optimized for YouTube format',
-    max_length: '3-10 minutes speaking time'
+    name: t('scriptGenerator.types.youtube', 'YouTube Script'),
+    description: t('scriptGenerator.types.youtubeDesc', 'Video script optimized for YouTube format'),
+    max_length: t('scriptGenerator.types.youtubeLength', '3-10 minutes speaking time')
   },
   script_tiktok_reel: {
-    name: 'TikTok/Reel Script',
-    description: 'Short video script for TikTok or Instagram Reels',
-    max_length: '15-60 seconds speaking time'
+    name: t('scriptGenerator.types.tiktokReel', 'TikTok/Reel Script'),
+    description: t('scriptGenerator.types.tiktokReelDesc', 'Short video script for TikTok or Instagram Reels'),
+    max_length: t('scriptGenerator.types.tiktokReelLength', '15-60 seconds speaking time')
   },
   script_vsl: {
-    name: 'Video Sales Letter (VSL)',
-    description: 'Sales-focused video script for conversions',
-    max_length: '5-20 minutes speaking time'
+    name: t('scriptGenerator.types.vsl', 'Video Sales Letter (VSL)'),
+    description: t('scriptGenerator.types.vslDesc', 'Sales-focused video script for conversions'),
+    max_length: t('scriptGenerator.types.vslLength', '5-20 minutes speaking time')
   },
   general: {
-    name: 'General Script',
-    description: 'General purpose content script',
-    max_length: 'Variable length'
+    name: t('scriptGenerator.types.general', 'General Script'),
+    description: t('scriptGenerator.types.generalDesc', 'General purpose content script'),
+    max_length: t('scriptGenerator.types.generalLength', 'Variable length')
   }
-};
+});
 
 interface ScriptGeneratorProps {
   businessProfileId?: string;
@@ -91,6 +91,9 @@ const ScriptGenerator: React.FC<ScriptGeneratorProps> = ({
   const { t } = useTranslation();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+
+  // Get localized script types
+  const SCRIPT_TYPES = getScriptTypes(t);
 
   // Get prefilled hook from URL params
   const prefilledHook = searchParams.get('hook') || '';

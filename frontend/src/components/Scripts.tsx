@@ -1,25 +1,24 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Routes, Route, useLocation, useNavigate, Navigate } from 'react-router-dom';
 import { 
   FileText, 
   Plus, 
   Search, 
-  Filter,
-  Zap,
-  PenTool,
-  Target,
+  X,
   Eye,
   Edit3,
   Trash2,
   Copy,
   Check,
-  X,
-  ChevronDown,
+  Zap,
+  PenTool,
+  Target,
   Bot,
-  Lightbulb
+  Lightbulb,
+  Palette,
+  Activity
 } from 'lucide-react';
-import { getScripts, getUserStyles, getScriptsCount, getOffers, getCampaigns, getScript, updateScript, deleteScript } from '../services/api';
+import { getScripts, getUserStyles, getOffers, getCampaigns, updateScript, deleteScript } from '../services/api';
 import { Offer, Campaign } from '../types';
 import StyleCopyTool from './StyleCopyTool';
 import ScriptHooksGenerator from './ScriptHooksGenerator';
@@ -66,16 +65,29 @@ const Scripts: React.FC<ScriptsProps> = ({
   onScriptsChanged 
 }) => {
   const { t } = useTranslation();
-  const location = useLocation();
-  const navigate = useNavigate();
   
-  // State
+  // Core data state
   const [scripts, setScripts] = useState<Script[]>([]);
   const [userStyles, setUserStyles] = useState<UserStyle[]>([]);
   const [offers, setOffers] = useState<Offer[]>([]);
   const [campaigns, setCampaigns] = useState<Campaign[]>([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<'scripts' | 'generator' | 'hooks' | 'styleclone'>('scripts');
+  
+  // Search functionality
+  const [searchQuery, setSearchQuery] = useState('');
+  const [filteredScripts, setFilteredScripts] = useState<Script[]>([]);
+  
+  // Modal state
+  const [modals, setModals] = useState({
+    styleClone: false,
+    hookGenerator: false,
+    scriptCreator: false,
+    preview: false
+  });
+  
+  // Modal data
+  const [selectedScript, setSelectedScript] = useState<Script | null>(null);
+  const [prefilledHook, setPrefilledHook] = useState<string>('');
 
   // Load data
   const loadData = useCallback(async () => {
@@ -118,31 +130,40 @@ const Scripts: React.FC<ScriptsProps> = ({
     loadData();
   }, [loadData]);
 
-  // Handle tab navigation based on URL
+  // Filter scripts based on search query
   useEffect(() => {
-    const path = location.pathname;
-    if (path.includes('/scripts/generate')) {
-      setActiveTab('generator');
-    } else if (path.includes('/scripts/hooks')) {
-      setActiveTab('hooks');
-    } else if (path.includes('/scripts/style-clone')) {
-      setActiveTab('styleclone');
+    if (!searchQuery.trim()) {
+      setFilteredScripts(scripts);
     } else {
-      setActiveTab('scripts');
+      const filtered = scripts.filter(script =>
+        script.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        script.content.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        script.script_type.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+      setFilteredScripts(filtered);
     }
-  }, [location.pathname]);
+  }, [scripts, searchQuery]);
 
-  const handleTabChange = (tab: 'scripts' | 'generator' | 'hooks' | 'styleclone') => {
-    setActiveTab(tab);
-    if (tab === 'scripts') {
-      navigate('/dashboard/scripts');
-    } else if (tab === 'generator') {
-      navigate('/dashboard/scripts/generate');
-    } else if (tab === 'hooks') {
-      navigate('/dashboard/scripts/hooks');
-    } else if (tab === 'styleclone') {
-      navigate('/dashboard/scripts/style-clone');
+  // Modal management functions
+  const openModal = (modalName: keyof typeof modals) => {
+    setModals(prev => ({ ...prev, [modalName]: true }));
+  };
+
+  const closeModal = (modalName: keyof typeof modals) => {
+    setModals(prev => ({ ...prev, [modalName]: false }));
+    // Reset modal data when closing
+    if (modalName === 'preview') {
+      setSelectedScript(null);
     }
+    if (modalName === 'scriptCreator') {
+      setPrefilledHook('');
+    }
+  };
+
+  const closeAllModals = () => {
+    setModals({ styleClone: false, hookGenerator: false, scriptCreator: false, preview: false });
+    setSelectedScript(null);
+    setPrefilledHook('');
   };
 
   // Handle refresh after changes
@@ -152,6 +173,28 @@ const Scripts: React.FC<ScriptsProps> = ({
       onScriptsChanged();
     }
   }, [loadData, onScriptsChanged]);
+
+  // Script action handlers
+  const handleScriptView = (script: Script) => {
+    setSelectedScript(script);
+    openModal('preview');
+  };
+
+  const handleHookCreated = (hook: string) => {
+    setPrefilledHook(hook);
+    closeModal('hookGenerator');
+    openModal('scriptCreator');
+  };
+
+  const handleStyleCreated = () => {
+    closeModal('styleClone');
+    loadData(); // Refresh styles
+  };
+
+  const handleScriptCreated = () => {
+    closeModal('scriptCreator');
+    loadData(); // Refresh scripts list
+  };
   
   if (isLoading) {
     return (
@@ -165,141 +208,330 @@ const Scripts: React.FC<ScriptsProps> = ({
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="max-w-7xl mx-auto px-6 py-8">
-        {/* Header */}
-        <div className="relative mb-8">
-          {/* Background Effects */}
-          <div className="absolute inset-0 bg-gradient-to-r from-blue-50 via-purple-50 to-pink-50 rounded-2xl"></div>
-          <div className="absolute -inset-1 bg-gradient-to-r from-blue-600/20 to-purple-600/20 rounded-2xl blur-lg"></div>
-          
-          <div className="relative bg-white rounded-2xl p-8 border border-gray-100 shadow-lg">
-            <div className="flex items-center justify-between mb-4">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center">
-                  <FileText className="w-6 h-6 text-white" />
+    <div className="h-full">
+      {/* Modern Header Panel */}
+      <div className="relative bg-gradient-to-br from-white via-gray-50 to-blue-50/30 rounded-2xl border border-gray-200/60 shadow-xl shadow-gray-100/50 backdrop-blur-sm mb-8 overflow-hidden">
+        {/* Subtle background pattern */}
+        <div className="absolute inset-0 bg-grid-gray-100/25 bg-[size:20px_20px] opacity-30"></div>
+        <div className="absolute top-0 right-0 w-64 h-64 bg-gradient-to-bl from-blue-100/40 to-transparent rounded-full blur-3xl"></div>
+        <div className="absolute bottom-0 left-0 w-48 h-48 bg-gradient-to-tr from-purple-100/40 to-transparent rounded-full blur-3xl"></div>
+        
+        {/* Content with relative positioning */}
+        <div className="relative p-8">
+          {/* Header Section - Title and Stats */}
+          <div className="flex justify-between items-center mb-8">
+            {/* Left - Title and Icon */}
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg">
+                <FileText className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-4xl font-black text-gray-900 tracking-tight">
+                  {t('scripts.title', 'Asystent Pisarski AI')}
+                </h1>
+                <p className="text-lg text-gray-600 font-medium mt-1">
+                  {t('scripts.subtitle', 'Twórz treści z narzędziami AI')}
+                </p>
+              </div>
+            </div>
+
+            {/* Right - Scripts Count */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 border border-gray-200/60 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg">
+                  <Activity className="w-4 h-4 text-white" />
                 </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-gray-900">
-                    {t('scripts.title', 'Skrypty AI')}
-                  </h1>
-                  <p className="text-gray-600">
-                    {t('scripts.subtitle', 'Twórz treści z narzędziami do pisania opartymi na AI')}
+                <div className="text-right">
+                  <p className="text-lg font-bold text-gray-900">
+                    {filteredScripts.length}
                   </p>
+                  <p className="text-xs text-gray-500">{t('scripts.totalScripts', 'Łączne Skrypty')}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Search and Actions Section */}
+          <div className="flex justify-between items-center gap-4 mb-2">
+            {/* Left - Search */}
+            <div className="flex-1 max-w-lg">
+              <div className="relative bg-white/90 backdrop-blur-sm rounded-xl border border-gray-200/60 shadow-lg">
+                <div className="relative">
+                  <Search className="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder={t('scripts.searchPlaceholder', 'Search scripts...')}
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="w-full pl-12 pr-12 py-3 bg-transparent border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500 font-medium rounded-xl"
+                  />
+                  {searchQuery && (
+                    <button
+                      onClick={() => setSearchQuery('')}
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             </div>
 
-            {/* Navigation Tabs */}
-            <div className="flex gap-2 mt-6">
+            {/* Right - Action Buttons */}
+            <div className="flex gap-3 ml-4">
               <button
-                onClick={() => handleTabChange('scripts')}
-                className={`px-6 py-3 rounded-lg font-medium text-sm transition-all ${
-                  activeTab === 'scripts'
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
+                onClick={() => openModal('styleClone')}
+                className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-purple-500 to-purple-600 hover:from-purple-600 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
               >
-                <div className="flex items-center gap-2">
-                  <FileText className="w-4 h-4" />
-                  {t('scripts.scriptsTab', 'Skrypty')}
-                </div>
+                <Palette className="w-4 h-4" />
+                <span>{t('scripts.cloneStyle', 'Klonuj Styl')}</span>
               </button>
               <button
-                onClick={() => handleTabChange('generator')}
-                className={`px-6 py-3 rounded-lg font-medium text-sm transition-all ${
-                  activeTab === 'generator'
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
+                onClick={() => openModal('hookGenerator')}
+                className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
               >
-                <div className="flex items-center gap-2">
-                  <PenTool className="w-4 h-4" />
-                  {t('scripts.scriptWriter', 'Pisarz Skryptów')}
-                </div>
+                <Target className="w-4 h-4" />
+                <span>{t('scripts.generateHook', 'Generuj Hook')}</span>
               </button>
               <button
-                onClick={() => handleTabChange('hooks')}
-                className={`px-6 py-3 rounded-lg font-medium text-sm transition-all ${
-                  activeTab === 'hooks'
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
+                onClick={() => openModal('scriptCreator')}
+                className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
               >
-                <div className="flex items-center gap-2">
-                  <Target className="w-4 h-4" />
-                  {t('scripts.generateHooks', 'Generuj Haki')}
-                </div>
-              </button>
-              <button
-                onClick={() => handleTabChange('styleclone')}
-                className={`px-6 py-3 rounded-lg font-medium text-sm transition-all ${
-                  activeTab === 'styleclone'
-                    ? 'bg-blue-600 text-white shadow-lg'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
-                }`}
-              >
-                <div className="flex items-center gap-2">
-                  <Copy className="w-4 h-4" />
-                  {t('scripts.styleClone', 'Style Clone')}
-                </div>
+                <PenTool className="w-4 h-4" />
+                <span>{t('scripts.createScript', 'Utwórz Skrypt')}</span>
               </button>
             </div>
           </div>
+
+          {/* Search Results Info */}
+          <div className="min-h-[20px] mb-2">
+            {searchQuery && (
+              <div className="flex items-center gap-2 text-sm text-emerald-600">
+                <div className="w-2 h-2 bg-emerald-500 rounded-full"></div>
+                <span className="font-medium">
+                  {t('scripts.searchResults', 'Znaleziono {{count}} skryptów', { count: filteredScripts.length })}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Scripts Grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {filteredScripts.length === 0 ? (
+          <div className="col-span-full text-center py-12">
+            <Bot className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              {searchQuery ? 
+                t('scripts.noSearchResults', 'Nie znaleziono skryptów') : 
+                t('scripts.noScripts', 'Brak utworzonych skryptów')
+              }
+            </h3>
+            <p className="text-gray-500 mb-4">
+              {searchQuery ?
+                t('scripts.tryDifferentSearch', 'Spróbuj innego wyszukiwania') :
+                t('scripts.createFirstScript', 'Utwórz pierwszy skrypt, aby rozpocząć')
+              }
+            </p>
+            {!searchQuery && (
+              <button
+                onClick={() => openModal('scriptCreator')}
+                className="inline-flex items-center gap-2 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
+              >
+                <Plus className="w-4 h-4" />
+                {t('scripts.createFirst', 'Utwórz Skrypt')}
+              </button>
+            )}
+          </div>
+        ) : (
+          filteredScripts.map((script) => (
+            <ScriptCard
+              key={script.id}
+              script={script}
+              onView={handleScriptView}
+              onEdit={handleScriptView}
+              onDelete={handleDataChange}
+              t={t}
+              authToken={authToken}
+              onTokenRefreshed={onTokenRefreshed}
+            />
+          ))
+        )}
+      </div>
+
+      {/* Modals */}
+      {modals.styleClone && (
+        <StyleCloneModal
+          isOpen={modals.styleClone}
+          onClose={() => closeModal('styleClone')}
+          userStyles={userStyles}
+          authToken={authToken}
+          businessProfileId={businessProfileId}
+          onStyleCreated={handleStyleCreated}
+          onTokenRefreshed={onTokenRefreshed}
+          t={t}
+        />
+      )}
+
+      {modals.hookGenerator && (
+        <HookGeneratorModal
+          isOpen={modals.hookGenerator}
+          onClose={() => closeModal('hookGenerator')}
+          businessProfileId={businessProfileId}
+          authToken={authToken}
+          onTokenRefreshed={onTokenRefreshed}
+          onHookCreated={handleHookCreated}
+          t={t}
+        />
+      )}
+
+      {modals.scriptCreator && (
+        <ScriptCreatorModal
+          isOpen={modals.scriptCreator}
+          onClose={() => closeModal('scriptCreator')}
+          businessProfileId={businessProfileId}
+          authToken={authToken}
+          onTokenRefreshed={onTokenRefreshed}
+          userStyles={userStyles}
+          offers={offers}
+          campaigns={campaigns}
+          prefilledHook={prefilledHook}
+          onScriptCreated={handleScriptCreated}
+          t={t}
+        />
+      )}
+
+      {modals.preview && selectedScript && (
+        <ScriptPreviewModal
+          isOpen={modals.preview}
+          onClose={() => closeModal('preview')}
+          script={selectedScript}
+          onSave={handleDataChange}
+          authToken={authToken}
+          onTokenRefreshed={onTokenRefreshed}
+          t={t}
+        />
+      )}
+    </div>
+  );
+};
+
+// Script Card Component
+interface ScriptCardProps {
+  script: Script;
+  onView: (script: Script) => void;
+  onEdit: (script: Script) => void;
+  onDelete: () => void;
+  t: any;
+  authToken: string;
+  onTokenRefreshed?: (token: string) => void;
+}
+
+const ScriptCard: React.FC<ScriptCardProps> = ({ 
+  script, 
+  onView, 
+  onEdit, 
+  onDelete,
+  t,
+  authToken,
+  onTokenRefreshed 
+}) => {
+  const [isDeleting, setIsDeleting] = useState(false);
+
+  const handleDelete = async () => {
+    if (!window.confirm(t('scripts.confirmDelete', 'Are you sure you want to delete this script?'))) {
+      return;
+    }
+
+    try {
+      setIsDeleting(true);
+      await deleteScript(script.id, authToken);
+      onDelete();
+    } catch (error) {
+      console.error('Error deleting script:', error);
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  const getTypeColor = (type: string) => {
+    switch (type) {
+      case 'post': return 'bg-blue-100 text-blue-700';
+      case 'blog': return 'bg-green-100 text-green-700';
+      case 'script': return 'bg-purple-100 text-purple-700';
+      default: return 'bg-orange-100 text-orange-700';
+    }
+  };
+
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'published': return 'bg-green-100 text-green-700';
+      case 'draft': return 'bg-yellow-100 text-yellow-700';
+      case 'archived': return 'bg-gray-100 text-gray-700';
+      default: return 'bg-gray-100 text-gray-700';
+    }
+  };
+
+  return (
+    <div className="bg-white rounded-2xl border border-gray-200/60 p-6 hover:border-blue-300/60 hover:shadow-lg transition-all duration-200 cursor-pointer group"
+         onClick={() => onView(script)}>
+      <div className="flex items-start justify-between">
+        <div className="flex-1 min-w-0">
+          {/* Header */}
+          <div className="flex items-start gap-4 mb-4">
+            <div className="p-2 bg-gradient-to-r from-blue-500/10 to-purple-500/10 rounded-xl group-hover:from-blue-500/20 group-hover:to-purple-500/20 transition-colors">
+              <FileText className="w-5 h-5 text-blue-600" />
+            </div>
+            <div className="flex-1 min-w-0">
+              <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">
+                {script.title}
+              </h3>
+              <p className="text-sm text-gray-600 line-clamp-2 mb-3">
+                {script.content.substring(0, 120)}...
+              </p>
+            </div>
+          </div>
+
+          {/* Metadata */}
+          <div className="flex items-center gap-3 text-xs">
+            <span className={`px-2 py-1 rounded-full font-medium ${getTypeColor(script.script_type)}`}>
+              {t(`scripts.${script.script_type}`, script.script_type)}
+            </span>
+            <span className={`px-2 py-1 rounded-full font-medium ${getStatusColor(script.status)}`}>
+              {t(`scripts.${script.status}`, script.status)}
+            </span>
+            <span className="text-gray-500">
+              {new Date(script.created_at).toLocaleDateString()}
+            </span>
+          </div>
         </div>
 
-        {/* Routed Content */}
-        <Routes>
-          <Route path="/" element={
-            <ScriptsListView 
-              scripts={scripts}
-              onDataChange={handleDataChange}
-              businessProfileId={businessProfileId}
-              authToken={authToken}
-              onTokenRefreshed={onTokenRefreshed}
-              userStyles={userStyles}
-              t={t}
-            />
-          } />
-          <Route path="/generate" element={
-            <ScriptGenerator
-              businessProfileId={businessProfileId}
-              authToken={authToken}
-              onTokenRefreshed={onTokenRefreshed}
-              userStyles={userStyles.map(style => ({
-                id: style.id,
-                style_name: style.style_name || 'Unnamed Style',
-                language: style.language,
-                content_types: style.style_card?.content_types || ['general']
-              }))}
-              offers={offers.map(offer => ({
-                id: offer.id,
-                name: offer.name,
-                type: offer.type,
-                description: offer.description,
-                price: offer.price?.toString(),
-                unit: offer.unit
-              }))}
-              campaigns={campaigns}
-            />
-          } />
-          <Route path="/hooks" element={
-            <ScriptHooksGenerator
-              businessProfileId={businessProfileId}
-              authToken={authToken}
-              onTokenRefreshed={onTokenRefreshed}
-            />
-          } />
-          <Route path="/style-clone" element={
-            <StyleCopyTool
-              userStyles={userStyles}
-              authToken={authToken}
-              onStyleCreated={handleDataChange}
-              onTokenRefreshed={onTokenRefreshed}
-              businessProfileId={businessProfileId}
-            />
-          } />
-        </Routes>
+        {/* Action buttons */}
+        <div className="flex items-center gap-1 ml-4 opacity-0 group-hover:opacity-100 transition-opacity">
+          <button 
+            onClick={(e) => { e.stopPropagation(); onView(script); }}
+            className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+            title={t('scripts.view', 'View script')}
+          >
+            <Eye className="w-4 h-4" />
+          </button>
+          <button 
+            onClick={(e) => { e.stopPropagation(); onEdit(script); }}
+            className="p-2 text-gray-400 hover:text-green-600 hover:bg-green-50 rounded-lg transition-colors"
+            title={t('scripts.edit', 'Edit script')}
+          >
+            <Edit3 className="w-4 h-4" />
+          </button>
+          <button 
+            onClick={(e) => { e.stopPropagation(); handleDelete(); }}
+            disabled={isDeleting}
+            className="p-2 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+            title={t('scripts.delete', 'Delete script')}
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
       </div>
     </div>
   );
@@ -796,6 +1028,369 @@ const ScriptsListView: React.FC<ScriptsListViewProps> = ({
           t={t}
         />
       )}
+    </div>
+  );
+};
+
+// StyleClone Modal Component
+interface StyleCloneModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  userStyles: UserStyle[];
+  authToken: string;
+  businessProfileId?: string;
+  onStyleCreated: () => void;
+  onTokenRefreshed?: (token: string) => void;
+  t: any;
+}
+
+const StyleCloneModal: React.FC<StyleCloneModalProps> = ({
+  isOpen,
+  onClose,
+  userStyles,
+  authToken,
+  businessProfileId,
+  onStyleCreated,
+  onTokenRefreshed,
+  t
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] flex flex-col shadow-2xl">
+        <div className="p-6 border-b border-gray-200 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">
+                {t('scripts.styleClone', 'Style Clone')}
+              </h2>
+              <p className="text-gray-600 mt-1">
+                {t('scripts.styleCloneDesc', 'Analyze your writing style or browse existing styles')}
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto">
+          <StyleCopyTool
+            userStyles={userStyles}
+            authToken={authToken}
+            onStyleCreated={onStyleCreated}
+            onTokenRefreshed={onTokenRefreshed}
+            businessProfileId={businessProfileId}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Hook Generator Modal Component
+interface HookGeneratorModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  businessProfileId?: string;
+  authToken: string;
+  onTokenRefreshed?: (token: string) => void;
+  onHookCreated: (hook: string) => void;
+  t: any;
+}
+
+const HookGeneratorModal: React.FC<HookGeneratorModalProps> = ({
+  isOpen,
+  onClose,
+  businessProfileId,
+  authToken,
+  onTokenRefreshed,
+  onHookCreated,
+  t
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl">
+        <div className="p-6 border-b border-gray-200 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">
+                {t('scripts.hookGenerator', 'Hook Generator')}
+              </h2>
+              <p className="text-gray-600 mt-1">
+                {t('scripts.hookGeneratorDesc', 'Generate compelling hooks for your content')}
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto">
+          <ScriptHooksGenerator
+            businessProfileId={businessProfileId}
+            authToken={authToken}
+            onTokenRefreshed={onTokenRefreshed}
+            onHookSelected={onHookCreated}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Script Creator Modal Component  
+interface ScriptCreatorModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  businessProfileId?: string;
+  authToken: string;
+  onTokenRefreshed?: (token: string) => void;
+  userStyles: UserStyle[];
+  offers: Offer[];
+  campaigns: Campaign[];
+  prefilledHook?: string;
+  onScriptCreated: () => void;
+  t: any;
+}
+
+const ScriptCreatorModal: React.FC<ScriptCreatorModalProps> = ({
+  isOpen,
+  onClose,
+  businessProfileId,
+  authToken,
+  onTokenRefreshed,
+  userStyles,
+  offers,
+  campaigns,
+  prefilledHook,
+  onScriptCreated,
+  t
+}) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl max-w-6xl w-full max-h-[90vh] flex flex-col shadow-2xl">
+        <div className="p-6 border-b border-gray-200 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold text-gray-900">
+                {t('scripts.scriptCreator', 'Script Creator')}
+              </h2>
+              <p className="text-gray-600 mt-1">
+                {t('scripts.scriptCreatorDesc', 'Create compelling scripts with AI assistance')}
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-gray-400 hover:text-gray-600 p-2 rounded-lg hover:bg-gray-100"
+            >
+              <X className="w-6 h-6" />
+            </button>
+          </div>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto">
+          <ScriptGenerator
+            businessProfileId={businessProfileId}
+            authToken={authToken}
+            onTokenRefreshed={onTokenRefreshed}
+            userStyles={userStyles.map(style => ({
+              id: style.id,
+              style_name: style.style_name || 'Unnamed Style',
+              language: style.language,
+              content_types: style.style_card?.content_types || ['general']
+            }))}
+            offers={offers.map(offer => ({
+              id: offer.id,
+              name: offer.name,
+              type: offer.type,
+              description: offer.description,
+              price: offer.price?.toString(),
+              unit: offer.unit
+            }))}
+            campaigns={campaigns}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Script Preview Modal Component
+interface ScriptPreviewModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  script: Script;
+  onSave: () => void;
+  authToken: string;
+  onTokenRefreshed?: (token: string) => void;
+  t: any;
+}
+
+const ScriptPreviewModal: React.FC<ScriptPreviewModalProps> = ({
+  isOpen,
+  onClose,
+  script,
+  onSave,
+  authToken,
+  onTokenRefreshed,
+  t
+}) => {
+  const [isEditing, setIsEditing] = useState(false);
+  const [editData, setEditData] = useState({
+    title: script.title,
+    content: script.content,
+    script_type: script.script_type,
+    status: script.status
+  });
+  const [isLoading, setIsLoading] = useState(false);
+
+  const handleSave = async () => {
+    try {
+      setIsLoading(true);
+      await updateScript(script.id, editData, authToken);
+      onSave();
+      setIsEditing(false);
+    } catch (error) {
+      console.error('Error updating script:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+      <div className="bg-white rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl">
+        <div className="p-6 border-b border-gray-200 flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex-1 min-w-0">
+              {isEditing ? (
+                <input
+                  type="text"
+                  value={editData.title}
+                  onChange={(e) => setEditData({ ...editData, title: e.target.value })}
+                  className="text-2xl font-bold text-gray-900 w-full border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 rounded-lg px-2 py-1"
+                />
+              ) : (
+                <h2 className="text-2xl font-bold text-gray-900 truncate">
+                  {script.title}
+                </h2>
+              )}
+              <div className="flex items-center gap-3 mt-2">
+                <span className="px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">
+                  {t(`scripts.${script.script_type}`, script.script_type)}
+                </span>
+                <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
+                  {t(`scripts.${script.status}`, script.status)}
+                </span>
+                <span className="text-sm text-gray-500">
+                  {new Date(script.created_at).toLocaleDateString()}
+                </span>
+              </div>
+            </div>
+            <div className="flex items-center gap-2 ml-4">
+              {isEditing ? (
+                <>
+                  <button
+                    onClick={() => setIsEditing(false)}
+                    className="px-3 py-2 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    disabled={isLoading}
+                  >
+                    {t('common.cancel', 'Cancel')}
+                  </button>
+                  <button
+                    onClick={handleSave}
+                    className="px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
+                    disabled={isLoading}
+                  >
+                    {isLoading ? t('common.saving', 'Saving...') : t('common.save', 'Save')}
+                  </button>
+                </>
+              ) : (
+                <button
+                  onClick={() => setIsEditing(true)}
+                  className="p-2 text-gray-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
+                >
+                  <Edit3 className="w-5 h-5" />
+                </button>
+              )}
+              <button
+                onClick={onClose}
+                className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        <div className="flex-1 overflow-y-auto p-6">
+          {isEditing ? (
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t('scripts.scriptType', 'Script Type')}
+                </label>
+                <select
+                  value={editData.script_type}
+                  onChange={(e) => setEditData({ ...editData, script_type: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="post">{t('scripts.post', 'Post')}</option>
+                  <option value="blog">{t('scripts.blog', 'Blog')}</option>
+                  <option value="script">{t('scripts.script', 'Script')}</option>
+                  <option value="general">{t('scripts.general', 'General')}</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t('scripts.status', 'Status')}
+                </label>
+                <select
+                  value={editData.status}
+                  onChange={(e) => setEditData({ ...editData, status: e.target.value })}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="draft">{t('scripts.draft', 'Draft')}</option>
+                  <option value="published">{t('scripts.published', 'Published')}</option>
+                  <option value="archived">{t('scripts.archived', 'Archived')}</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  {t('scripts.content', 'Content')}
+                </label>
+                <textarea
+                  value={editData.content}
+                  onChange={(e) => setEditData({ ...editData, content: e.target.value })}
+                  rows={15}
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none font-mono text-sm"
+                />
+              </div>
+            </div>
+          ) : (
+            <div className="prose max-w-none">
+              <div className="whitespace-pre-wrap font-mono text-sm leading-relaxed text-gray-900">
+                {script.content}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
     </div>
   );
 };
