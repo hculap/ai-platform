@@ -270,7 +270,7 @@ const Scripts: React.FC<ScriptsProps> = ({
                 id: style.id,
                 style_name: style.style_name || 'Unnamed Style',
                 language: style.language,
-                content_types: Array.isArray(style.sample_texts) ? ['general'] : ['general']
+                content_types: style.style_card?.content_types || ['general']
               }))}
               offers={offers.map(offer => ({
                 id: offer.id,

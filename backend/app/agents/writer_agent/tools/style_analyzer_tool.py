@@ -158,6 +158,7 @@ ANALYSIS RULES:
 - Values must be concise and specific (avoid generic words like "professional", "engaging")
 - Infer numerical values (e.g., avg sentence length) from the samples; estimate if needed
 - AUTOMATICALLY DETECT the language of the samples and include it in the response
+- PRESERVE the content_types from the input parameters exactly as provided in the analysis request
 - Build a realistic `negative_constraints` list by scanning the samples: 
   include clichés/AI-isms from the banlist_seed ONLY if they do NOT appear in the samples; 
   exclude anything the author actually uses
@@ -171,7 +172,7 @@ EXECUTABLE DIRECTIVES RULES:
 - `execution_targets`: Specific numeric ranges for consistency (e.g., "12-18 words", "80-120 words", "informal-conversational")
 
 EXAMPLE OUTPUT FORMAT:
-{"language": "en", "domains": ["business"], "diction": {...}, "rewrite_directives": ["Keep sentences under 20 words", "Use active voice"], ...}
+{"language": "en", "content_types": ["post", "blog"], "domains": ["business"], "diction": {...}, "rewrite_directives": ["Keep sentences under 20 words", "Use active voice"], ...}
 
 Return ONLY the raw JSON object - no other text or formatting."""
 
@@ -386,6 +387,14 @@ Return ONLY the JSON object, nothing else."""
         try:
             # Extract and parse the JSON response (handles markdown wrapping)
             style_card = self._extract_json_from_response(raw_response)
+            
+            # Ensure content_types are preserved from user input
+            content_types = validated_params.get('content_types', ['general'])
+            if 'content_types' not in style_card or not style_card['content_types']:
+                logger.debug(f"Adding missing content_types to style card: {content_types}")
+                style_card['content_types'] = content_types
+            else:
+                logger.debug(f"Style card already contains content_types: {style_card['content_types']}")
             
             # Validate that required fields are present
             required_fields = [

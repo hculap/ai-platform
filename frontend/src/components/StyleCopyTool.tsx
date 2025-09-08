@@ -547,14 +547,29 @@ const StyleCard: React.FC<{
                  } Style` || 
                  t('styleCopyTool.writingStyle', 'Writing Style')}
               </h4>
-              <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
-                {style.language.toUpperCase()}
-              </span>
-              {style.style_card?.version === 'v2' && (
-                <span className="px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">
-                  {t('styleCopyTool.executable', 'Executable')}
+              <div className="flex items-center gap-2">
+                <span className="px-2 py-1 bg-gray-100 text-gray-600 text-xs rounded-full">
+                  {style.language.toUpperCase()}
                 </span>
-              )}
+                {(style.style_card?.content_types || ['general']).map((contentType: string) => (
+                  <span 
+                    key={contentType}
+                    className={`px-2 py-1 text-xs rounded-full ${
+                      contentType === 'post' ? 'bg-blue-100 text-blue-700' :
+                      contentType === 'blog' ? 'bg-green-100 text-green-700' :
+                      contentType === 'script' ? 'bg-purple-100 text-purple-700' :
+                      'bg-orange-100 text-orange-700'
+                    }`}
+                  >
+                    {t(`styleCopyTool.contentType.${contentType}`, contentType)}
+                  </span>
+                ))}
+                {style.style_card?.version === 'v2' && (
+                  <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs rounded-full">
+                    {t('styleCopyTool.executable', 'Executable')}
+                  </span>
+                )}
+              </div>
             </div>
             <p className="text-sm text-gray-500 mt-1">
               {t('styleCopyTool.createdOn', 'Created on')} {formatDate(style.created_at)}
