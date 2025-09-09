@@ -11,7 +11,7 @@ from dataclasses import dataclass, field, asdict
 from enum import Enum
 import time
 import logging
-from contextlib import asynccontextmanager
+# Removed asynccontextmanager import as we're converting to sync
 
 
 # Configure logging
@@ -200,7 +200,7 @@ class OpenAIClient:
             self._client = get_openai_client()
         return self._client
     
-    async def call(self, user_input: str, background: bool = False, **kwargs) -> Dict[str, Any]:
+    def call(self, user_input: str, background: bool = False, **kwargs) -> Dict[str, Any]:
         """
         Call OpenAI API based on configuration.
         
@@ -289,27 +289,33 @@ class ExecutionMonitor:
         self.total_execution_time = 0.0
         self.last_execution_time: Optional[datetime] = None
     
-    @asynccontextmanager
-    async def monitor(self):
+    def monitor(self):
         """Context manager for monitoring execution."""
-        start_time = time.time()
+        class MonitorContext:
+            def __init__(self, parent):
+                self.parent = parent
+                self.start_time = None
+                
+            def __enter__(self):
+                self.start_time = time.time()
+                logger.info(f"Starting execution of {self.parent.tool_name}")
+                return self
+                
+            def __exit__(self, exc_type, exc_val, exc_tb):
+                execution_time = time.time() - self.start_time
+                self.parent.execution_count += 1
+                self.parent.total_execution_time += execution_time
+                self.parent.last_execution_time = datetime.now()
+                
+                if self.parent.max_execution_time and execution_time > self.parent.max_execution_time:
+                    logger.warning(
+                        f"Tool {self.parent.tool_name} exceeded time limit: "
+                        f"{execution_time:.2f}s > {self.parent.max_execution_time}s"
+                    )
+                
+                logger.info(f"Completed {self.parent.tool_name} in {execution_time:.2f}s")
         
-        try:
-            logger.info(f"Starting execution of {self.tool_name}")
-            yield
-        finally:
-            execution_time = time.time() - start_time
-            self.execution_count += 1
-            self.total_execution_time += execution_time
-            self.last_execution_time = datetime.now()
-            
-            if self.max_execution_time and execution_time > self.max_execution_time:
-                logger.warning(
-                    f"Tool {self.tool_name} exceeded time limit: "
-                    f"{execution_time:.2f}s > {self.max_execution_time}s"
-                )
-            
-            logger.info(f"Completed {self.tool_name} in {execution_time:.2f}s")
+        return MonitorContext(self)
     
     def get_metrics(self) -> Dict[str, Any]:
         """Get execution metrics."""
@@ -424,7 +430,7 @@ class BaseTool(ABC):
         return self.config.version
     
     @abstractmethod
-    async def execute(self, input_data: ToolInput) -> ToolOutput:
+    def execute(self, input_data: ToolInput) -> ToolOutput:
         """
         Execute the tool with given input.
         
@@ -438,7 +444,7 @@ class BaseTool(ABC):
         """
         pass
     
-    async def get_status(self, job_id: str, user_id: Optional[Union[int, str]] = None) -> ToolOutput:
+    def get_status(self, job_id: str, user_id: Optional[Union[int, str]] = None) -> ToolOutput:
         """
         Get the status of a background job.
         
@@ -556,7 +562,7 @@ class BaseTool(ABC):
             additional_info=additional_info or {}
         )
     
-    async def call_openai(self, user_input: str, background: bool = False, **kwargs) -> Dict[str, Any]:
+    def call_openai(self, user_input: str, background: bool = False, **kwargs) -> Dict[str, Any]:
         """
         Call OpenAI API using configured settings.
         
@@ -575,9 +581,9 @@ class BaseTool(ABC):
                 'content': None
             }
         
-        return await self.openai_client.call(user_input, background=background, **kwargs)
+        return self.openai_client.call(user_input, background=background, **kwargs)
     
-    async def execute_with_monitoring(self, input_data: ToolInput) -> ToolOutput:
+    def execute_with_monitoring(self, input_data: ToolInput) -> ToolOutput:
         """
         Execute tool with monitoring and error handling.
         
@@ -613,8 +619,8 @@ class BaseTool(ABC):
                 )
             
             # Execute with monitoring
-            async with self.monitor.monitor():
-                result = await self.execute(input_data)
+            with self.monitor.monitor():
+                result = self.execute(input_data)
             
             # Record successful call for rate limiting
             if self.rate_limiter and result.success:

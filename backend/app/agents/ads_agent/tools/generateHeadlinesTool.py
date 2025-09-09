@@ -157,7 +157,7 @@ class GenerateHeadlinesTool(PromptBasedTool):
         logger.info(f"Validation successful, returning: {result}")
         return result
 
-    async def _prepare_openai_message(self, validated_params: Dict[str, Any], input_data) -> str:
+    def _prepare_openai_message(self, validated_params: Dict[str, Any], input_data) -> str:
         """Prepare the comprehensive user message for OpenAI."""
         business_profile_id = validated_params['business_profile_id']
         platform = validated_params['platform']
@@ -324,7 +324,7 @@ class GenerateHeadlinesTool(PromptBasedTool):
         
         return headlines[:10]  # Limit to 10 headlines
 
-    async def _process_openai_result(
+    def _process_openai_result(
         self,
         content: Any,
         validated_params: Dict[str, Any],
@@ -369,7 +369,7 @@ class GenerateHeadlinesTool(PromptBasedTool):
                 'error': f"Failed to process headlines result: {str(process_error)}"
             }
 
-    async def _parse_status_content(self, content: Any) -> Dict[str, Any]:
+    def _parse_status_content(self, content: Any) -> Dict[str, Any]:
         """Parse content from status checking."""
         try:
             parsed_content = self.parser(content)

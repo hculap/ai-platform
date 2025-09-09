@@ -131,7 +131,7 @@ class EnrichCompetitorTool(PromptBasedTool):
         logger.info(f"Validation successful, returning: {result}")
         return result
 
-    async def _prepare_openai_message(self, validated_params: Dict[str, Any], input_data) -> str:
+    def _prepare_openai_message(self, validated_params: Dict[str, Any], input_data) -> str:
         """Prepare the input message for OpenAI."""
         logger.info(f"Preparing enrichment message with params: {validated_params}")
         logger.info(f"Input data: {input_data}")
@@ -188,7 +188,7 @@ class EnrichCompetitorTool(PromptBasedTool):
         
         return input_text
     
-    async def _process_openai_result(
+    def _process_openai_result(
         self,
         content: Any,
         validated_params: Dict[str, Any],
@@ -236,7 +236,7 @@ class EnrichCompetitorTool(PromptBasedTool):
                 'input': current_input
             }
 
-    async def _parse_status_content(self, content: Any) -> Dict[str, Any]:
+    def _parse_status_content(self, content: Any) -> Dict[str, Any]:
         """Parse content from status checking."""
         try:
             parsed_content = self.parser.parse(content)

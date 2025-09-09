@@ -302,7 +302,7 @@ Return ONLY the JSON object, nothing else."""
         
         return user_message
 
-    async def _process_openai_result(
+    def _process_openai_result(
         self,
         content: Any,
         validated_params: Dict[str, Any],

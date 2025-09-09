@@ -429,6 +429,59 @@ class OpenAIClient:
                 is_background=True
             )
 
+    def call(
+        self,
+        user_input: str,
+        background: bool = False,
+        system_message: Optional[str] = None,
+        prompt_id: Optional[str] = None,
+        model: str = "gpt-4o",
+        **kwargs
+    ) -> Dict[str, Any]:
+        """
+        Main call method for OpenAI API integration.
+        Supports both background (OpenAI Responses API) and synchronous (Chat API) modes.
+        
+        Args:
+            user_input: User input message
+            background: Whether to use background processing (OpenAI Responses API)
+            system_message: Optional system message
+            prompt_id: Optional prompt ID for Responses API
+            model: Model to use
+            **kwargs: Additional parameters
+            
+        Returns:
+            Dictionary with success, content, response_id, etc.
+        """
+        try:
+            if background:
+                # Use OpenAI Responses API for background processing
+                response = self.create_response_with_prompt_id(
+                    user_message=user_input,
+                    system_message=system_message,
+                    prompt_id=prompt_id,
+                    model=model,
+                    **kwargs
+                )
+                return response.to_dict()
+            else:
+                # Use Chat API for immediate responses
+                response = self.create_chat_completion(
+                    user_message=user_input,
+                    system_message=system_message,
+                    model=model,
+                    **kwargs
+                )
+                return response.to_dict()
+                
+        except Exception as e:
+            logger.error(f"OpenAI call error: {e}", exc_info=True)
+            return {
+                'success': False,
+                'error': str(e),
+                'error_type': type(e).__name__
+            }
+
     def create_chat_completion(
         self,
         messages: Optional[List[Dict[str, str]]] = None,

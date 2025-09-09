@@ -68,7 +68,7 @@ class BaseAgent(ABC):
         self.is_public = is_public
 
     @abstractmethod
-    async def execute(self, input_data: AgentInput) -> AgentOutput:
+    def execute(self, input_data: AgentInput) -> AgentOutput:
         """Execute method that all agents must implement"""
         pass
 
@@ -135,7 +135,7 @@ class ExampleAgent(BaseAgent):
             is_public=False
         )
 
-    async def execute(self, input_data: AgentInput) -> AgentOutput:
+    def execute(self, input_data: AgentInput) -> AgentOutput:
         """Example implementation of the execute method"""
         start_time = time.time()
         

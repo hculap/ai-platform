@@ -189,7 +189,7 @@ class GenerateScriptTool(PromptBasedTool):
         logger.info(f"Validation successful, returning: {result}")
         return result
 
-    async def _prepare_openai_message(self, validated_params: Dict[str, Any], input_data) -> str:
+    def _prepare_openai_message(self, validated_params: Dict[str, Any], input_data) -> str:
         """Prepare the comprehensive user message for OpenAI."""
         selected_hook = validated_params['selected_hook']
         script_type = validated_params['script_type']
@@ -448,7 +448,7 @@ class GenerateScriptTool(PromptBasedTool):
         
         return first_line if first_line else 'Generated Script'
 
-    async def _process_openai_result(
+    def _process_openai_result(
         self,
         content: Any,
         validated_params: Dict[str, Any],
@@ -507,7 +507,7 @@ class GenerateScriptTool(PromptBasedTool):
                 'error': f"Failed to process script result: {str(process_error)}"
             }
 
-    async def _parse_status_content(self, content: Any) -> Dict[str, Any]:
+    def _parse_status_content(self, content: Any) -> Dict[str, Any]:
         """Parse content from status checking."""
         try:
             parsed_content = self.parser(content)

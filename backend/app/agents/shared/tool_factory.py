@@ -64,7 +64,7 @@ class OpenAITool(BaseTool):
         self.parser = parser or create_parser('generic')
         self.validator = validator
     
-    async def execute(self, input_data: ToolInput, background: bool = False) -> ToolOutput:
+    def execute(self, input_data: ToolInput, background: bool = False) -> ToolOutput:
         """
         Execute OpenAI tool with standardized patterns.
         
@@ -99,8 +99,8 @@ class OpenAITool(BaseTool):
                 validated_params = validation_result
             
             # Call OpenAI API
-            user_message = await self._prepare_openai_message(validated_params, input_data)
-            openai_result = await self.call_openai(user_message, background=background)
+            user_message = self._prepare_openai_message(validated_params, input_data)
+            openai_result = self.call_openai(user_message, background=background)
             
             if not openai_result.get('success'):
                 return self._create_error_output(
@@ -121,7 +121,7 @@ class OpenAITool(BaseTool):
                 )
             
             # Process and return results for synchronous mode
-            response_data = await self._process_openai_result(
+            response_data = self._process_openai_result(
                 openai_result.get('content'),
                 validated_params,
                 openai_result,
@@ -141,7 +141,7 @@ class OpenAITool(BaseTool):
                 start_time
             )
     
-    async def get_status(self, job_id: str, user_id: Optional[str] = None) -> ToolOutput:
+    def get_status(self, job_id: str, user_id: Optional[str] = None) -> ToolOutput:
         """
         Get the status of a background job with custom parsing.
         
@@ -170,7 +170,7 @@ class OpenAITool(BaseTool):
                 
                 if content:
                     try:
-                        parsed_content = await self._parse_status_content(content)
+                        parsed_content = self._parse_status_content(content)
                         return ToolOutput.success_response({
                             'status': 'completed',
                             **parsed_content
@@ -218,7 +218,7 @@ class OpenAITool(BaseTool):
         """
         return {'valid': True, **parameters}
     
-    async def _prepare_openai_message(
+    def _prepare_openai_message(
         self, 
         validated_params: Dict[str, Any], 
         input_data: ToolInput
@@ -236,7 +236,7 @@ class OpenAITool(BaseTool):
         """
         return f"Process the following data: {validated_params}"
     
-    async def _process_openai_result(
+    def _process_openai_result(
         self,
         content: Any,
         validated_params: Dict[str, Any],
@@ -266,7 +266,7 @@ class OpenAITool(BaseTool):
                 'error': f"Failed to parse result: {str(parse_error)}"
             }
     
-    async def _parse_status_content(self, content: Any) -> Dict[str, Any]:
+    def _parse_status_content(self, content: Any) -> Dict[str, Any]:
         """
         Parse content from status checking.
         Override this method to customize status content parsing.

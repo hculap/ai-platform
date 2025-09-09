@@ -151,7 +151,7 @@ class GenerateFullCreativeTool(PromptBasedTool):
         logger.info(f"Validation successful, returning: {result}")
         return result
 
-    async def _prepare_openai_message(self, validated_params: Dict[str, Any], input_data) -> str:
+    def _prepare_openai_message(self, validated_params: Dict[str, Any], input_data) -> str:
         """Prepare the comprehensive user message for OpenAI."""
         selected_headlines = validated_params['selected_headlines']
         business_profile_id = validated_params['business_profile_id']
@@ -305,7 +305,7 @@ class GenerateFullCreativeTool(PromptBasedTool):
             logger.error(f"Failed to parse creative response: {str(e)}")
             return {'creatives': []}
 
-    async def _process_openai_result(
+    def _process_openai_result(
         self,
         content: Any,
         validated_params: Dict[str, Any],
@@ -386,7 +386,7 @@ class GenerateFullCreativeTool(PromptBasedTool):
                 'error': f"Failed to process creative result: {str(process_error)}"
             }
 
-    async def _parse_status_content(self, content: Any) -> Dict[str, Any]:
+    def _parse_status_content(self, content: Any) -> Dict[str, Any]:
         """Parse content from status checking."""
         try:
             parsed_content = self.parser(content)

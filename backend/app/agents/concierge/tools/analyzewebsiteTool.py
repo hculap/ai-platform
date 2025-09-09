@@ -35,12 +35,12 @@ class AnalyzeWebsiteTool(PromptBasedTool):
             validator=validator
         )
     
-    async def _prepare_openai_message(self, validated_params: Dict[str, Any], input_data) -> str:
+    def _prepare_openai_message(self, validated_params: Dict[str, Any], input_data) -> str:
         """Prepare the message to send to OpenAI."""
         url = validated_params['url']
         return f"Please analyze the following website URL and create a comprehensive business profile: {url}"
     
-    async def _process_openai_result(
+    def _process_openai_result(
         self,
         content: Any,
         validated_params: Dict[str, Any],
@@ -72,7 +72,7 @@ class AnalyzeWebsiteTool(PromptBasedTool):
                 'error': f"Failed to parse analysis: {str(parse_error)}"
             }
     
-    async def _parse_status_content(self, content: Any) -> Dict[str, Any]:
+    def _parse_status_content(self, content: Any) -> Dict[str, Any]:
         """Parse content from status checking."""
         try:
             parsed_content = self.parser.parse(content)

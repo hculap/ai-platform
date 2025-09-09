@@ -44,7 +44,7 @@ class FindCompetitorsTool(PromptBasedTool):
             validator=validator
         )
 
-    async def _prepare_openai_message(self, validated_params: Dict[str, Any], input_data) -> str:
+    def _prepare_openai_message(self, validated_params: Dict[str, Any], input_data) -> str:
         """Prepare the comprehensive user message for OpenAI."""
         business_profile_id = validated_params['business_profile_id']
         logger.info(f"Preparing message for business profile ID: {business_profile_id}")
@@ -108,7 +108,7 @@ class FindCompetitorsTool(PromptBasedTool):
         
         return "\n".join(message_parts)
 
-    async def _process_openai_result(
+    def _process_openai_result(
         self,
         content: Any,
         validated_params: Dict[str, Any],
@@ -143,7 +143,7 @@ class FindCompetitorsTool(PromptBasedTool):
                 'error': f"Failed to parse research result: {str(parse_error)}"
             }
 
-    async def _parse_status_content(self, content: Any) -> Dict[str, Any]:
+    def _parse_status_content(self, content: Any) -> Dict[str, Any]:
         """Parse content from status checking."""
         try:
             parsed_content = self.parser.parse(content)

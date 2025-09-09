@@ -313,18 +313,12 @@ def execute_tool(slug: str, tool_slug: str):
             # Check for background mode
             background_mode = data.get('background', False) and tool_slug in ['analyze-website', 'find-competitors', 'enrich-competitor', 'generate-campaign', 'generate-headlines', 'generate-full-creative', 'generate-script-hooks']
             
-            # Execute tool synchronously
-            import asyncio
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            try:
-                # Check if tool supports background mode
-                if background_mode and hasattr(tool.execute, '__code__') and 'background' in tool.execute.__code__.co_varnames:
-                    result = loop.run_until_complete(tool.execute(tool_input, background=background_mode))
-                else:
-                    result = loop.run_until_complete(tool.execute(tool_input))
-            finally:
-                loop.close()
+            # Execute tool synchronously (no more asyncio needed)
+            # Check if tool supports background mode
+            if background_mode and hasattr(tool.execute, '__code__') and 'background' in tool.execute.__code__.co_varnames:
+                result = tool.execute(tool_input, background=background_mode)
+            else:
+                result = tool.execute(tool_input)
             execution_time = time.time() - start_time
 
             if result.success:
@@ -469,17 +463,11 @@ def handle_tool_status_check(slug: str, tool_slug: str):
 
         tool = agent.capabilities.tools[tool_slug]
 
-        # Execute status check asynchronously
+        # Execute status check synchronously (no more asyncio needed)
         start_time = time.time()
 
         try:
-            import asyncio
-            loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(loop)
-            try:
-                result = loop.run_until_complete(tool.get_status(job_id, current_user_id))
-            finally:
-                loop.close()
+            result = tool.get_status(job_id, current_user_id)
             
             execution_time = time.time() - start_time
 

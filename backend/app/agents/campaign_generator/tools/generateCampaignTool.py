@@ -137,7 +137,7 @@ class GenerateCampaignTool(PromptBasedTool):
                 return result
         return ProductsValidator()
     
-    async def _prepare_openai_message(self, validated_params: Dict[str, Any], input_data: ToolInput) -> str:
+    def _prepare_openai_message(self, validated_params: Dict[str, Any], input_data: ToolInput) -> str:
         """
         Prepare user message for OpenAI API call
         
@@ -173,7 +173,7 @@ class GenerateCampaignTool(PromptBasedTool):
         
         return user_message
     
-    async def _process_openai_result(
+    def _process_openai_result(
         self,
         content: Any,
         validated_params: Dict[str, Any],

@@ -66,7 +66,7 @@ class StandardAgent(BaseAgent):
             is_public=is_public
         )
     
-    async def execute(self, input_data: AgentInput) -> AgentOutput:
+    def execute(self, input_data: AgentInput) -> AgentOutput:
         """
         Execute the agent with standardized patterns.
         
@@ -113,9 +113,9 @@ class StandardAgent(BaseAgent):
             # Check if background mode is requested
             background_mode = parameters.get('background', False)
             if hasattr(tool.execute, '__code__') and 'background' in tool.execute.__code__.co_varnames:
-                result = await tool.execute(tool_input, background=background_mode)
+                result = tool.execute(tool_input, background=background_mode)
             else:
-                result = await tool.execute(tool_input)
+                result = tool.execute(tool_input)
             
             return AgentOutput(
                 success=result.success,
@@ -173,7 +173,7 @@ class SingleToolAgent(StandardAgent):
         
         self.primary_tool = tool
     
-    async def execute(self, input_data: AgentInput) -> AgentOutput:
+    def execute(self, input_data: AgentInput) -> AgentOutput:
         """
         Execute the single tool directly or with action parameter.
         
@@ -199,7 +199,7 @@ class SingleToolAgent(StandardAgent):
             input_data.parameters = parameters
             
             # Use standard execution
-            return await super().execute(input_data)
+            return super().execute(input_data)
             
         except Exception as error:
             logger.exception(f"{self.name} execution error: {error}")
