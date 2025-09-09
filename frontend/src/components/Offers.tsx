@@ -22,6 +22,8 @@ import {
   createOffer, 
   updateOffer, 
   generateOffers,
+  startBackgroundOfferGeneration,
+  checkOfferGenerationStatus,
   saveSelectedOffers
 } from '../services/api';
 import { Offer } from '../types';
@@ -56,6 +58,7 @@ const OffersComponent: React.FC<OffersProps> = ({
   const [isAIGenerationLoading, setIsAIGenerationLoading] = useState(false);
   const [aiGenerationError, setAiGenerationError] = useState<string | null>(null);
   const [aiGenerationSuccess, setAiGenerationSuccess] = useState<string | null>(null);
+  const [offerGenerationJobId, setOfferGenerationJobId] = useState<string | null>(null);
   
   // Selection states for generated offers
   const [generatedOffers, setGeneratedOffers] = useState<any[]>([]);
@@ -127,6 +130,60 @@ const OffersComponent: React.FC<OffersProps> = ({
       fetchOffers();
     }
   }, [fetchOffers, businessProfileId]);
+
+  // Polling effect for offer generation status
+  useEffect(() => {
+    if (!offerGenerationJobId || !isAIGenerationLoading) return;
+
+    const pollStatus = async () => {
+      try {
+        const statusResult = await checkOfferGenerationStatus(offerGenerationJobId);
+        
+        if (statusResult.status === 'completed') {
+          console.log('Offer generation completed, data:', statusResult.data);
+          
+          // Try different possible data structures
+          let offers = null;
+          if (statusResult.data?.offers) {
+            offers = statusResult.data.offers;
+          } else if (statusResult.data?.data?.offers) {
+            offers = statusResult.data.data.offers;
+          } else if (Array.isArray(statusResult.data)) {
+            offers = statusResult.data;
+          }
+          
+          if (offers && Array.isArray(offers) && offers.length > 0) {
+            setGeneratedOffers(offers);
+            setShowGenerationResults(true);
+            setSelectedOffers(new Set());
+            setIsAIGenerationLoading(false);
+            setOfferGenerationJobId(null);
+          } else {
+            console.error('No valid offers found in completed response:', statusResult.data);
+            setAiGenerationError('No offers were generated - please try again');
+            setIsAIGenerationLoading(false);
+            setOfferGenerationJobId(null);
+          }
+        } else if (statusResult.status === 'failed' || statusResult.status === 'error') {
+          setAiGenerationError(statusResult.error || 'Offer generation failed');
+          setIsAIGenerationLoading(false);
+          setOfferGenerationJobId(null);
+        }
+        // Continue polling for pending, queued, in_progress statuses
+      } catch (error) {
+        console.error('Error checking offer generation status:', error);
+        setAiGenerationError('Failed to check generation status');
+        setIsAIGenerationLoading(false);
+        setOfferGenerationJobId(null);
+      }
+    };
+
+    // Start polling immediately, then every 3 seconds
+    pollStatus();
+    const interval = setInterval(pollStatus, 3000);
+
+    return () => clearInterval(interval);
+  }, [offerGenerationJobId, isAIGenerationLoading]);
 
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -239,23 +296,24 @@ const OffersComponent: React.FC<OffersProps> = ({
       setAiGenerationError(null);
       setAiGenerationSuccess(null);
       setShowGenerationResults(false);
+      setOfferGenerationJobId(null);
 
-      const result = await generateOffers(businessProfileId, authToken);
+      // Start background offer generation
+      const result = await startBackgroundOfferGeneration(businessProfileId);
 
-      if (result.success && result.data?.data?.offers) {
-        setGeneratedOffers(result.data.data.offers);
-        setShowGenerationResults(true);
-        setSelectedOffers(new Set());
+      if (result.success && result.openaiResponseId) {
+        setOfferGenerationJobId(result.openaiResponseId);
+        // Polling will be handled by useEffect
       } else {
-        setAiGenerationError(result.error || 'Failed to generate offers');
+        setAiGenerationError(result.error || 'Failed to start offer generation');
+        setIsAIGenerationLoading(false);
       }
     } catch (error) {
-      console.error('Error generating offers:', error);
-      setAiGenerationError('An unexpected error occurred while generating offers');
-    } finally {
+      console.error('Error starting offer generation:', error);
+      setAiGenerationError('An unexpected error occurred while starting offer generation');
       setIsAIGenerationLoading(false);
     }
-  }, [businessProfileId, authToken]);
+  }, [businessProfileId]);
 
   const handleOfferSelect = useCallback((offerName: string, checked: boolean) => {
     setSelectedOffers(prev => {

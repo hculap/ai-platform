@@ -340,9 +340,8 @@ def generate_offers(business_profile_id):
 
     # Execute the agent
     try:
-        import asyncio
         logger.info("Starting agent execution...")
-        result = asyncio.run(agent.execute(agent_input))
+        result = agent.execute(agent_input)
         logger.info(f"Agent execution completed. Success: {result.success}")
         
         if not result.success:

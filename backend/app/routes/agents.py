@@ -87,7 +87,6 @@ agents_bp = Blueprint('agents', __name__, url_prefix='/api/agents')
 @agents_bp.route('/debug', methods=['GET'])
 def debug_route():
     """Debug route to test if Flask is working."""
-    print("DEBUG: Debug route called")
     return jsonify({
         'message': 'Debug route working',
         'agents_available': len(AgentRegistry.list_agents())
@@ -247,8 +246,6 @@ def execute_tool(slug: str, tool_slug: str):
         data = request.get_json() or {}
 
         # Get current user (may be None for public agents)
-        print(f"DEBUG: execute_tool called with slug={slug}, tool_slug={tool_slug}")
-        print(f"DEBUG: Request data: {data}")
         current_user_id = None
 
         # Check if Authorization header is present
@@ -311,7 +308,7 @@ def execute_tool(slug: str, tool_slug: str):
             )
 
             # Check for background mode
-            background_mode = data.get('background', False) and tool_slug in ['analyze-website', 'find-competitors', 'enrich-competitor', 'generate-campaign', 'generate-headlines', 'generate-full-creative', 'generate-script-hooks']
+            background_mode = data.get('background', False) and tool_slug in ['analyze-website', 'find-competitors', 'enrich-competitor', 'generate-campaign', 'generate-headlines', 'generate-full-creative', 'generate-script-hooks', 'generate-offers']
             
             # Execute tool synchronously (no more asyncio needed)
             # Check if tool supports background mode

@@ -250,6 +250,40 @@ class GenerateOffersTool(PromptBasedTool):
         
         return "\n".join(message_parts)
     
+    def _parse_status_content(self, content: Any) -> Dict[str, Any]:
+        """
+        Parse content from completed background job status.
+        
+        For offers generation, we expect the content to be a JSON array of offers.
+        We need to process it the same way as synchronous requests.
+        
+        Args:
+            content: Content from completed OpenAI response
+            
+        Returns:
+            Parsed offers content in expected format
+        """
+        try:
+            # Parse AI response using the same logic as synchronous mode
+            offers_data = OfferGenerationService.parse_ai_response(str(content))
+            
+            logger.info(f"Successfully parsed {len(offers_data)} offers from background job")
+            
+            return {
+                'message': f'Generated {len(offers_data)} offers for selection',
+                'offers_count': len(offers_data),
+                'offers': offers_data,
+                'status': 'completed'
+            }
+            
+        except Exception as e:
+            logger.error(f"Error parsing background job content: {e}", exc_info=True)
+            return {
+                'error': f"Failed to process generated offers: {str(e)}",
+                'content': str(content),
+                'status': 'error'
+            }
+    
     def _generate_fallback_offers(self, validated_params: Dict[str, Any], user_id: str) -> List[Dict[str, Any]]:
         """
         Generate basic fallback offers when AI service is unavailable

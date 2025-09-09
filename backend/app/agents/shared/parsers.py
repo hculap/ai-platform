@@ -70,6 +70,10 @@ class OpenAIContentParser(BaseContentParser):
                 # If not JSON, create simple structure
                 parsed_data = {'content': str(content)}
         
+        # If parsed data is a list, wrap it in a dictionary
+        if isinstance(parsed_data, list):
+            parsed_data = {'data': parsed_data}
+        
         # Apply expected structure if specified
         if self.expected_structure and self.expected_structure not in parsed_data:
             parsed_data = {self.expected_structure: parsed_data}

@@ -1523,18 +1523,119 @@ export const deleteOffer = async (offerId: string, authToken: string): Promise<{
   }
 };
 
+// Start background offer generation
+export const startBackgroundOfferGeneration = async (businessProfileId: string): Promise<{ success: boolean; openaiResponseId?: string; error?: string }> => {
+  try {
+    const response = await api.post('/agents/offer-assistant/tools/generate-offers/call', {
+      input: { 
+        business_profile_id: businessProfileId 
+      },
+      background: true
+    });
+
+    if (response.data.status === 'pending' && response.data.data?.openai_response_id) {
+      return {
+        success: true,
+        openaiResponseId: response.data.data.openai_response_id
+      };
+    } else {
+      return {
+        success: false,
+        error: response.data.error || 'Failed to start offer generation'
+      };
+    }
+  } catch (error) {
+    console.error('Offer generation start error:', error);
+    return {
+      success: false,
+      error: error instanceof Error ? error.message : 'Failed to start offer generation'
+    };
+  }
+};
+
+// Check offer generation status
+export const checkOfferGenerationStatus = async (openaiResponseId: string): Promise<{ 
+  status: 'pending' | 'queued' | 'in_progress' | 'completed' | 'failed' | 'canceled' | 'error'; 
+  data?: any; 
+  error?: string 
+}> => {
+  try {
+    const response = await api.get(`/agents/offer-assistant/tools/generate-offers/call?job_id=${openaiResponseId}`);
+
+    if (response.data && response.data.data) {
+      const offerData = response.data.data;
+
+      if (offerData.status === 'completed') {
+        // Check if we have offers data
+        if (offerData.offers) {
+          return {
+            status: 'completed',
+            data: offerData
+          };
+        } else {
+          // Completion but no offers - try different data structure
+          console.log('Completed but no offers found, checking full response:', response.data);
+          return {
+            status: 'completed',
+            data: response.data.data || response.data
+          };
+        }
+      } else if (offerData.status === 'pending' || offerData.status === 'queued' || offerData.status === 'in_progress') {
+        // Still processing - return the OpenAI status directly
+        console.log('Offer Generation Status:', offerData.status);
+        return {
+          status: offerData.status
+        };
+      } else {
+        return {
+          status: 'error',
+          error: offerData.error || offerData.message || 'Unknown status'
+        };
+      }
+    } else if (response.data.error) {
+      return {
+        status: 'failed',
+        error: response.data.error || 'Offer generation failed'
+      };
+    } else {
+      return {
+        status: 'error',
+        error: 'Failed to check status'
+      };
+    }
+  } catch (error) {
+    console.error('Status check error:', error);
+    return {
+      status: 'error',
+      error: error instanceof Error ? error.message : 'Failed to check status'
+    };
+  }
+};
+
+// Legacy synchronous offer generation (kept for backward compatibility)
 export const generateOffers = async (businessProfileId: string, authToken: string): Promise<{ success: boolean; data?: any; error?: string; isTokenExpired?: boolean }> => {
   try {
-    const response = await api.post(`/business-profiles/${businessProfileId}/generate-offers`, {}, {
+    const response = await api.post('/agents/offer-assistant/tools/generate-offers/call', {
+      input: { 
+        business_profile_id: businessProfileId 
+      }
+    }, {
       headers: {
         'Authorization': `Bearer ${authToken}`
       }
     });
 
-    return {
-      success: true,
-      data: response.data
-    };
+    if (response.data.status === 'completed') {
+      return {
+        success: true,
+        data: response.data.data
+      };
+    } else {
+      return {
+        success: false,
+        error: response.data.error || 'Failed to generate offers'
+      };
+    }
   } catch (error: any) {
     console.error('Error generating offers:', error);
 
