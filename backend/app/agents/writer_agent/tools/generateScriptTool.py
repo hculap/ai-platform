@@ -315,20 +315,21 @@ class GenerateScriptTool(PromptBasedTool):
         else:
             message_parts.append("No competition data available")
         
-        # Offers Information
-        message_parts.append(f"\n=== OFFERS/PRODUCTS/SERVICES ===")
-        if offers_data:
-            for i, offer in enumerate(offers_data, 1):
-                offer_type = offer.get('type', '')
-                type_text = f"({offer_type}) " if offer_type and offer_type != 'N/A' else ""
-                description = offer.get('description', '')
-                desc_text = f" - {description}" if description and description != 'N/A' else ""
-                price = offer.get('price', 'N/A')
-                unit = offer.get('unit', '')
-                price_text = f" - {price} {unit}" if price != 'N/A' else ""
-                message_parts.append(f"{i}. {offer.get('name', 'N/A')} {type_text}{desc_text}{price_text}")
-        else:
-            message_parts.append("No offers/products/services data available")
+        # Offers Information - only show if no focused context exists
+        if not context_data:
+            message_parts.append(f"\n=== OFFERS/PRODUCTS/SERVICES ===")
+            if offers_data:
+                for i, offer in enumerate(offers_data, 1):
+                    offer_type = offer.get('type', '')
+                    type_text = f"({offer_type}) " if offer_type and offer_type != 'N/A' else ""
+                    description = offer.get('description', '')
+                    desc_text = f" - {description}" if description and description != 'N/A' else ""
+                    price = offer.get('price', 'N/A')
+                    unit = offer.get('unit', '')
+                    price_text = f" - {price} {unit}" if price != 'N/A' else ""
+                    message_parts.append(f"{i}. {offer.get('name', 'N/A')} {type_text}{desc_text}{price_text}")
+            else:
+                message_parts.append("No offers/products/services data available")
         
         # Context Information
         if context_data:
@@ -363,21 +364,22 @@ class GenerateScriptTool(PromptBasedTool):
             message_parts.append(f"\n=== WRITING STYLE TO EMULATE ===")
             message_parts.append(f"Style Name: {style_data.get('style_name', 'N/A')}")
             message_parts.append(f"Language: {style_data.get('language', 'N/A')}")
-            message_parts.append(f"Content Types: {', '.join(style_data.get('content_types', []))}")
+            # Get style_card data (contains the actual analysis)
+            style_card_data = style_data.get('style_card', {})
+            message_parts.append(f"Content Types: {', '.join(style_card_data.get('content_types', []))}")
             
             # Style characteristics
-            if style_data.get('style_analysis'):
-                analysis = style_data['style_analysis']
-                if analysis.get('tone'):
-                    message_parts.append(f"Tone: {analysis['tone']}")
-                if analysis.get('vocabulary'):
-                    message_parts.append(f"Vocabulary: {analysis['vocabulary']}")
-                if analysis.get('sentence_structure'):
-                    message_parts.append(f"Sentence Structure: {analysis['sentence_structure']}")
-                if analysis.get('key_phrases'):
-                    message_parts.append(f"Key Phrases: {', '.join(analysis['key_phrases'])}")
-                if analysis.get('avoid_phrases'):
-                    message_parts.append(f"Phrases to Avoid: {', '.join(analysis['avoid_phrases'])}")
+            if style_card_data:
+                if style_card_data.get('tone'):
+                    message_parts.append(f"Tone: {style_card_data['tone']}")
+                if style_card_data.get('vocabulary'):
+                    message_parts.append(f"Vocabulary: {style_card_data['vocabulary']}")
+                if style_card_data.get('sentence_structure'):
+                    message_parts.append(f"Sentence Structure: {style_card_data['sentence_structure']}")
+                if style_card_data.get('key_phrases'):
+                    message_parts.append(f"Key Phrases: {', '.join(style_card_data['key_phrases'])}")
+                if style_card_data.get('avoid_phrases'):
+                    message_parts.append(f"Phrases to Avoid: {', '.join(style_card_data['avoid_phrases'])}")
         
         # Script Specifications
         script_info = self.SCRIPT_TYPES.get(script_type, {})
@@ -487,7 +489,8 @@ class GenerateScriptTool(PromptBasedTool):
             
             logger.info(f"Created new script with ID: {script.id}")
             
-            return {
+            # Preserve rich metadata from OpenAI response alongside saved script
+            response_data = {
                 'script': script.to_dict(),
                 'success': True,
                 'business_profile_id': validated_params['business_profile_id'],
@@ -498,6 +501,14 @@ class GenerateScriptTool(PromptBasedTool):
                     'additional_context': validated_params.get('additional_context', '')
                 }
             }
+            
+            # Add rich metadata from OpenAI if available (e.g., beats, checklist, cta, duration)
+            rich_fields = ['beats', 'checklist', 'cta', 'estimated_duration_sec', 'metadata', 'language']
+            for field in rich_fields:
+                if field in parsed_data:
+                    response_data[field] = parsed_data[field]
+            
+            return response_data
             
         except Exception as process_error:
             db.session.rollback()

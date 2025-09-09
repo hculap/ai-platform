@@ -270,6 +270,17 @@ export interface GeneratedScript {
   updated_at: string;
 }
 
+export interface ScriptBeat {
+  timestamp?: string;
+  section?: string;
+  content?: string;
+  text?: string;
+}
+
+export interface ScriptCTA {
+  alternatives?: string[];
+}
+
 export interface ScriptGenerationResult {
   script: GeneratedScript | null;
   success?: boolean;
@@ -281,6 +292,13 @@ export interface ScriptGenerationResult {
     style_id?: string;
     additional_context: string;
   };
+  // Rich metadata fields from OpenAI
+  beats?: ScriptBeat[];
+  checklist?: string[];
+  cta?: ScriptCTA;
+  estimated_duration_sec?: number;
+  metadata?: any;
+  language?: string;
 }
 
 export interface ScriptTypeInfo {

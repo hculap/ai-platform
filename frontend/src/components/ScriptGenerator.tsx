@@ -10,7 +10,11 @@ import {
   ArrowLeft,
   Save,
   Eye,
-  Palette
+  Palette,
+  Clock,
+  Play,
+  CheckSquare,
+  MessageCircle
 } from 'lucide-react';
 import { generateScript } from '../services/api';
 import {
@@ -460,25 +464,107 @@ const ScriptGenerator: React.FC<ScriptGeneratorProps> = ({
               </p>
             </div>
 
-            {/* Script Content */}
-            {generatedScript?.script && (
-              <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
-                <div className="flex items-center justify-between mb-4">
-                  <h5 className="font-medium text-gray-900">
-                    {t('scriptGenerator.scriptContent', 'Script Content')}
-                  </h5>
-                  <div className="flex items-center gap-2">
-                    <span className="text-sm text-gray-500">
-                      {Math.round(generatedScript.script.content.length / 5)} words
-                    </span>
-                    <Eye className="w-4 h-4 text-gray-400" />
+            {/* Rich Script Content */}
+            {generatedScript && (
+              <div className="space-y-6">
+                {/* Duration and Type Info */}
+                {generatedScript.estimated_duration_sec && (
+                  <div className="flex items-center gap-4 text-sm text-gray-600 bg-blue-50 rounded-lg p-3 border border-blue-200">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-blue-600" />
+                      <span>Duration: {Math.round(generatedScript.estimated_duration_sec / 60)} min {generatedScript.estimated_duration_sec % 60} sec</span>
+                    </div>
                   </div>
-                </div>
-                <div className="bg-white border border-gray-200 rounded-lg p-4">
-                  <pre className="whitespace-pre-wrap text-sm text-gray-900 font-normal leading-relaxed">
-                    {generatedScript.script.content}
-                  </pre>
-                </div>
+                )}
+
+                {/* Script Beats (if available) */}
+                {generatedScript.beats && generatedScript.beats.length > 0 && (
+                  <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
+                    <h5 className="font-medium text-gray-900 mb-4 flex items-center gap-2">
+                      <Play className="w-4 h-4" />
+                      Script Beats
+                    </h5>
+                    <div className="space-y-3">
+                      {generatedScript.beats.map((beat: any, index: number) => (
+                        <div key={index} className="bg-white border border-gray-200 rounded-lg p-4">
+                          <div className="flex items-start gap-3">
+                            <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-medium">
+                              {index + 1}
+                            </div>
+                            <div className="flex-1">
+                              {beat.timestamp && (
+                                <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded mb-2 inline-block">
+                                  {beat.timestamp}
+                                </span>
+                              )}
+                              {beat.section && (
+                                <h6 className="font-medium text-gray-900 mb-1">{beat.section}</h6>
+                              )}
+                              <p className="text-sm text-gray-700 whitespace-pre-wrap">{beat.content || beat.text}</p>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Main Script Content */}
+                {generatedScript?.script && (
+                  <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
+                    <div className="flex items-center justify-between mb-4">
+                      <h5 className="font-medium text-gray-900">
+                        {t('scriptGenerator.scriptContent', 'Script Content')}
+                      </h5>
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-500">
+                          {Math.round(generatedScript.script.content.length / 5)} words
+                        </span>
+                        <Eye className="w-4 h-4 text-gray-400" />
+                      </div>
+                    </div>
+                    <div className="bg-white border border-gray-200 rounded-lg p-4">
+                      <pre className="whitespace-pre-wrap text-sm text-gray-900 font-normal leading-relaxed">
+                        {generatedScript.script.content}
+                      </pre>
+                    </div>
+                  </div>
+                )}
+
+                {/* Checklist (if available) */}
+                {generatedScript.checklist && generatedScript.checklist.length > 0 && (
+                  <div className="border border-gray-200 rounded-lg p-6 bg-yellow-50">
+                    <h5 className="font-medium text-gray-900 mb-4 flex items-center gap-2">
+                      <CheckSquare className="w-4 h-4" />
+                      Production Checklist
+                    </h5>
+                    <div className="space-y-2">
+                      {generatedScript.checklist.map((item: string, index: number) => (
+                        <label key={index} className="flex items-start gap-3 cursor-pointer hover:bg-yellow-100 p-2 rounded">
+                          <input type="checkbox" className="mt-1 rounded" />
+                          <span className="text-sm text-gray-700">{item}</span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* CTA Alternatives (if available) */}
+                {generatedScript.cta?.alternatives && generatedScript.cta.alternatives.length > 0 && (
+                  <div className="border border-gray-200 rounded-lg p-6 bg-green-50">
+                    <h5 className="font-medium text-gray-900 mb-4 flex items-center gap-2">
+                      <MessageCircle className="w-4 h-4" />
+                      Call-to-Action Alternatives
+                    </h5>
+                    <div className="space-y-2">
+                      {generatedScript.cta.alternatives.map((cta: string, index: number) => (
+                        <div key={index} className="bg-white border border-green-200 rounded p-3">
+                          <p className="text-sm text-gray-700">{cta}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 

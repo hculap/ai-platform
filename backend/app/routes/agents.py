@@ -308,7 +308,7 @@ def execute_tool(slug: str, tool_slug: str):
             )
 
             # Check for background mode
-            background_mode = data.get('background', False) and tool_slug in ['analyze-website', 'find-competitors', 'enrich-competitor', 'generate-campaign', 'generate-headlines', 'generate-full-creative', 'generate-script-hooks', 'generate-offers']
+            background_mode = data.get('background', False) and tool_slug in ['analyze-website', 'find-competitors', 'enrich-competitor', 'generate-campaign', 'generate-headlines', 'generate-full-creative', 'generate-script-hooks', 'generate-script', 'generate-offers']
             
             # Execute tool synchronously (no more asyncio needed)
             # Check if tool supports background mode

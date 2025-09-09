@@ -2745,29 +2745,48 @@ const checkScriptGenerationStatus = async (
   authToken: string
 ): Promise<{ status: string; data?: ScriptGenerationResult; error?: string; isTokenExpired?: boolean }> => {
   try {
-    const response = await api.get(`/agents/writer-agent/tools/generate-script/status/${openaiResponseId}`, {
+    const response = await api.get(`/agents/writer-agent/tools/generate-script/call?job_id=${openaiResponseId}`, {
       headers: {
         Authorization: `Bearer ${authToken}`
       }
     });
 
-    if (response.data.status === 'completed' && response.data.data) {
-      return {
-        status: 'completed',
-        data: response.data.data,
-        error: response.data.error
-      };
-    } else if (response.data.status === 'failed' || response.data.status === 'error') {
-      return {
-        status: response.data.status,
-        error: response.data.error || 'Script generation failed',
-        isTokenExpired: false
-      };
+    if (response.data && response.data.data) {
+      const scriptData = response.data.data;
+      if (scriptData.status === 'completed') {
+        // Script generation completed successfully
+        return {
+          status: 'completed',
+          data: scriptData,
+          error: scriptData.error
+        };
+      } else if (scriptData.status === 'failed' || scriptData.status === 'error') {
+        return {
+          status: scriptData.status,
+          error: scriptData.error || 'Script generation failed',
+          isTokenExpired: false
+        };
+      } else {
+        // Still processing (queued, in_progress, etc.)
+        return {
+          status: scriptData.status || 'pending',
+          error: scriptData.error
+        };
+      }
     } else {
-      return {
-        status: response.data.status || 'pending',
-        error: response.data.error
-      };
+      // No nested data - check outer status
+      if (response.data.status === 'completed') {
+        return {
+          status: 'completed',
+          data: response.data,
+          error: response.data.error
+        };
+      } else {
+        return {
+          status: response.data.status || 'pending',
+          error: response.data.error
+        };
+      }
     }
   } catch (error: any) {
     console.error('Error checking script generation status:', error);
