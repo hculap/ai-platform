@@ -59,6 +59,8 @@ interface ScriptGeneratorProps {
   businessProfileId?: string;
   authToken: string;
   onTokenRefreshed?: (newToken: string) => void;
+  prefilledHook?: string;
+  onClose?: () => void;
   userStyles?: Array<{
     id: string;
     style_name: string;
@@ -84,6 +86,8 @@ const ScriptGenerator: React.FC<ScriptGeneratorProps> = ({
   businessProfileId,
   authToken,
   onTokenRefreshed,
+  prefilledHook,
+  onClose,
   userStyles = [],
   offers = [],
   campaigns = []
@@ -95,11 +99,13 @@ const ScriptGenerator: React.FC<ScriptGeneratorProps> = ({
   // Get localized script types
   const SCRIPT_TYPES = getScriptTypes(t);
 
-  // Get prefilled hook from URL params
-  const prefilledHook = searchParams.get('hook') || '';
+  // Get prefilled hook from props or URL params (for backward compatibility)
+  const hookFromProps = prefilledHook || '';
+  const hookFromUrl = searchParams.get('hook') || '';
+  const initialHook = hookFromProps || hookFromUrl;
 
   // State
-  const [selectedHook, setSelectedHook] = useState(prefilledHook);
+  const [selectedHook, setSelectedHook] = useState(initialHook);
   const [scriptType, setScriptType] = useState<ScriptType>('general');
   const [styleId, setStyleId] = useState('');
   const [additionalContext, setAdditionalContext] = useState('');
@@ -171,7 +177,13 @@ const ScriptGenerator: React.FC<ScriptGeneratorProps> = ({
 
   // Navigate back to hooks generator
   const handleBackToHooks = () => {
-    navigate(-1);
+    if (onClose) {
+      // Modal mode - use callback to return to hooks modal
+      onClose();
+    } else {
+      // Route mode - use browser navigation for backward compatibility
+      navigate(-1);
+    }
   };
 
   return (

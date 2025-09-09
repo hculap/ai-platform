@@ -186,6 +186,11 @@ const Scripts: React.FC<ScriptsProps> = ({
     openModal('scriptCreator');
   };
 
+  const handleBackToHookGenerator = () => {
+    closeModal('scriptCreator');
+    openModal('hookGenerator');
+  };
+
   const handleStyleCreated = () => {
     closeModal('styleClone');
     loadData(); // Refresh styles
@@ -398,6 +403,7 @@ const Scripts: React.FC<ScriptsProps> = ({
           campaigns={campaigns}
           prefilledHook={prefilledHook}
           onScriptCreated={handleScriptCreated}
+          onBackToHookGenerator={handleBackToHookGenerator}
           t={t}
         />
       )}
@@ -1161,6 +1167,7 @@ interface ScriptCreatorModalProps {
   campaigns: Campaign[];
   prefilledHook?: string;
   onScriptCreated: () => void;
+  onBackToHookGenerator?: () => void;
   t: any;
 }
 
@@ -1175,6 +1182,7 @@ const ScriptCreatorModal: React.FC<ScriptCreatorModalProps> = ({
   campaigns,
   prefilledHook,
   onScriptCreated,
+  onBackToHookGenerator,
   t
 }) => {
   if (!isOpen) return null;
@@ -1206,6 +1214,8 @@ const ScriptCreatorModal: React.FC<ScriptCreatorModalProps> = ({
             businessProfileId={businessProfileId}
             authToken={authToken}
             onTokenRefreshed={onTokenRefreshed}
+            prefilledHook={prefilledHook}
+            onClose={onBackToHookGenerator}
             userStyles={userStyles.map(style => ({
               id: style.id,
               style_name: style.style_name || 'Unnamed Style',
