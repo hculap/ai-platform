@@ -5,7 +5,8 @@ import {
   User, Building2, Settings, LogOut, Search, Bell,
   Bot, Zap, FileText, Video, Target, TrendingUp, Megaphone,
   Users, Activity, Clock, CheckCircle, Plus, Menu, Package,
-  Play, BookOpen, Lightbulb, ChevronLeft, ChevronRight, Check, X, Home, Palette, TrendingUp as TrendingUpIcon, TrendingDown, Calendar, Star
+  Play, BookOpen, Lightbulb, ChevronLeft, ChevronRight, Check, X, Home, Palette, TrendingUp as TrendingUpIcon, TrendingDown, Calendar, Star,
+  BarChart3, Globe, Heart, MessageSquare, Share2, Eye
 } from 'lucide-react';
 import { User as UserType } from '../types';
 import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, updateBusinessProfile, getCompetitionsCount, getOffersCount, getCampaignsCount, getAdsCount, getScriptsCount, getOffers, getCampaigns, getUserStyles } from '../services/api';
@@ -505,6 +506,60 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
         icon: Users,
         color: 'text-purple-600',
         bgColor: 'bg-purple-100',
+        priority: 1
+      },
+      {
+        id: 'track-analytics',
+        title: t('dashboard.tips.trackAnalytics.title', 'Track Key Performance Metrics'),
+        content: t('dashboard.tips.trackAnalytics.content', 'Monitor conversion rates, customer acquisition costs, and engagement metrics. Data-driven decisions lead to sustainable business growth.'),
+        icon: BarChart3,
+        color: 'text-green-600',
+        bgColor: 'bg-green-100',
+        priority: 1
+      },
+      {
+        id: 'global-reach',
+        title: t('dashboard.tips.globalReach.title', 'Expand Your Digital Presence'),
+        content: t('dashboard.tips.globalReach.content', 'Optimize your website for international markets. Multi-language content and local SEO unlock new customer segments.'),
+        icon: Globe,
+        color: 'text-indigo-600',
+        bgColor: 'bg-indigo-100',
+        priority: 1
+      },
+      {
+        id: 'customer-retention',
+        title: t('dashboard.tips.customerRetention.title', 'Focus on Customer Retention'),
+        content: t('dashboard.tips.customerRetention.content', 'Acquiring new customers costs 5x more than retaining existing ones. Build loyalty programs and personalized experiences.'),
+        icon: Heart,
+        color: 'text-red-600',
+        bgColor: 'bg-red-100',
+        priority: 1
+      },
+      {
+        id: 'social-engagement',
+        title: t('dashboard.tips.socialEngagement.title', 'Master Social Media Engagement'),
+        content: t('dashboard.tips.socialEngagement.content', 'Create authentic conversations with your audience. Consistent engagement builds brand trust and drives organic growth.'),
+        icon: MessageSquare,
+        color: 'text-pink-600',
+        bgColor: 'bg-pink-100',
+        priority: 1
+      },
+      {
+        id: 'content-strategy',
+        title: t('dashboard.tips.contentStrategy.title', 'Develop a Content Strategy'),
+        content: t('dashboard.tips.contentStrategy.content', 'Plan your content calendar around customer journey stages. Educational content positions you as an industry expert.'),
+        icon: Share2,
+        color: 'text-orange-600',
+        bgColor: 'bg-orange-100',
+        priority: 1
+      },
+      {
+        id: 'monitor-competition',
+        title: t('dashboard.tips.monitorCompetition.title', 'Monitor Competitor Activity'),
+        content: t('dashboard.tips.monitorCompetition.content', 'Stay informed about competitor pricing, content, and campaigns. Market intelligence helps you identify opportunities and threats.'),
+        icon: Eye,
+        color: 'text-gray-600',
+        bgColor: 'bg-gray-100',
         priority: 1
       }
     ];
