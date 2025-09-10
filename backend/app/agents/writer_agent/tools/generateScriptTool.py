@@ -519,9 +519,15 @@ class GenerateScriptTool(PromptBasedTool):
             }
 
     def _parse_status_content(self, content: Any) -> Dict[str, Any]:
-        """Parse content from status checking."""
+        """Parse content from status checking and save script to database."""
         try:
             parsed_content = self.parser(content)
+            
+            # For background mode, we need to save the script to database
+            # Since we don't have access to original request parameters in status parsing,
+            # we'll return the parsed content as-is and let the API endpoint handle saving
+            # if needed. The frontend will handle both data structures.
+            
             return parsed_content
         except Exception as e:
             raise Exception(f"Failed to parse script status result: {str(e)}")

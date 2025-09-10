@@ -197,8 +197,7 @@ const Scripts: React.FC<ScriptsProps> = ({
   };
 
   const handleScriptCreated = () => {
-    closeModal('scriptCreator');
-    loadData(); // Refresh scripts list
+    loadData(); // Refresh scripts list (but keep modal open)
   };
   
   if (isLoading) {
@@ -1216,6 +1215,7 @@ const ScriptCreatorModal: React.FC<ScriptCreatorModalProps> = ({
             onTokenRefreshed={onTokenRefreshed}
             prefilledHook={prefilledHook}
             onClose={onBackToHookGenerator}
+            onScriptCreated={onScriptCreated}
             userStyles={userStyles.map(style => ({
               id: style.id,
               style_name: style.style_name || 'Unnamed Style',

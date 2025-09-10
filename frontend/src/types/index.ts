@@ -299,6 +299,10 @@ export interface ScriptGenerationResult {
   estimated_duration_sec?: number;
   metadata?: any;
   language?: string;
+  // Content fields (available in background mode at root level)
+  title?: string;
+  content?: string;
+  type?: string;
 }
 
 export interface ScriptTypeInfo {

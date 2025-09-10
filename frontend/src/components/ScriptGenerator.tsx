@@ -14,7 +14,15 @@ import {
   Clock,
   Play,
   CheckSquare,
-  MessageCircle
+  MessageCircle,
+  Copy,
+  Download,
+  Info,
+  Target,
+  Mic,
+  Camera,
+  Type,
+  StickyNote
 } from 'lucide-react';
 import { generateScript } from '../services/api';
 import {
@@ -65,6 +73,7 @@ interface ScriptGeneratorProps {
   onTokenRefreshed?: (newToken: string) => void;
   prefilledHook?: string;
   onClose?: () => void;
+  onScriptCreated?: () => void;
   userStyles?: Array<{
     id: string;
     style_name: string;
@@ -92,6 +101,7 @@ const ScriptGenerator: React.FC<ScriptGeneratorProps> = ({
   onTokenRefreshed,
   prefilledHook,
   onClose,
+  onScriptCreated,
   userStyles = [],
   offers = [],
   campaigns = []
@@ -121,6 +131,8 @@ const ScriptGenerator: React.FC<ScriptGeneratorProps> = ({
   const [generationError, setGenerationError] = useState<string | null>(null);
   const [generatedScript, setGeneratedScript] = useState<ScriptGenerationResult | null>(null);
   const [showPreview, setShowPreview] = useState(false);
+  const [activeTab, setActiveTab] = useState<'content' | 'beats' | 'checklist' | 'cta' | 'metadata'>('content');
+  const [copiedText, setCopiedText] = useState<string | null>(null);
 
   // Get selected script type details
   const selectedScriptType = SCRIPT_TYPES[scriptType];
@@ -188,6 +200,32 @@ const ScriptGenerator: React.FC<ScriptGeneratorProps> = ({
       // Route mode - use browser navigation for backward compatibility
       navigate(-1);
     }
+  };
+
+  // Copy text to clipboard
+  const copyToClipboard = (text: string, label: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setCopiedText(label);
+      setTimeout(() => setCopiedText(null), 2000);
+    });
+  };
+
+  // Export script as text file
+  const exportScript = () => {
+    if (!generatedScript) return;
+    
+    const content = generatedScript.script?.content || generatedScript.content || '';
+    const title = generatedScript.script?.title || generatedScript.title || 'Generated Script';
+    
+    const blob = new Blob([content], { type: 'text/plain' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${title.replace(/[^a-zA-Z0-9]/g, '_')}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
@@ -457,7 +495,7 @@ const ScriptGenerator: React.FC<ScriptGeneratorProps> = ({
                 {t('scriptGenerator.scriptGenerated', 'Script Generated')}
               </div>
               <h4 className="text-lg font-semibold text-gray-900 mb-2">
-                {generatedScript?.script?.title || 'Generated Script'}
+                {generatedScript?.script?.title || generatedScript?.title || 'Generated Script'}
               </h4>
               <p className="text-gray-600 text-sm mb-4">
                 {selectedScriptType.name} • {t('scriptGenerator.savedAsDraft', 'Saved as draft')}
@@ -467,104 +505,375 @@ const ScriptGenerator: React.FC<ScriptGeneratorProps> = ({
             {/* Rich Script Content */}
             {generatedScript && (
               <div className="space-y-6">
-                {/* Duration and Type Info */}
-                {generatedScript.estimated_duration_sec && (
-                  <div className="flex items-center gap-4 text-sm text-gray-600 bg-blue-50 rounded-lg p-3 border border-blue-200">
+                {/* Quick Stats Bar */}
+                <div className="flex items-center gap-4 text-sm text-gray-600 bg-blue-50 rounded-lg p-3 border border-blue-200">
+                  {generatedScript.estimated_duration_sec && (
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-blue-600" />
                       <span>Duration: {Math.round(generatedScript.estimated_duration_sec / 60)} min {generatedScript.estimated_duration_sec % 60} sec</span>
                     </div>
+                  )}
+                  <div className="flex items-center gap-2">
+                    <Type className="w-4 h-4 text-blue-600" />
+                    <span>Words: {Math.round((generatedScript.script?.content || generatedScript.content || '').length / 5)}</span>
                   </div>
-                )}
+                  {generatedScript.beats && (
+                    <div className="flex items-center gap-2">
+                      <Play className="w-4 h-4 text-blue-600" />
+                      <span>Beats: {generatedScript.beats.length}</span>
+                    </div>
+                  )}
+                </div>
 
-                {/* Script Beats (if available) */}
-                {generatedScript.beats && generatedScript.beats.length > 0 && (
-                  <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
-                    <h5 className="font-medium text-gray-900 mb-4 flex items-center gap-2">
-                      <Play className="w-4 h-4" />
-                      Script Beats
-                    </h5>
-                    <div className="space-y-3">
-                      {generatedScript.beats.map((beat: any, index: number) => (
-                        <div key={index} className="bg-white border border-gray-200 rounded-lg p-4">
-                          <div className="flex items-start gap-3">
-                            <div className="w-6 h-6 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-xs font-medium">
-                              {index + 1}
+                {/* Action Buttons */}
+                <div className="flex justify-center gap-2 mb-4">
+                  <button
+                    onClick={() => copyToClipboard(generatedScript.script?.content || generatedScript.content || '', 'Script')}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm"
+                  >
+                    <Copy className="w-4 h-4" />
+                    {copiedText === 'Script' ? 'Copied!' : 'Copy Script'}
+                  </button>
+                  <button
+                    onClick={exportScript}
+                    className="px-4 py-2 bg-gray-100 text-gray-700 rounded-lg font-medium hover:bg-gray-200 transition-colors flex items-center gap-2 text-sm"
+                  >
+                    <Download className="w-4 h-4" />
+                    Export
+                  </button>
+                </div>
+
+                {/* Tabbed Interface */}
+                <div className="border border-gray-200 rounded-lg overflow-hidden">
+                  {/* Tab Headers */}
+                  <div className="flex border-b border-gray-200 bg-gray-50">
+                    <button
+                      onClick={() => setActiveTab('content')}
+                      className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                        activeTab === 'content'
+                          ? 'border-blue-500 text-blue-600 bg-white'
+                          : 'border-transparent text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <FileText className="w-4 h-4" />
+                        Script Content
+                      </div>
+                    </button>
+                    
+                    {generatedScript.beats && generatedScript.beats.length > 0 && (
+                      <button
+                        onClick={() => setActiveTab('beats')}
+                        className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                          activeTab === 'beats'
+                            ? 'border-blue-500 text-blue-600 bg-white'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Play className="w-4 h-4" />
+                          Beats ({generatedScript.beats.length})
+                        </div>
+                      </button>
+                    )}
+                    
+                    {generatedScript.checklist && generatedScript.checklist.length > 0 && (
+                      <button
+                        onClick={() => setActiveTab('checklist')}
+                        className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                          activeTab === 'checklist'
+                            ? 'border-blue-500 text-blue-600 bg-white'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <CheckSquare className="w-4 h-4" />
+                          Checklist ({generatedScript.checklist.length})
+                        </div>
+                      </button>
+                    )}
+                    
+                    {generatedScript.cta?.alternatives && generatedScript.cta.alternatives.length > 0 && (
+                      <button
+                        onClick={() => setActiveTab('cta')}
+                        className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                          activeTab === 'cta'
+                            ? 'border-blue-500 text-blue-600 bg-white'
+                            : 'border-transparent text-gray-500 hover:text-gray-700'
+                        }`}
+                      >
+                        <div className="flex items-center gap-2">
+                          <MessageCircle className="w-4 h-4" />
+                          CTAs ({generatedScript.cta.alternatives.length})
+                        </div>
+                      </button>
+                    )}
+                    
+                    <button
+                      onClick={() => setActiveTab('metadata')}
+                      className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors ${
+                        activeTab === 'metadata'
+                          ? 'border-blue-500 text-blue-600 bg-white'
+                          : 'border-transparent text-gray-500 hover:text-gray-700'
+                      }`}
+                    >
+                      <div className="flex items-center gap-2">
+                        <Info className="w-4 h-4" />
+                        Details
+                      </div>
+                    </button>
+                  </div>
+
+                  {/* Tab Content */}
+                  <div className="p-6">
+
+                    {/* Content Tab */}
+                    {activeTab === 'content' && (generatedScript?.script?.content || generatedScript?.content) && (
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <h5 className="font-medium text-gray-900">
+                            {t('scriptGenerator.scriptContent', 'Script Content')}
+                          </h5>
+                          <button
+                            onClick={() => copyToClipboard(generatedScript.script?.content || generatedScript.content || '', 'Content')}
+                            className="text-sm text-blue-600 hover:text-blue-800 flex items-center gap-1"
+                          >
+                            <Copy className="w-4 h-4" />
+                            {copiedText === 'Content' ? 'Copied!' : 'Copy'}
+                          </button>
+                        </div>
+                        <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 max-h-96 overflow-y-auto">
+                          <pre className="whitespace-pre-wrap text-sm text-gray-900 font-normal leading-relaxed">
+                            {generatedScript.script?.content || generatedScript.content}
+                          </pre>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Beats Tab */}
+                    {activeTab === 'beats' && generatedScript.beats && generatedScript.beats.length > 0 && (
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <h5 className="font-medium text-gray-900">Script Beats</h5>
+                          <span className="text-sm text-gray-500">{generatedScript.beats.length} beats</span>
+                        </div>
+                        <div className="space-y-4 max-h-96 overflow-y-auto">
+                          {generatedScript.beats.map((beat: any, index: number) => (
+                            <div key={index} className="border border-gray-200 rounded-lg p-4">
+                              <div className="flex items-start gap-3">
+                                <div className="w-8 h-8 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-sm font-medium">
+                                  {index + 1}
+                                </div>
+                                <div className="flex-1">
+                                  <div className="flex items-center gap-2 mb-2">
+                                    {beat.timestamp && (
+                                      <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                                        <Clock className="w-3 h-3 inline mr-1" />
+                                        {beat.timestamp}
+                                      </span>
+                                    )}
+                                    {beat.section && (
+                                      <span className="text-xs font-medium text-purple-600 bg-purple-50 px-2 py-1 rounded">
+                                        <Target className="w-3 h-3 inline mr-1" />
+                                        {beat.section}
+                                      </span>
+                                    )}
+                                  </div>
+                                  
+                                  {beat.speaker && (
+                                    <div className="mb-2 text-xs text-gray-600">
+                                      <Mic className="w-3 h-3 inline mr-1" />
+                                      <strong>Speaker:</strong> {beat.speaker}
+                                    </div>
+                                  )}
+                                  
+                                  {beat.voiceover && (
+                                    <div className="mb-2 p-2 bg-blue-50 rounded text-sm">
+                                      <div className="text-xs text-blue-700 font-medium mb-1">
+                                        <Mic className="w-3 h-3 inline mr-1" />Voiceover:
+                                      </div>
+                                      <p className="text-gray-700">{beat.voiceover}</p>
+                                    </div>
+                                  )}
+                                  
+                                  {beat.on_screen_text && (
+                                    <div className="mb-2 p-2 bg-yellow-50 rounded text-sm">
+                                      <div className="text-xs text-yellow-700 font-medium mb-1">
+                                        <Type className="w-3 h-3 inline mr-1" />On-Screen Text:
+                                      </div>
+                                      <p className="text-gray-700">{beat.on_screen_text}</p>
+                                    </div>
+                                  )}
+                                  
+                                  {beat.b_roll && (
+                                    <div className="mb-2 p-2 bg-green-50 rounded text-sm">
+                                      <div className="text-xs text-green-700 font-medium mb-1">
+                                        <Camera className="w-3 h-3 inline mr-1" />B-Roll Suggestions:
+                                      </div>
+                                      <p className="text-gray-700">{beat.b_roll}</p>
+                                    </div>
+                                  )}
+                                  
+                                  {beat.director_notes && (
+                                    <div className="mb-2 p-2 bg-purple-50 rounded text-sm">
+                                      <div className="text-xs text-purple-700 font-medium mb-1">
+                                        <StickyNote className="w-3 h-3 inline mr-1" />Director Notes:
+                                      </div>
+                                      <p className="text-gray-700 italic">{beat.director_notes}</p>
+                                    </div>
+                                  )}
+                                  
+                                  <div className="text-sm text-gray-700 whitespace-pre-wrap font-medium">
+                                    {beat.content || beat.text}
+                                  </div>
+                                </div>
+                              </div>
                             </div>
-                            <div className="flex-1">
-                              {beat.timestamp && (
-                                <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-1 rounded mb-2 inline-block">
-                                  {beat.timestamp}
-                                </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Checklist Tab */}
+                    {activeTab === 'checklist' && generatedScript.checklist && generatedScript.checklist.length > 0 && (
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <h5 className="font-medium text-gray-900">Production Checklist</h5>
+                          <span className="text-sm text-gray-500">{generatedScript.checklist.length} items</span>
+                        </div>
+                        <div className="space-y-2 max-h-96 overflow-y-auto">
+                          {generatedScript.checklist.map((item: string, index: number) => (
+                            <label key={index} className="flex items-start gap-3 cursor-pointer hover:bg-gray-50 p-3 rounded border border-gray-200">
+                              <input type="checkbox" className="mt-1 rounded" />
+                              <span className="text-sm text-gray-700">{item}</span>
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* CTA Tab */}
+                    {activeTab === 'cta' && generatedScript.cta?.alternatives && generatedScript.cta.alternatives.length > 0 && (
+                      <div>
+                        <div className="flex items-center justify-between mb-4">
+                          <h5 className="font-medium text-gray-900">Call-to-Action Alternatives</h5>
+                          <span className="text-sm text-gray-500">{generatedScript.cta.alternatives.length} options</span>
+                        </div>
+                        <div className="space-y-3 max-h-96 overflow-y-auto">
+                          {generatedScript.cta.alternatives.map((cta: string, index: number) => (
+                            <div key={index} className="border border-gray-200 rounded-lg p-4 hover:bg-gray-50">
+                              <div className="flex justify-between items-start">
+                                <div className="flex-1">
+                                  <div className="text-xs text-gray-500 mb-1">Option {index + 1}</div>
+                                  <p className="text-sm text-gray-700">{cta}</p>
+                                </div>
+                                <button
+                                  onClick={() => copyToClipboard(cta, `CTA ${index + 1}`)}
+                                  className="ml-2 text-blue-600 hover:text-blue-800"
+                                >
+                                  <Copy className="w-4 h-4" />
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Metadata Tab */}
+                    {activeTab === 'metadata' && (
+                      <div>
+                        <h5 className="font-medium text-gray-900 mb-4">Script Details & Metadata</h5>
+                        <div className="space-y-4">
+                          {/* Generation Parameters */}
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                            <h6 className="font-medium text-blue-900 mb-3">Generation Parameters</h6>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
+                              <div>
+                                <span className="text-blue-700 font-medium">Hook Used:</span>
+                                <p className="text-gray-700 mt-1">{generatedScript?.generation_params?.selected_hook}</p>
+                              </div>
+                              <div>
+                                <span className="text-blue-700 font-medium">Script Type:</span>
+                                <p className="text-gray-700 mt-1">{SCRIPT_TYPES[generatedScript?.generation_params?.script_type || 'general']?.name}</p>
+                              </div>
+                              {generatedScript?.generation_params?.style_id && (
+                                <div>
+                                  <span className="text-blue-700 font-medium">Style Applied:</span>
+                                  <p className="text-gray-700 mt-1">Yes</p>
+                                </div>
                               )}
-                              {beat.section && (
-                                <h6 className="font-medium text-gray-900 mb-1">{beat.section}</h6>
+                              {generatedScript?.generation_params?.additional_context && (
+                                <div className="md:col-span-2">
+                                  <span className="text-blue-700 font-medium">Additional Context:</span>
+                                  <p className="text-gray-700 mt-1">{generatedScript.generation_params.additional_context}</p>
+                                </div>
                               )}
-                              <p className="text-sm text-gray-700 whitespace-pre-wrap">{beat.content || beat.text}</p>
                             </div>
                           </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
 
-                {/* Main Script Content */}
-                {generatedScript?.script && (
-                  <div className="border border-gray-200 rounded-lg p-6 bg-gray-50">
-                    <div className="flex items-center justify-between mb-4">
-                      <h5 className="font-medium text-gray-900">
-                        {t('scriptGenerator.scriptContent', 'Script Content')}
-                      </h5>
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-500">
-                          {Math.round(generatedScript.script.content.length / 5)} words
-                        </span>
-                        <Eye className="w-4 h-4 text-gray-400" />
+                          {/* Script Metrics */}
+                          <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+                            <h6 className="font-medium text-green-900 mb-3">Script Metrics</h6>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                              <div className="text-center">
+                                <div className="text-2xl font-bold text-green-600">
+                                  {Math.round((generatedScript.script?.content || generatedScript.content || '').length / 5)}
+                                </div>
+                                <div className="text-green-700">Words</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-2xl font-bold text-green-600">
+                                  {(generatedScript.script?.content || generatedScript.content || '').length}
+                                </div>
+                                <div className="text-green-700">Characters</div>
+                              </div>
+                              {generatedScript.estimated_duration_sec && (
+                                <div className="text-center">
+                                  <div className="text-2xl font-bold text-green-600">
+                                    {Math.round(generatedScript.estimated_duration_sec / 60)}
+                                  </div>
+                                  <div className="text-green-700">Minutes</div>
+                                </div>
+                              )}
+                              {generatedScript.beats && (
+                                <div className="text-center">
+                                  <div className="text-2xl font-bold text-green-600">
+                                    {generatedScript.beats.length}
+                                  </div>
+                                  <div className="text-green-700">Beats</div>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* Additional Metadata */}
+                          {(generatedScript.language || generatedScript.metadata) && (
+                            <div className="bg-purple-50 border border-purple-200 rounded-lg p-4">
+                              <h6 className="font-medium text-purple-900 mb-3">Additional Metadata</h6>
+                              <div className="space-y-2 text-sm">
+                                {generatedScript.language && (
+                                  <div>
+                                    <span className="text-purple-700 font-medium">Language:</span>
+                                    <span className="text-gray-700 ml-2">{generatedScript.language}</span>
+                                  </div>
+                                )}
+                                {generatedScript.metadata && typeof generatedScript.metadata === 'object' && (
+                                  <div>
+                                    <span className="text-purple-700 font-medium">Technical Metadata:</span>
+                                    <pre className="text-gray-700 mt-2 text-xs bg-white p-2 rounded border">
+                                      {JSON.stringify(generatedScript.metadata, null, 2)}
+                                    </pre>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                    <div className="bg-white border border-gray-200 rounded-lg p-4">
-                      <pre className="whitespace-pre-wrap text-sm text-gray-900 font-normal leading-relaxed">
-                        {generatedScript.script.content}
-                      </pre>
-                    </div>
+                    )}
                   </div>
-                )}
-
-                {/* Checklist (if available) */}
-                {generatedScript.checklist && generatedScript.checklist.length > 0 && (
-                  <div className="border border-gray-200 rounded-lg p-6 bg-yellow-50">
-                    <h5 className="font-medium text-gray-900 mb-4 flex items-center gap-2">
-                      <CheckSquare className="w-4 h-4" />
-                      Production Checklist
-                    </h5>
-                    <div className="space-y-2">
-                      {generatedScript.checklist.map((item: string, index: number) => (
-                        <label key={index} className="flex items-start gap-3 cursor-pointer hover:bg-yellow-100 p-2 rounded">
-                          <input type="checkbox" className="mt-1 rounded" />
-                          <span className="text-sm text-gray-700">{item}</span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {/* CTA Alternatives (if available) */}
-                {generatedScript.cta?.alternatives && generatedScript.cta.alternatives.length > 0 && (
-                  <div className="border border-gray-200 rounded-lg p-6 bg-green-50">
-                    <h5 className="font-medium text-gray-900 mb-4 flex items-center gap-2">
-                      <MessageCircle className="w-4 h-4" />
-                      Call-to-Action Alternatives
-                    </h5>
-                    <div className="space-y-2">
-                      {generatedScript.cta.alternatives.map((cta: string, index: number) => (
-                        <div key={index} className="bg-white border border-green-200 rounded p-3">
-                          <p className="text-sm text-gray-700">{cta}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                </div>
               </div>
             )}
 
@@ -596,7 +905,13 @@ const ScriptGenerator: React.FC<ScriptGeneratorProps> = ({
               </button>
               
               <button
-                onClick={() => navigate('/dashboard/scripts')}
+                onClick={() => {
+                  // Notify parent component that script was created (to refresh list)
+                  if (onScriptCreated) {
+                    onScriptCreated();
+                  }
+                  navigate('/dashboard/scripts');
+                }}
                 className="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2"
               >
                 <Save className="w-4 h-4" />

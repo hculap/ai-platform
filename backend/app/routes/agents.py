@@ -15,6 +15,8 @@ from werkzeug.exceptions import NotFound, BadRequest
 from ..agents.base import AgentRegistry, AgentInput
 from ..models.interaction import Interaction
 from ..models.ad import Ad
+from ..models.script import Script
+from ..models.business_profile import BusinessProfile
 from .. import db
 from ..utils.messages import (
     get_message, ERROR_VALIDATION_ERROR, ERROR_UNAUTHORIZED,
@@ -469,13 +471,23 @@ def handle_tool_status_check(slug: str, tool_slug: str):
             execution_time = time.time() - start_time
 
             if result.success:
-                # Process ads agent tool results for async completion
+                # Process tool results for async completion
                 processed_data = result.data
+                
                 if tool_slug == 'generate-headlines' and result.data.get('status') == 'completed':
                     # For async headlines, we can't easily create Ad records without original parameters
                     # For now, return the headlines data as-is and let frontend handle it
                     # TODO: Implement proper parameter storage for async jobs
                     pass
+                
+                elif tool_slug == 'generate-script' and result.data.get('status') == 'completed':
+                    # Save completed script to database
+                    try:
+                        processed_data = _save_background_script(result.data, current_user_id)
+                    except Exception as script_error:
+                        logger.error(f'Error saving background script: {script_error}')
+                        # Don't fail the entire request if script saving fails
+                        pass
                 
                 response_data = {
                     'status': 'completed',
@@ -575,3 +587,76 @@ def list_interactions():
             'error': ERROR_SERVER_ERROR,
             'message': get_message(ERROR_SERVER_ERROR)
         }), 500
+
+
+def _save_background_script(script_data: Dict[str, Any], user_id: str) -> Dict[str, Any]:
+    """
+    Save completed background script to database.
+    
+    Args:
+        script_data: The completed script data from background processing
+        user_id: The user ID from JWT
+    
+    Returns:
+        Updated script data with saved script record
+    """
+    if not user_id:
+        logger.warning("Cannot save background script: no user_id provided")
+        return script_data
+    
+    try:
+        # Extract required fields from script data
+        title = script_data.get('title', 'Generated Script')
+        content = script_data.get('content', '')
+        script_type = script_data.get('type', 'general')
+        
+        # Validate we have essential content
+        if not content.strip():
+            logger.warning("Cannot save background script: no content provided")
+            return script_data
+        
+        # The challenge: we don't have business_profile_id from the original request
+        # For now, let's try to find an active business profile for this user
+        # This is a workaround until we implement proper parameter storage for async jobs
+        business_profile = BusinessProfile.query.filter_by(
+            user_id=user_id,
+            is_active=True
+        ).first()
+        
+        if not business_profile:
+            # Fallback: get any business profile for this user
+            business_profile = BusinessProfile.query.filter_by(user_id=user_id).first()
+        
+        if not business_profile:
+            logger.warning(f"Cannot save background script: no business profile found for user {user_id}")
+            return script_data
+        
+        # Create script record
+        script = Script(
+            user_id=user_id,
+            business_profile_id=business_profile.id,
+            title=title,
+            content=content,
+            script_type=script_type,
+            # We don't have access to style_id, offer_id, campaign_id from background mode
+            # These would need to be stored with the original job parameters
+            status='draft'
+        )
+        
+        db.session.add(script)
+        db.session.commit()
+        
+        logger.info(f"Successfully saved background script with ID: {script.id}")
+        
+        # Add the saved script to the response data
+        updated_data = script_data.copy()
+        updated_data['script'] = script.to_dict()
+        updated_data['saved_to_database'] = True
+        
+        return updated_data
+        
+    except Exception as e:
+        db.session.rollback()
+        logger.error(f"Failed to save background script: {str(e)}")
+        # Return original data if saving fails - don't break the response
+        return script_data
