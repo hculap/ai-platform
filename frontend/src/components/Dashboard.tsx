@@ -5,7 +5,7 @@ import {
   User, Building2, Settings, LogOut, Search, Bell,
   Bot, Zap, FileText, Video, Target, TrendingUp, Megaphone,
   Users, Activity, Clock, CheckCircle, Plus, Menu, Package,
-  Play, BookOpen, Lightbulb, ChevronLeft, ChevronRight, Check, X, Home
+  Play, BookOpen, Lightbulb, ChevronLeft, ChevronRight, Check, X, Home, Palette, TrendingUp as TrendingUpIcon, TrendingDown, Calendar, Star
 } from 'lucide-react';
 import { User as UserType } from '../types';
 import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, updateBusinessProfile, getCompetitionsCount, getOffersCount, getCampaignsCount, getAdsCount, getScriptsCount, getOffers, getCampaigns, getUserStyles } from '../services/api';
@@ -64,6 +64,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
   const [adsCount, setAdsCount] = useState<number>(0);
   const [scriptsCount, setScriptsCount] = useState<number>(0);
   const [interactionsCount, setInteractionsCount] = useState<number>(0);
+  const [userStylesCount, setUserStylesCount] = useState<number>(0);
   const [isLoadingStats, setIsLoadingStats] = useState<boolean>(true);
 
   // Business profiles state
@@ -216,6 +217,22 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     }
   }, [authToken, selectedBusinessProfile?.id]);
 
+  // Function to refresh user styles count
+  const refreshUserStylesCount = useCallback(async () => {
+    if (!selectedBusinessProfile?.id) {
+      setUserStylesCount(0);
+      return;
+    }
+    try {
+      const stylesResult = await getUserStyles(authToken, selectedBusinessProfile.id);
+      if (stylesResult.success && stylesResult.data) {
+        setUserStylesCount(stylesResult.data.length);
+      }
+    } catch (error) {
+      console.error('Error refreshing user styles count:', error);
+    }
+  }, [authToken, selectedBusinessProfile?.id]);
+
   // Fetch real dashboard data
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -243,6 +260,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
         // Fetch scripts count (will use selectedBusinessProfile?.id automatically)
         await refreshScriptsCount();
 
+        // Fetch user styles count (will use selectedBusinessProfile?.id automatically)
+        await refreshUserStylesCount();
+
         // Fetch interactions count
         const interactionsResult = await getInteractionsCount(authToken);
         if (interactionsResult.success && interactionsResult.data !== undefined) {
@@ -256,7 +276,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     };
 
     fetchDashboardData();
-  }, [authToken, refreshCompetitionsCount, refreshOffersCount, refreshCampaignsCount, refreshAdsCount, refreshScriptsCount]);
+  }, [authToken, refreshCompetitionsCount, refreshOffersCount, refreshCampaignsCount, refreshAdsCount, refreshScriptsCount, refreshUserStylesCount]);
 
   // Fetch business profiles separately
   useEffect(() => {
@@ -330,7 +350,12 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     }
   }, [selectedBusinessProfile?.id, authToken, refreshScriptsCount]);
 
-
+  // Also refresh user styles count when selectedBusinessProfile changes
+  useEffect(() => {
+    if (selectedBusinessProfile?.id) {
+      refreshUserStylesCount();
+    }
+  }, [selectedBusinessProfile?.id, authToken, refreshUserStylesCount]);
 
   // Update navigation sections with current data
   const navigationSections: NavSection[] = [
@@ -358,58 +383,242 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     }
   ];
 
+  // Enhanced stats with growth indicators and activity data
+  const getStatWithGrowth = (currentValue: number, statId: string) => {
+    // Simulate growth data - in real app this would come from backend
+    const mockGrowthData: Record<string, { growth: number; isPositive: boolean; activity: string }> = {
+      'profiles': { growth: businessProfilesCount > 0 ? 0 : 100, isPositive: true, activity: 'Setup in progress' },
+      'competitions': { growth: competitionsCount > 1 ? 25 : 0, isPositive: true, activity: 'Research active' },
+      'offers': { growth: offersCount > 2 ? 15 : 0, isPositive: true, activity: 'Catalog growing' },
+      'campaigns': { growth: campaignsCount > 0 ? 12 : 0, isPositive: true, activity: 'Strategy ready' },
+      'ads': { growth: adsCount > 1 ? 8 : 0, isPositive: true, activity: 'Creatives ready' },
+      'scripts': { growth: scriptsCount > 3 ? 20 : 0, isPositive: true, activity: 'Content active' },
+      'styles': { growth: userStylesCount > 0 ? 100 : 0, isPositive: true, activity: 'Styles cloned' },
+      'agents': { growth: 0, isPositive: true, activity: 'Always available' }
+    };
+
+    return mockGrowthData[statId] || { growth: 0, isPositive: true, activity: 'Active' };
+  };
+
   const stats = [
-    { id: 'profiles', label: t('dashboard.stats.businessProfiles'), value: isLoadingStats ? '...' : businessProfilesCount.toString(), icon: Building2, bgColor: 'bg-blue-100', textColor: 'text-blue-600', trend: 'Active profiles' },
-    { id: 'agents', label: t('dashboard.stats.totalAgents'), value: isLoadingStats ? '...' : agentsCount.toString(), icon: Bot, bgColor: 'bg-purple-100', textColor: 'text-purple-600', trend: 'AI agents available' },
-    { id: 'competitions', label: t('dashboard.stats.competitors'), value: isLoadingStats ? '...' : competitionsCount.toString(), icon: Target, bgColor: 'bg-blue-100', textColor: 'text-blue-600', trend: 'Market insights' },
-    { id: 'offers', label: t('dashboard.stats.offers'), value: isLoadingStats ? '...' : offersCount.toString(), icon: Package, bgColor: 'bg-purple-100', textColor: 'text-purple-600', trend: 'Products & services' },
-    { id: 'campaigns', label: t('dashboard.stats.campaigns'), value: isLoadingStats ? '...' : campaignsCount.toString(), icon: TrendingUp, bgColor: 'bg-blue-100', textColor: 'text-blue-600', trend: 'Marketing strategies' },
-    { id: 'ads', label: t('dashboard.stats.ads'), value: isLoadingStats ? '...' : adsCount.toString(), icon: Megaphone, bgColor: 'bg-purple-100', textColor: 'text-purple-600', trend: 'Advertisement creatives' },
-    { id: 'scripts', label: t('dashboard.stats.scripts'), value: isLoadingStats ? '...' : scriptsCount.toString(), icon: FileText, bgColor: 'bg-blue-100', textColor: 'text-blue-600', trend: 'Content pieces' },
+    { 
+      id: 'profiles', 
+      label: t('dashboard.stats.businessProfiles'), 
+      value: isLoadingStats ? '...' : businessProfilesCount.toString(), 
+      icon: Building2, 
+      bgColor: 'bg-blue-100', 
+      textColor: 'text-blue-600', 
+      trend: 'Active profiles',
+      ...getStatWithGrowth(businessProfilesCount, 'profiles')
+    },
+    { 
+      id: 'styles', 
+      label: t('dashboard.stats.userStyles', 'Writing Styles'), 
+      value: isLoadingStats ? '...' : userStylesCount.toString(), 
+      icon: Palette, 
+      bgColor: 'bg-purple-100', 
+      textColor: 'text-purple-600', 
+      trend: 'Cloned writing styles',
+      ...getStatWithGrowth(userStylesCount, 'styles')
+    },
+    { 
+      id: 'competitions', 
+      label: t('dashboard.stats.competitors'), 
+      value: isLoadingStats ? '...' : competitionsCount.toString(), 
+      icon: Target, 
+      bgColor: 'bg-blue-100', 
+      textColor: 'text-blue-600', 
+      trend: 'Market insights',
+      ...getStatWithGrowth(competitionsCount, 'competitions')
+    },
+    { 
+      id: 'offers', 
+      label: t('dashboard.stats.offers'), 
+      value: isLoadingStats ? '...' : offersCount.toString(), 
+      icon: Package, 
+      bgColor: 'bg-purple-100', 
+      textColor: 'text-purple-600', 
+      trend: 'Products & services',
+      ...getStatWithGrowth(offersCount, 'offers')
+    },
+    { 
+      id: 'campaigns', 
+      label: t('dashboard.stats.campaigns'), 
+      value: isLoadingStats ? '...' : campaignsCount.toString(), 
+      icon: TrendingUp, 
+      bgColor: 'bg-blue-100', 
+      textColor: 'text-blue-600', 
+      trend: 'Marketing strategies',
+      ...getStatWithGrowth(campaignsCount, 'campaigns')
+    },
+    { 
+      id: 'ads', 
+      label: t('dashboard.stats.ads'), 
+      value: isLoadingStats ? '...' : adsCount.toString(), 
+      icon: Megaphone, 
+      bgColor: 'bg-purple-100', 
+      textColor: 'text-purple-600', 
+      trend: 'Advertisement creatives',
+      ...getStatWithGrowth(adsCount, 'ads')
+    },
+    { 
+      id: 'scripts', 
+      label: t('dashboard.stats.scripts'), 
+      value: isLoadingStats ? '...' : scriptsCount.toString(), 
+      icon: FileText, 
+      bgColor: 'bg-blue-100', 
+      textColor: 'text-blue-600', 
+      trend: 'Content pieces',
+      ...getStatWithGrowth(scriptsCount, 'scripts')
+    },
+    { 
+      id: 'agents', 
+      label: t('dashboard.stats.totalAgents'), 
+      value: isLoadingStats ? '...' : agentsCount.toString(), 
+      icon: Bot, 
+      bgColor: 'bg-purple-100', 
+      textColor: 'text-purple-600', 
+      trend: 'AI agents available',
+      ...getStatWithGrowth(agentsCount, 'agents')
+    },
   ];
 
-  const businessTips = [
-    {
-      id: 1,
-      title: t('dashboard.tips.tip1.title', 'Research Before You Campaign'),
-      content: t('dashboard.tips.tip1.content', 'Always analyze your competitors before creating marketing campaigns. Understanding their strategies helps you position your business more effectively.'),
-      icon: Target,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100'
-    },
-    {
-      id: 2,
-      title: t('dashboard.tips.tip2.title', 'Optimize Your Offer Catalog'),
-      content: t('dashboard.tips.tip2.content', 'Use AI-generated market insights to refine your product and service offerings. Focus on what your target customers truly desire.'),
-      icon: Package,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100'
-    },
-    {
-      id: 3,
-      title: t('dashboard.tips.tip3.title', 'Leverage AI Automation'),
-      content: t('dashboard.tips.tip3.content', 'Let AI agents handle repetitive research tasks while you focus on strategy and execution. Automation saves time and improves accuracy.'),
-      icon: Bot,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100'
-    },
-    {
-      id: 4,
-      title: t('dashboard.tips.tip4.title', 'Monitor Campaign Performance'),
-      content: t('dashboard.tips.tip4.content', 'Track your marketing campaign results and adjust strategies based on real data. Continuous optimization leads to better ROI.'),
-      icon: TrendingUp,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100'
-    },
-    {
-      id: 5,
-      title: t('dashboard.tips.tip5.title', 'Build Customer Personas'),
-      content: t('dashboard.tips.tip5.content', 'Create detailed customer profiles based on your target audience analysis. Personalized marketing messages convert better.'),
-      icon: Users,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100'
+  // Smart contextual recommendations based on user progress
+  const getSmartRecommendations = () => {
+    const recommendations = [];
+    
+    // Base tips - always available
+    const baseTips = [
+      {
+        id: 'leverage-ai',
+        title: t('dashboard.tips.leverageAI.title', 'Leverage AI Automation'),
+        content: t('dashboard.tips.leverageAI.content', 'Let AI agents handle repetitive research tasks while you focus on strategy and execution. Automation saves time and improves accuracy.'),
+        icon: Bot,
+        color: 'text-blue-600',
+        bgColor: 'bg-blue-100',
+        priority: 1
+      },
+      {
+        id: 'customer-personas',
+        title: t('dashboard.tips.customerPersonas.title', 'Build Customer Personas'),
+        content: t('dashboard.tips.customerPersonas.content', 'Create detailed customer profiles based on your target audience analysis. Personalized marketing messages convert better.'),
+        icon: Users,
+        color: 'text-purple-600',
+        bgColor: 'bg-purple-100',
+        priority: 1
+      }
+    ];
+
+    // Contextual tips based on progress
+    if (businessProfilesCount === 0) {
+      recommendations.push({
+        id: 'create-profile',
+        title: t('dashboard.recommendations.createProfile.title', 'Start with Business Analysis'),
+        content: t('dashboard.recommendations.createProfile.content', 'Create your first business profile to unlock AI-powered insights. Analyze your website and define your target audience.'),
+        icon: Building2,
+        color: 'text-blue-600',
+        bgColor: 'bg-blue-100',
+        priority: 3,
+        actionUrl: '/dashboard/business-profiles'
+      });
+    } else {
+      if (userStylesCount === 0) {
+        recommendations.push({
+          id: 'clone-style',
+          title: t('dashboard.recommendations.cloneStyle.title', 'Clone Your Writing Style'),
+          content: t('dashboard.recommendations.cloneStyle.content', 'Analyze your existing content to create AI-powered writing styles. This helps maintain brand consistency across all content.'),
+          icon: Palette,
+          color: 'text-purple-600',
+          bgColor: 'bg-purple-100',
+          priority: 3,
+          actionUrl: '/dashboard/scripts'
+        });
+      }
+      
+      if (competitionsCount === 0) {
+        recommendations.push({
+          id: 'research-competition',
+          title: t('dashboard.recommendations.researchCompetition.title', 'Research Your Competition'),
+          content: t('dashboard.recommendations.researchCompetition.content', 'Understanding your competitors\' strategies helps position your business more effectively and identify market opportunities.'),
+          icon: Target,
+          color: 'text-blue-600',
+          bgColor: 'bg-blue-100',
+          priority: 3,
+          actionUrl: '/dashboard/competition'
+        });
+      }
+      
+      if (offersCount === 0) {
+        recommendations.push({
+          id: 'create-offers',
+          title: t('dashboard.recommendations.createOffers.title', 'Define Your Offers'),
+          content: t('dashboard.recommendations.createOffers.content', 'Create a comprehensive offer catalog. AI can help optimize pricing and positioning based on market analysis.'),
+          icon: Package,
+          color: 'text-purple-600',
+          bgColor: 'bg-purple-100',
+          priority: 3,
+          actionUrl: '/dashboard/offers'
+        });
+      } else if (campaignsCount === 0) {
+        recommendations.push({
+          id: 'create-campaigns',
+          title: t('dashboard.recommendations.createCampaigns.title', 'Launch Marketing Campaigns'),
+          content: t('dashboard.recommendations.createCampaigns.content', 'With offers defined, create strategic marketing campaigns to reach your target audience effectively.'),
+          icon: TrendingUp,
+          color: 'text-blue-600',
+          bgColor: 'bg-blue-100',
+          priority: 3,
+          actionUrl: '/dashboard/campaigns'
+        });
+      } else if (adsCount === 0) {
+        recommendations.push({
+          id: 'create-ads',
+          title: t('dashboard.recommendations.createAds.title', 'Generate Ad Creatives'),
+          content: t('dashboard.recommendations.createAds.content', 'Turn your campaigns into compelling advertisements. AI can generate platform-specific creatives for better performance.'),
+          icon: Megaphone,
+          color: 'text-purple-600',
+          bgColor: 'bg-purple-100',
+          priority: 3,
+          actionUrl: '/dashboard/ads'
+        });
+      }
+      
+      // Advanced recommendations for established users
+      if (campaignsCount > 0 && adsCount > 0) {
+        recommendations.push({
+          id: 'optimize-performance',
+          title: t('dashboard.recommendations.optimizePerformance.title', 'Monitor & Optimize'),
+          content: t('dashboard.recommendations.optimizePerformance.content', 'Track your marketing campaign results and adjust strategies based on real data. Continuous optimization leads to better ROI.'),
+          icon: Activity,
+          color: 'text-blue-600',
+          bgColor: 'bg-blue-100',
+          priority: 2
+        });
+      }
+      
+      if (scriptsCount === 0 && userStylesCount > 0) {
+        recommendations.push({
+          id: 'generate-content',
+          title: t('dashboard.recommendations.generateContent.title', 'Create Content with AI'),
+          content: t('dashboard.recommendations.generateContent.content', 'Use your cloned writing styles to generate consistent, high-quality content for your marketing campaigns.'),
+          icon: FileText,
+          color: 'text-purple-600',
+          bgColor: 'bg-purple-100',
+          priority: 2,
+          actionUrl: '/dashboard/scripts'
+        });
+      }
     }
-  ];
+
+    // Combine and sort by priority (higher priority first)
+    const allTips = [...recommendations, ...baseTips]
+      .sort((a, b) => (b.priority || 0) - (a.priority || 0))
+      .slice(0, 5); // Limit to 5 tips
+
+    return allTips;
+  };
+
+  const businessTips = getSmartRecommendations();
 
   return (
     <div className="h-screen bg-gray-50 flex overflow-hidden">
@@ -668,19 +877,34 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                 </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4 mb-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 xl:grid-cols-4 gap-4 mb-8">
               {stats.map((stat) => (
                 <div key={stat.id} className="bg-white rounded-lg p-4 shadow-sm border border-gray-100 hover:shadow-md transition-shadow">
                   <div className="flex items-center justify-between mb-3">
                     <div className={`w-8 h-8 ${stat.bgColor} rounded-lg flex items-center justify-center`}>
                       <stat.icon className={`w-4 h-4 ${stat.textColor}`} />
                     </div>
-                    <Plus className="w-3 h-3 text-gray-400 hover:text-gray-600 cursor-pointer" />
+                    {stat.growth > 0 && (
+                      <div className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium ${
+                        stat.isPositive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'
+                      }`}>
+                        {stat.isPositive ? <TrendingUpIcon className="w-3 h-3" /> : <TrendingDown className="w-3 h-3" />}
+                        +{stat.growth}%
+                      </div>
+                    )}
                   </div>
                   <div>
                     <div className="text-xl font-bold text-gray-900 mb-1">{stat.value}</div>
                     <div className="text-xs font-medium text-gray-600 mb-1">{stat.label}</div>
-                    <div className="text-xs text-gray-500">{stat.trend}</div>
+                    <div className="flex items-center justify-between">
+                      <div className="text-xs text-gray-500">{stat.activity}</div>
+                      {stat.growth === 0 && stat.value !== '...' && parseInt(stat.value) > 0 && (
+                        <div className="flex items-center gap-1">
+                          <Star className="w-3 h-3 text-yellow-500 fill-current" />
+                          <span className="text-xs text-yellow-600">Ready</span>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
@@ -705,13 +929,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                       <div className="flex justify-between text-sm mb-2">
                         <span className="text-gray-600">{t('dashboard.onboarding.progress', 'Progress')}</span>
                         <span className="font-medium text-blue-600">
-                          {Math.round(((businessProfilesCount > 0 ? 1 : 0) + (competitionsCount > 0 ? 1 : 0) + (offersCount > 0 ? 1 : 0) + (campaignsCount > 0 ? 1 : 0) + (adsCount > 0 ? 1 : 0)) / 5 * 100)}%
+                          {Math.round(((businessProfilesCount > 0 ? 1 : 0) + (userStylesCount > 0 ? 1 : 0) + (competitionsCount > 0 ? 1 : 0) + (offersCount > 0 ? 1 : 0) + (campaignsCount > 0 ? 1 : 0) + (adsCount > 0 ? 1 : 0)) / 6 * 100)}%
                         </span>
                       </div>
                       <div className="w-full bg-gray-200 rounded-full h-2">
                         <div 
                           className="bg-gradient-to-r from-blue-600 to-purple-600 h-2 rounded-full transition-all duration-300"
-                          style={{ width: `${((businessProfilesCount > 0 ? 1 : 0) + (competitionsCount > 0 ? 1 : 0) + (offersCount > 0 ? 1 : 0) + (campaignsCount > 0 ? 1 : 0) + (adsCount > 0 ? 1 : 0)) / 5 * 100}%` }}
+                          style={{ width: `${((businessProfilesCount > 0 ? 1 : 0) + (userStylesCount > 0 ? 1 : 0) + (competitionsCount > 0 ? 1 : 0) + (offersCount > 0 ? 1 : 0) + (campaignsCount > 0 ? 1 : 0) + (adsCount > 0 ? 1 : 0)) / 6 * 100}%` }}
                         ></div>
                       </div>
                     </div>
@@ -730,13 +954,26 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                       )}
                     </Link>
 
+                    <Link to="/dashboard/scripts" className="flex items-center gap-4 p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-200 group">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${userStylesCount > 0 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
+                        {userStylesCount > 0 ? <Check className="w-4 h-4" /> : <Palette className="w-4 h-4" />}
+                      </div>
+                      <div className="flex-1">
+                        <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.onboarding.stepStyles', 'Clone Writing Style')}</div>
+                        <div className="text-sm text-gray-500">{userStylesCount > 0 ? t('dashboard.onboarding.stepStylesComplete', 'Writing styles cloned') : t('dashboard.onboarding.stepStylesDesc', 'Analyze and clone your writing style')}</div>
+                      </div>
+                      {userStylesCount > 0 && (
+                        <div className="text-sm font-medium text-green-600">{userStylesCount} {t('dashboard.onboarding.cloned', 'cloned')}</div>
+                      )}
+                    </Link>
+
                     <Link to="/dashboard/competition" className="flex items-center gap-4 p-4 rounded-lg border border-gray-200 hover:border-blue-300 hover:bg-blue-50/50 transition-all duration-200 group">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center ${competitionsCount > 0 ? 'bg-green-100 text-green-600' : 'bg-gray-100 text-gray-400'}`}>
                         {competitionsCount > 0 ? <Check className="w-4 h-4" /> : <Target className="w-4 h-4" />}
                       </div>
                       <div className="flex-1">
-                        <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.onboarding.step2', 'Find Competitors')}</div>
-                        <div className="text-sm text-gray-500">{competitionsCount > 0 ? t('dashboard.onboarding.step2Complete', 'Competitors analyzed') : t('dashboard.onboarding.step2Desc', 'Research your market competition')}</div>
+                        <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.onboarding.step3', 'Find Competitors')}</div>
+                        <div className="text-sm text-gray-500">{competitionsCount > 0 ? t('dashboard.onboarding.step3Complete', 'Competitors analyzed') : t('dashboard.onboarding.step3Desc', 'Research your market competition')}</div>
                       </div>
                       {competitionsCount > 0 && (
                         <div className="text-sm font-medium text-green-600">{competitionsCount} {t('dashboard.onboarding.found', 'found')}</div>
@@ -748,8 +985,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                         {offersCount > 0 ? <Check className="w-4 h-4" /> : <Package className="w-4 h-4" />}
                       </div>
                       <div className="flex-1">
-                        <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.onboarding.step3', 'Create Offers')}</div>
-                        <div className="text-sm text-gray-500">{offersCount > 0 ? t('dashboard.onboarding.step3Complete', 'Offers created') : t('dashboard.onboarding.step3Desc', 'Define your products & services')}</div>
+                        <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.onboarding.step4', 'Create Offers')}</div>
+                        <div className="text-sm text-gray-500">{offersCount > 0 ? t('dashboard.onboarding.step4Complete', 'Offers created') : t('dashboard.onboarding.step4Desc', 'Define your products & services')}</div>
                       </div>
                       {offersCount > 0 && (
                         <div className="text-sm font-medium text-green-600">{offersCount} {t('dashboard.onboarding.active', 'active')}</div>
@@ -761,8 +998,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                         {campaignsCount > 0 ? <Check className="w-4 h-4" /> : <TrendingUp className="w-4 h-4" />}
                       </div>
                       <div className="flex-1">
-                        <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.onboarding.step4', 'Create Campaign')}</div>
-                        <div className="text-sm text-gray-500">{campaignsCount > 0 ? t('dashboard.onboarding.step4Complete', 'Campaigns launched') : t('dashboard.onboarding.step4Desc', 'Generate marketing strategies')}</div>
+                        <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.onboarding.step5', 'Create Campaign')}</div>
+                        <div className="text-sm text-gray-500">{campaignsCount > 0 ? t('dashboard.onboarding.step5Complete', 'Campaigns launched') : t('dashboard.onboarding.step5Desc', 'Generate marketing strategies')}</div>
                       </div>
                       {campaignsCount > 0 && (
                         <div className="text-sm font-medium text-green-600">{campaignsCount} {t('dashboard.onboarding.running', 'running')}</div>
@@ -774,8 +1011,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                         {adsCount > 0 ? <Check className="w-4 h-4" /> : <Megaphone className="w-4 h-4" />}
                       </div>
                       <div className="flex-1">
-                        <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.onboarding.step5', 'Create first Ad')}</div>
-                        <div className="text-sm text-gray-500">{adsCount > 0 ? t('dashboard.onboarding.step5Complete', 'Ads created') : t('dashboard.onboarding.step5Desc', 'Generate advertisement creatives')}</div>
+                        <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.onboarding.step6', 'Create first Ad')}</div>
+                        <div className="text-sm text-gray-500">{adsCount > 0 ? t('dashboard.onboarding.step6Complete', 'Ads created') : t('dashboard.onboarding.step6Desc', 'Generate advertisement creatives')}</div>
                       </div>
                       {adsCount > 0 && (
                         <div className="text-sm font-medium text-green-600">{adsCount} {t('dashboard.onboarding.created', 'created')}</div>
@@ -785,155 +1022,164 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                 </div>
               </div>
 
-              {/* Video Placeholder */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-                <div className="p-6 border-b border-gray-100">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
-                      <Video className="w-4 h-4 text-white" />
+              {/* Right Column: Video + Tips Stacked */}
+              <div className="space-y-6">
+                {/* Video Section */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+                  <div className="p-6 border-b border-gray-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
+                        <Video className="w-4 h-4 text-white" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-gray-900">{t('dashboard.video.title', 'Tutorial Video')}</h3>
                     </div>
-                    <h3 className="text-lg font-semibold text-gray-900">{t('dashboard.video.title', 'Tutorial Video')}</h3>
                   </div>
-                </div>
-                <div className="p-6">
-                  <div className="relative bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-xl aspect-video mb-4 group cursor-pointer hover:shadow-lg transition-all duration-300 overflow-hidden">
-                    {/* Background pattern */}
-                    <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-purple-600/10"></div>
-                    <div className="absolute top-4 left-4 right-4 bottom-4 border-2 border-dashed border-blue-300/50 rounded-lg flex items-center justify-center">
-                      <div className="text-center">
-                        <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
-                          <Play className="w-6 h-6 text-white ml-1" />
-                        </div>
-                        <h4 className="text-lg font-semibold text-gray-900 mb-2">{t('dashboard.video.videoTitle', 'Getting Started with AI Platform')}</h4>
-                        <p className="text-sm text-gray-600 mb-3">{t('dashboard.video.videoDesc', 'Learn how to set up your business profile and create your first AI-powered marketing campaign')}</p>
-                        <div className="flex items-center justify-center gap-2 text-sm text-purple-600 font-medium">
-                          <Clock className="w-4 h-4" />
-                          <span>{t('dashboard.video.duration', '5:32 min')}</span>
+                  <div className="p-6">
+                    <div className="relative bg-gradient-to-br from-blue-50 via-purple-50 to-pink-50 rounded-xl aspect-video mb-4 group cursor-pointer hover:shadow-lg transition-all duration-300 overflow-hidden">
+                      {/* Background pattern */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 to-purple-600/10"></div>
+                      <div className="absolute top-4 left-4 right-4 bottom-4 border-2 border-dashed border-blue-300/50 rounded-lg flex items-center justify-center">
+                        <div className="text-center">
+                          <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform duration-300">
+                            <Play className="w-6 h-6 text-white ml-1" />
+                          </div>
+                          <h4 className="text-lg font-semibold text-gray-900 mb-2">{t('dashboard.video.videoTitle', 'Getting Started with AI Platform')}</h4>
+                          <p className="text-sm text-gray-600 mb-3">{t('dashboard.video.videoDesc', 'Learn how to set up your business profile and create your first AI-powered marketing campaign')}</p>
+                          <div className="flex items-center justify-center gap-2 text-sm text-purple-600 font-medium">
+                            <Clock className="w-4 h-4" />
+                            <span>{t('dashboard.video.duration', '5:32 min')}</span>
+                          </div>
                         </div>
                       </div>
                     </div>
+                    <div className="text-center">
+                      <button className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium text-sm rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200">
+                        <Play className="w-4 h-4" />
+                        {t('dashboard.video.watchNow', 'Watch Now')}
+                      </button>
+                    </div>
                   </div>
-                  <div className="text-center">
-                    <button className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium text-sm rounded-lg shadow-md hover:shadow-lg transform hover:-translate-y-0.5 transition-all duration-200">
-                      <Play className="w-4 h-4" />
-                      {t('dashboard.video.watchNow', 'Watch Now')}
-                    </button>
+                </div>
+
+                {/* Business Tips Section */}
+                <div className="bg-white rounded-xl shadow-sm border border-gray-100">
+                  <div className="p-6 border-b border-gray-100">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-3">
+                        <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
+                          <Lightbulb className="w-4 h-4 text-white" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900">{t('dashboard.tips.title', 'Business Tips')}</h3>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <button
+                          onClick={() => setCurrentTipIndex(currentTipIndex > 0 ? currentTipIndex - 1 : businessTips.length - 1)}
+                          className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                          disabled={businessTips.length <= 1}
+                        >
+                          <ChevronLeft className="w-4 h-4 text-gray-400" />
+                        </button>
+                        <span className="text-xs text-gray-500 px-2">
+                          {currentTipIndex + 1} / {businessTips.length}
+                        </span>
+                        <button
+                          onClick={() => setCurrentTipIndex(currentTipIndex < businessTips.length - 1 ? currentTipIndex + 1 : 0)}
+                          className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
+                          disabled={businessTips.length <= 1}
+                        >
+                          <ChevronRight className="w-4 h-4 text-gray-400" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="p-6">
+                    {businessTips.length > 0 && (() => {
+                      const IconComponent = businessTips[currentTipIndex].icon;
+                      return (
+                        <div className="transition-all duration-300 ease-in-out">
+                          <div className="flex items-start gap-4 mb-4">
+                            <div className={`w-12 h-12 ${businessTips[currentTipIndex].bgColor} rounded-lg flex items-center justify-center flex-shrink-0`}>
+                              <IconComponent className={`w-6 h-6 ${businessTips[currentTipIndex].color}`} />
+                            </div>
+                          <div className="flex-1">
+                            <h4 className="font-semibold text-gray-900 mb-2">{businessTips[currentTipIndex].title}</h4>
+                            <p className="text-sm text-gray-600 leading-relaxed mb-3">{businessTips[currentTipIndex].content}</p>
+                            {businessTips[currentTipIndex].actionUrl && (
+                              <Link 
+                                to={businessTips[currentTipIndex].actionUrl!}
+                                className="inline-flex items-center gap-2 px-3 py-1.5 text-sm font-medium bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105"
+                              >
+                                <Plus className="w-3 h-3" />
+                                {t('dashboard.recommendations.takeAction', 'Take Action')}
+                              </Link>
+                            )}
+                            </div>
+                          </div>
+                          
+                          {/* Tip indicators */}
+                          <div className="flex justify-center gap-2 mt-6">
+                            {businessTips.map((_, index) => (
+                              <button
+                                key={index}
+                                onClick={() => setCurrentTipIndex(index)}
+                                className={`w-2 h-2 rounded-full transition-all duration-200 ${
+                                  index === currentTipIndex 
+                                    ? 'bg-gradient-to-r from-blue-600 to-purple-600 w-6' 
+                                    : 'bg-gray-300 hover:bg-gray-400'
+                                }`}
+                              />
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Quick Actions & Tips */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Quick Actions */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-                <div className="p-6 border-b border-gray-100">
-                  <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-                      <Zap className="w-4 h-4 text-white" />
-                    </div>
-                    <h3 className="text-lg font-semibold text-gray-900">{t('dashboard.quickActions.title', 'Quick Actions')}</h3>
+            {/* Full-Width Quick Actions */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-100 mb-8">
+              <div className="p-6 border-b border-gray-100">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+                    <Zap className="w-4 h-4 text-white" />
                   </div>
-                </div>
-                <div className="p-6">
-                  <div className="grid grid-cols-2 gap-4">
-                    <Link to="/dashboard/agents" className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-left group">
-                      <Bot className="w-8 h-8 text-blue-600 mb-2 group-hover:scale-110 transition-transform" />
-                      <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.quickActions.runAgent', 'Run AI Agent')}</div>
-                      <div className="text-sm text-gray-600">{t('dashboard.quickActions.runAgentDesc', 'Analyze website & generate insights')}</div>
-                    </Link>
-                    <Link to="/dashboard/competition" className="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors text-left group">
-                      <Target className="w-8 h-8 text-purple-600 mb-2 group-hover:scale-110 transition-transform" />
-                      <div className="font-medium text-gray-900 group-hover:text-purple-700 transition-colors">{t('dashboard.quickActions.findCompetitors', 'Find Competitors')}</div>
-                      <div className="text-sm text-gray-600">{t('dashboard.quickActions.findCompetitorsDesc', 'Research market competition')}</div>
-                    </Link>
-                    <Link to="/dashboard/campaigns" className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-left group">
-                      <TrendingUp className="w-8 h-8 text-blue-600 mb-2 group-hover:scale-110 transition-transform" />
-                      <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.quickActions.createCampaign', 'Create Campaign')}</div>
-                      <div className="text-sm text-gray-600">{t('dashboard.quickActions.createCampaignDesc', 'Generate marketing strategy')}</div>
-                    </Link>
-                    <Link to="/dashboard/offers" className="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors text-left group">
-                      <Package className="w-8 h-8 text-purple-600 mb-2 group-hover:scale-110 transition-transform" />
-                      <div className="font-medium text-gray-900 group-hover:text-purple-700 transition-colors">{t('dashboard.quickActions.manageOffers', 'Manage Offers')}</div>
-                      <div className="text-sm text-gray-600">{t('dashboard.quickActions.manageOffersDesc', 'Create products & services')}</div>
-                    </Link>
-                    <Link to="/dashboard/ads" className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-left group">
-                      <Megaphone className="w-8 h-8 text-blue-600 mb-2 group-hover:scale-110 transition-transform" />
-                      <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.quickActions.generateAds', 'Generate Ads')}</div>
-                      <div className="text-sm text-gray-600">{t('dashboard.quickActions.generateAdsDesc', 'Create advertisement creatives')}</div>
-                    </Link>
-                    <Link to="/dashboard/scripts" className="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors text-left group">
-                      <FileText className="w-8 h-8 text-purple-600 mb-2 group-hover:scale-110 transition-transform" />
-                      <div className="font-medium text-gray-900 group-hover:text-purple-700 transition-colors">{t('dashboard.quickActions.generateScripts', 'Write Content')}</div>
-                      <div className="text-sm text-gray-600">{t('dashboard.quickActions.generateScriptsDesc', 'Create content with AI assistant')}</div>
-                    </Link>
-                  </div>
+                  <h3 className="text-lg font-semibold text-gray-900">{t('dashboard.quickActions.title', 'Quick Actions')}</h3>
                 </div>
               </div>
-
-              {/* Business Tips */}
-              <div className="bg-white rounded-xl shadow-sm border border-gray-100">
-                <div className="p-6 border-b border-gray-100">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                      <div className="w-8 h-8 bg-gradient-to-r from-purple-600 to-pink-600 rounded-lg flex items-center justify-center">
-                        <Lightbulb className="w-4 h-4 text-white" />
-                      </div>
-                      <h3 className="text-lg font-semibold text-gray-900">{t('dashboard.tips.title', 'Business Tips')}</h3>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        onClick={() => setCurrentTipIndex(currentTipIndex > 0 ? currentTipIndex - 1 : businessTips.length - 1)}
-                        className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                        disabled={businessTips.length <= 1}
-                      >
-                        <ChevronLeft className="w-4 h-4 text-gray-400" />
-                      </button>
-                      <span className="text-xs text-gray-500 px-2">
-                        {currentTipIndex + 1} / {businessTips.length}
-                      </span>
-                      <button
-                        onClick={() => setCurrentTipIndex(currentTipIndex < businessTips.length - 1 ? currentTipIndex + 1 : 0)}
-                        className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-                        disabled={businessTips.length <= 1}
-                      >
-                        <ChevronRight className="w-4 h-4 text-gray-400" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <div className="p-6">
-                  {businessTips.length > 0 && (() => {
-                    const IconComponent = businessTips[currentTipIndex].icon;
-                    return (
-                      <div className="transition-all duration-300 ease-in-out">
-                        <div className="flex items-start gap-4 mb-4">
-                          <div className={`w-12 h-12 ${businessTips[currentTipIndex].bgColor} rounded-lg flex items-center justify-center flex-shrink-0`}>
-                            <IconComponent className={`w-6 h-6 ${businessTips[currentTipIndex].color}`} />
-                          </div>
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900 mb-2">{businessTips[currentTipIndex].title}</h4>
-                          <p className="text-sm text-gray-600 leading-relaxed">{businessTips[currentTipIndex].content}</p>
-                          </div>
-                        </div>
-                        
-                        {/* Tip indicators */}
-                        <div className="flex justify-center gap-2 mt-6">
-                          {businessTips.map((_, index) => (
-                            <button
-                              key={index}
-                              onClick={() => setCurrentTipIndex(index)}
-                              className={`w-2 h-2 rounded-full transition-all duration-200 ${
-                                index === currentTipIndex 
-                                  ? 'bg-gradient-to-r from-blue-600 to-purple-600 w-6' 
-                                  : 'bg-gray-300 hover:bg-gray-400'
-                              }`}
-                            />
-                          ))}
-                        </div>
-                      </div>
-                    );
-                  })()}
+              <div className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 gap-4">
+                  <Link to="/dashboard/agents" className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-left group">
+                    <Bot className="w-8 h-8 text-blue-600 mb-2 group-hover:scale-110 transition-transform" />
+                    <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.quickActions.runAgent', 'Run AI Agent')}</div>
+                    <div className="text-sm text-gray-600">{t('dashboard.quickActions.runAgentDesc', 'Analyze website & generate insights')}</div>
+                  </Link>
+                  <Link to="/dashboard/competition" className="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors text-left group">
+                    <Target className="w-8 h-8 text-purple-600 mb-2 group-hover:scale-110 transition-transform" />
+                    <div className="font-medium text-gray-900 group-hover:text-purple-700 transition-colors">{t('dashboard.quickActions.findCompetitors', 'Find Competitors')}</div>
+                    <div className="text-sm text-gray-600">{t('dashboard.quickActions.findCompetitorsDesc', 'Research market competition')}</div>
+                  </Link>
+                  <Link to="/dashboard/campaigns" className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-left group">
+                    <TrendingUp className="w-8 h-8 text-blue-600 mb-2 group-hover:scale-110 transition-transform" />
+                    <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.quickActions.createCampaign', 'Create Campaign')}</div>
+                    <div className="text-sm text-gray-600">{t('dashboard.quickActions.createCampaignDesc', 'Generate marketing strategy')}</div>
+                  </Link>
+                  <Link to="/dashboard/offers" className="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors text-left group">
+                    <Package className="w-8 h-8 text-purple-600 mb-2 group-hover:scale-110 transition-transform" />
+                    <div className="font-medium text-gray-900 group-hover:text-purple-700 transition-colors">{t('dashboard.quickActions.manageOffers', 'Manage Offers')}</div>
+                    <div className="text-sm text-gray-600">{t('dashboard.quickActions.manageOffersDesc', 'Create products & services')}</div>
+                  </Link>
+                  <Link to="/dashboard/ads" className="p-4 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors text-left group">
+                    <Megaphone className="w-8 h-8 text-blue-600 mb-2 group-hover:scale-110 transition-transform" />
+                    <div className="font-medium text-gray-900 group-hover:text-blue-700 transition-colors">{t('dashboard.quickActions.generateAds', 'Generate Ads')}</div>
+                    <div className="text-sm text-gray-600">{t('dashboard.quickActions.generateAdsDesc', 'Create advertisement creatives')}</div>
+                  </Link>
+                  <Link to="/dashboard/scripts" className="p-4 bg-purple-50 rounded-lg hover:bg-purple-100 transition-colors text-left group">
+                    <FileText className="w-8 h-8 text-purple-600 mb-2 group-hover:scale-110 transition-transform" />
+                    <div className="font-medium text-gray-900 group-hover:text-purple-700 transition-colors">{t('dashboard.quickActions.generateScripts', 'Write Content')}</div>
+                    <div className="text-sm text-gray-600">{t('dashboard.quickActions.generateScriptsDesc', 'Create content with AI assistant')}</div>
+                  </Link>
                 </div>
               </div>
             </div>
