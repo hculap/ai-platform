@@ -16,9 +16,11 @@ import {
   Loader2,
   CheckCircle
 } from 'lucide-react';
-import { getAgents, executeAgent, checkAnalysisStatus, createBusinessProfile } from '../services/api';
+import { getAgents, executeAgent, checkAnalysisStatus, createBusinessProfile, getCreditBalance } from '../services/api';
 import BusinessForm, { BusinessFormProps } from './BusinessForm';
-import { BusinessProfile, BusinessProfileApi } from '../types';
+import { BusinessProfile, BusinessProfileApi, UserCredit, CreditError } from '../types';
+import ToolCostBadge from './ToolCostBadge';
+import { dispatchCreditUpdate } from '../utils/creditEvents';
 
 
 interface Agent {
@@ -68,6 +70,10 @@ const Agents: React.FC<AgentsProps> = ({
   const [isPolling, setIsPolling] = useState(false);
   const [pollingInterval, setPollingInterval] = useState<NodeJS.Timeout | null>(null);
   const [openaiResponseId, setOpenaiResponseId] = useState<string | null>(null);
+  
+  // Credits state
+  const [userCredits, setUserCredits] = useState<UserCredit | null>(null);
+  const [isLoadingCredits, setIsLoadingCredits] = useState(false);
 
   // Debounce search query
   useEffect(() => {
@@ -160,6 +166,28 @@ const Agents: React.FC<AgentsProps> = ({
     fetchAgents();
   }, [fetchAgents]);
 
+  // Fetch user credits
+  const fetchCredits = useCallback(async () => {
+    try {
+      setIsLoadingCredits(true);
+      const result = await getCreditBalance();
+
+      if (result.success && result.data) {
+        setUserCredits(result.data);
+      } else {
+        console.error('Error fetching credits:', result.error);
+      }
+    } catch (error) {
+      console.error('Error fetching credits:', error);
+    } finally {
+      setIsLoadingCredits(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchCredits();
+  }, [fetchCredits]);
+
   const handleSearchChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
   }, []);
@@ -208,6 +236,8 @@ const Agents: React.FC<AgentsProps> = ({
 
 
       if (result.success && result.data) {
+        // Refresh credits after successful execution start
+        fetchCredits();
 
         // Check if this is a background response
         if (result.data.data && result.data.data.openai_response_id) {
@@ -222,7 +252,15 @@ const Agents: React.FC<AgentsProps> = ({
           setExecutionError('Unexpected response format');
         }
       } else {
-        setExecutionError(result.error || t('agents.executionFailed', 'Wykonanie agenta nie powiodło się'));
+        // Check for credit errors by error message pattern
+        if (result.error && result.error.includes('INSUFFICIENT_CREDITS')) {
+          // This is a credit error - show special message
+          setExecutionError(`${result.error} - Please upgrade your subscription to continue using AI tools.`);
+          // Refresh credits to show current balance
+          fetchCredits();
+        } else {
+          setExecutionError(result.error || t('agents.executionFailed', 'Wykonanie agenta nie powiodło się'));
+        }
       }
     } catch (error) {
       console.error('Agent execution error:', error);
@@ -274,6 +312,16 @@ const Agents: React.FC<AgentsProps> = ({
           setOpenaiResponseId(null);
           clearInterval(interval);
           setPollingInterval(null);
+          
+          // Refresh credits and dispatch event for real-time updates
+          fetchCredits();
+          if (userCredits) {
+            dispatchCreditUpdate({
+              userId: 'current-user',
+              newBalance: userCredits.balance,
+              toolSlug: selectedAgent?.slug
+            });
+          }
         } else if (statusResult.status === 'failed' || statusResult.status === 'error') {
           // Analysis failed
           setExecutionError(statusResult.error || 'Analysis failed');
@@ -694,9 +742,19 @@ const Agents: React.FC<AgentsProps> = ({
 
                   {/* Agent Footer */}
                   <div className="flex items-center justify-between pt-4 border-t border-gray-200/60 group-hover:border-blue-200/60 transition-all duration-300">
-                    <div className="flex items-center gap-2 text-sm text-gray-500">
-                      <Sparkles className="w-4 h-4" />
-                      <span>{t('agents.aiPowered', 'Zasilany AI')}</span>
+                    <div className="flex items-center gap-3">
+                      <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <Sparkles className="w-4 h-4" />
+                        <span>{t('agents.aiPowered', 'Zasilany AI')}</span>
+                      </div>
+                      {/* Show cost for main tool (assume analyze-website for business-concierge) */}
+                      {agent.slug === 'business-concierge' && (
+                        <ToolCostBadge 
+                          toolSlug="analyze-website" 
+                          userBalance={userCredits?.balance}
+                          compact={true}
+                        />
+                      )}
                     </div>
 
                     <button

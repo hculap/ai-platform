@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { BusinessProfile, BusinessProfileApi, AnalysisResult, AuthResponse, Offer, Campaign, CampaignGenerationParams, CampaignGenerationResult, CampaignGoal, Ad, AdGenerationParams, HeadlineGenerationResult, CreativeGenerationResult, ScriptHookGenerationParams, ScriptHookGenerationResult, ScriptGenerationParams, ScriptGenerationResult } from '../types';
+import { BusinessProfile, BusinessProfileApi, AnalysisResult, AuthResponse, Offer, Campaign, CampaignGenerationParams, CampaignGenerationResult, CampaignGoal, Ad, AdGenerationParams, HeadlineGenerationResult, CreativeGenerationResult, ScriptHookGenerationParams, ScriptHookGenerationResult, ScriptGenerationParams, ScriptGenerationResult, UserCredit, CreditTransaction, ToolCost } from '../types';
 import { tokenManager } from './tokenManager';
 
 // API Configuration
@@ -3278,6 +3278,164 @@ export const deleteUserStyle = async (styleId: string, authToken: string) => {
     return {
       success: false,
       error: error.response?.data?.message || error.message || 'Failed to delete user style'
+    };
+  }
+};
+
+// Credit API Functions
+
+// Get current user's credit balance
+export const getCreditBalance = async (): Promise<{ success: boolean; data?: UserCredit; error?: string }> => {
+  try {
+    const response = await api.get('/credits/balance');
+    
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error: any) {
+    console.error('Get credit balance error:', error);
+    
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.'
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to get credit balance'
+    };
+  }
+};
+
+// Get credit transaction history
+export const getCreditTransactions = async (limit?: number): Promise<{ success: boolean; data?: CreditTransaction[]; error?: string }> => {
+  try {
+    const url = limit ? `/credits/transactions?limit=${limit}` : '/credits/transactions';
+    const response = await api.get(url);
+    
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (error: any) {
+    console.error('Get credit transactions error:', error);
+    
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.'
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to get credit transactions'
+    };
+  }
+};
+
+// Get tool costs (public endpoint)
+export const getToolCosts = async (): Promise<{ success: boolean; data?: ToolCost; error?: string }> => {
+  try {
+    const response = await api.get('/credits/tools/costs');
+    
+    return {
+      success: true,
+      data: response.data.data
+    };
+  } catch (error: any) {
+    console.error('Get tool costs error:', error);
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to get tool costs'
+    };
+  }
+};
+
+// Get specific tool cost (public endpoint)
+export const getToolCost = async (toolSlug: string): Promise<{ success: boolean; data?: { tool_slug: string; cost: number }; error?: string }> => {
+  try {
+    const response = await api.get(`/credits/tools/${toolSlug}/cost`);
+    
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error: any) {
+    console.error('Get tool cost error:', error);
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to get tool cost'
+    };
+  }
+};
+
+// Upgrade subscription
+export const upgradeSubscription = async (monthlyQuota: number): Promise<{ success: boolean; data?: UserCredit; error?: string }> => {
+  try {
+    const response = await api.post('/credits/subscription/upgrade', {
+      monthly_quota: monthlyQuota
+    });
+    
+    return {
+      success: true,
+      data: {
+        balance: response.data.balance,
+        monthly_quota: response.data.monthly_quota,
+        subscription_status: response.data.subscription_status,
+        renewal_date: response.data.renewal_date
+      }
+    };
+  } catch (error: any) {
+    console.error('Upgrade subscription error:', error);
+    
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.'
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to upgrade subscription'
+    };
+  }
+};
+
+// Add credits (for admin/promotional use)
+export const addCredits = async (amount: number, reason?: string): Promise<{ success: boolean; data?: { balance: number; amount_added: number }; error?: string }> => {
+  try {
+    const response = await api.post('/credits/add', {
+      amount,
+      reason: reason || 'Credit addition'
+    });
+    
+    return {
+      success: true,
+      data: {
+        balance: response.data.balance,
+        amount_added: response.data.amount_added
+      }
+    };
+  } catch (error: any) {
+    console.error('Add credits error:', error);
+    
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.'
+      };
+    }
+    
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to add credits'
     };
   }
 };

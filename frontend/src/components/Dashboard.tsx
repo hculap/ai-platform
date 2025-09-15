@@ -8,7 +8,7 @@ import {
   Play, BookOpen, Lightbulb, ChevronLeft, ChevronRight, Check, X, Home, Palette, TrendingUp as TrendingUpIcon, TrendingDown, Calendar, Star,
   BarChart3, Globe, Heart, MessageSquare, Share2, Eye
 } from 'lucide-react';
-import { User as UserType } from '../types';
+import { User as UserType, UserCredit } from '../types';
 import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, updateBusinessProfile, getCompetitionsCount, getOffersCount, getCampaignsCount, getAdsCount, getScriptsCount, getOffers, getCampaigns, getUserStyles } from '../services/api';
 import BusinessProfiles from './BusinessProfiles';
 import Agents from './Agents';
@@ -18,6 +18,7 @@ import Campaigns from './Campaigns';
 import Ads from './Ads';
 import Scripts from './Scripts';
 import ScriptGenerator from './ScriptGenerator';
+import CreditsCard from './CreditsCard';
 
 interface DashboardProps {
   user: UserType;
@@ -66,6 +67,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
   const [scriptsCount, setScriptsCount] = useState<number>(0);
   const [interactionsCount, setInteractionsCount] = useState<number>(0);
   const [userStylesCount, setUserStylesCount] = useState<number>(0);
+  const [credits, setCredits] = useState<UserCredit | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState<boolean>(true);
 
   // Business profiles state
@@ -75,6 +77,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
 
   // Tips carousel state
   const [currentTipIndex, setCurrentTipIndex] = useState<number>(0);
+
+  // Credits state
+  const [userCredits, setUserCredits] = useState<UserCredit | null>(null);
 
   // Function to update active profile (only one can be active at a time)
   const updateActiveProfile = useCallback(async (profileId: string) => {
@@ -783,6 +788,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                 </button>
               )}
             </nav>
+
+            {/* Credits Card - Compact Version for Sidebar */}
+            {!sidebarCollapsed && (
+              <div className="px-2 mb-3">
+                <CreditsCard 
+                  className="!p-3 !border-0 !shadow-none !bg-gray-50"
+                  onCreditUpdate={(creditData) => setCredits(creditData)}
+                />
+              </div>
+            )}
 
             {/* User Identity - Very Compact and Subtle */}
             <div className="px-2">

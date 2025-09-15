@@ -310,3 +310,35 @@ export interface ScriptTypeInfo {
   description: string;
   max_length: string;
 }
+
+// Credit System Types
+export interface UserCredit {
+  balance: number;
+  monthly_quota: number;
+  subscription_status: 'free_trial' | 'active' | 'inactive';
+  renewal_date?: string;
+  is_renewal_due?: boolean;
+}
+
+export interface CreditTransaction {
+  id: string;
+  transaction_type: 'earned' | 'spent' | 'expired' | 'renewal';
+  amount: number;
+  balance_after: number;
+  description: string;
+  tool_slug?: string;
+  interaction_id?: string;
+  created_at: string;
+}
+
+export interface ToolCost {
+  [toolSlug: string]: number;
+}
+
+export interface CreditError {
+  error: 'INSUFFICIENT_CREDITS';
+  message: string;
+  required_credits: number;
+  current_balance: number;
+  subscription_status: string;
+}
