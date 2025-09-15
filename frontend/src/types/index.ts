@@ -342,3 +342,45 @@ export interface CreditError {
   current_balance: number;
   subscription_status: string;
 }
+
+// Prompt Templates Types
+export interface PromptTemplate {
+  id: string;
+  title: string;
+  description?: string;
+  content: string;
+  category: string;
+  dependencies: string[];
+  language: 'en' | 'pl';
+  status: 'active' | 'inactive';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface TemplatesResponse {
+  templates: PromptTemplate[];
+  count: number;
+}
+
+export interface CategoriesResponse {
+  categories: string[];
+  count: number;
+}
+
+export interface TemplatePersonalizationData {
+  businessProfile?: BusinessProfileApi;
+  competitors?: any[];
+  offers?: Offer[];
+  campaigns?: Campaign[];
+  scripts?: GeneratedScript[];
+  ads?: Ad[];
+  user?: User;
+  userCredits?: UserCredit;
+}
+
+export interface PersonalizedTemplate {
+  originalTemplate: PromptTemplate;
+  personalizedContent: string;
+  missingDependencies: string[];
+  availableDependencies: string[];
+}

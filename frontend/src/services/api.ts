@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { BusinessProfile, BusinessProfileApi, AnalysisResult, AuthResponse, Offer, Campaign, CampaignGenerationParams, CampaignGenerationResult, CampaignGoal, Ad, AdGenerationParams, HeadlineGenerationResult, CreativeGenerationResult, ScriptHookGenerationParams, ScriptHookGenerationResult, ScriptGenerationParams, ScriptGenerationResult, UserCredit, CreditTransaction, ToolCost } from '../types';
+import { BusinessProfile, BusinessProfileApi, AnalysisResult, AuthResponse, Offer, Campaign, CampaignGenerationParams, CampaignGenerationResult, CampaignGoal, Ad, AdGenerationParams, HeadlineGenerationResult, CreativeGenerationResult, ScriptHookGenerationParams, ScriptHookGenerationResult, ScriptGenerationParams, ScriptGenerationResult, UserCredit, CreditTransaction, ToolCost, PromptTemplate, TemplatesResponse, CategoriesResponse } from '../types';
 import { tokenManager } from './tokenManager';
 
 // API Configuration
@@ -3436,6 +3436,97 @@ export const addCredits = async (amount: number, reason?: string): Promise<{ suc
     return {
       success: false,
       error: error.response?.data?.message || error.message || 'Failed to add credits'
+    };
+  }
+};
+
+// Prompt Templates API Functions
+export const getTemplates = async (language?: string, category?: string, search?: string): Promise<{ success: boolean; data?: TemplatesResponse; error?: string }> => {
+  try {
+    const params: any = {};
+    if (language) params.language = language;
+    if (category) params.category = category;
+    if (search) params.search = search;
+
+    const response = await api.get('/templates', { params });
+
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error: any) {
+    console.error('Error fetching templates:', error);
+
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.'
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to fetch templates'
+    };
+  }
+};
+
+export const getTemplate = async (templateId: string): Promise<{ success: boolean; data?: PromptTemplate; error?: string }> => {
+  try {
+    const response = await api.get(`/templates/${templateId}`);
+
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error: any) {
+    console.error('Error fetching template:', error);
+
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.'
+      };
+    }
+
+    if (error.response?.status === 404) {
+      return {
+        success: false,
+        error: 'Template not found'
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to fetch template'
+    };
+  }
+};
+
+export const getTemplateCategories = async (language?: string): Promise<{ success: boolean; data?: CategoriesResponse; error?: string }> => {
+  try {
+    const params: any = {};
+    if (language) params.language = language;
+
+    const response = await api.get('/templates/categories', { params });
+
+    return {
+      success: true,
+      data: response.data
+    };
+  } catch (error: any) {
+    console.error('Error fetching template categories:', error);
+
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.'
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to fetch template categories'
     };
   }
 };

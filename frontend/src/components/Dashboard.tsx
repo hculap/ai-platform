@@ -19,6 +19,7 @@ import Ads from './Ads';
 import Scripts from './Scripts';
 import ScriptGenerator from './ScriptGenerator';
 import CreditsCard from './CreditsCard';
+import PromptTemplates from './PromptTemplates';
 
 interface DashboardProps {
   user: UserType;
@@ -382,6 +383,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
       title: t('dashboard.nav.aiTools'),
       items: [
         { id: 'agents', label: t('dashboard.nav.agents'), icon: Bot, count: agentsCount },
+        { id: 'templates', label: t('dashboard.nav.templates'), icon: BookOpen, count: 0 },
         { id: 'automations', label: t('dashboard.nav.automations'), icon: Zap, count: 12 },
         { id: 'prompts', label: t('dashboard.nav.prompts'), icon: FileText, count: 28 },
         { id: 'videos', label: t('dashboard.nav.videos'), icon: Video, count: 3 },
@@ -913,6 +915,14 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                   onNavigateToBusinessProfiles={() => window.location.href = '/dashboard/business-profiles'}
                   onProfileCreated={refreshBusinessProfiles}
                   onProfilesChanged={refreshBusinessProfiles}
+                />
+              } />
+
+              <Route path="templates" element={
+                <PromptTemplates
+                  user={user}
+                  authToken={authToken}
+                  onTokenRefreshed={onTokenRefreshed}
                 />
               } />
               

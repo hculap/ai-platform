@@ -25,6 +25,7 @@ class GenerateOffersTool(PromptBasedTool):
     # Constants
     PROMPT_ID = 'pmpt_68b45d3e9768819385a3b08df384bddf05cf82b6c6aeae41'
     VERSION = '1.0.0'
+    COST = 35  # Credits required for offer catalog generation
     
     def __init__(self):
         # Create parameter validator

@@ -26,6 +26,7 @@ class GenerateCampaignTool(PromptBasedTool):
     # Constants
     PROMPT_ID = 'pmpt_68b6f349a55c8194a65b306469911922083ba8ae4a23fadf'
     VERSION = '1.0.0'
+    COST = 40  # Credits required for marketing campaign generation
     
     # Campaign goal options
     CAMPAIGN_GOALS = [

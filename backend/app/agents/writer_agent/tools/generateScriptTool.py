@@ -119,6 +119,7 @@ class GenerateScriptTool(PromptBasedTool):
     # Constants
     PROMPT_ID = 'pmpt_68bd29f83a5c8194bb62367f212baa5b08cfddfb386f5709'
     VERSION = '1.0.0'
+    COST = 30  # Credits required for full script generation
     
     # Script type definitions with descriptions
     SCRIPT_TYPES = {

@@ -143,6 +143,7 @@ class StyleAnalyzerTool(SystemMessageTool):
     """
 
     VERSION = '1.0.0'
+    COST = 25  # Credits required for style analysis
 
     def __init__(self):
         # System message for style analysis with executable directive generation

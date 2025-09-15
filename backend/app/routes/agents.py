@@ -298,6 +298,29 @@ def execute_tool(slug: str, tool_slug: str):
             db.session.commit()
             interaction_id = interaction.id
 
+        # Check credit requirements before execution
+        from ..services.credit_service import CreditService
+        tool_cost = CreditService.get_tool_cost(tool_slug)
+        
+        if tool_cost > 0 and current_user_id:
+            has_credits, balance_info = CreditService.check_sufficient_credits(current_user_id, tool_cost)
+            if not has_credits:
+                # Mark interaction as failed if it exists
+                if interaction and interaction_id:
+                    interaction.mark_failed(
+                        error_message=f"Insufficient credits: need {tool_cost}, have {balance_info.get('balance', 0)}",
+                        execution_time=0
+                    )
+                    db.session.commit()
+                
+                return jsonify({
+                    'error': 'INSUFFICIENT_CREDITS',
+                    'message': f'Need {tool_cost} credits, have {balance_info.get("balance", 0)}',
+                    'required_credits': tool_cost,
+                    'current_balance': balance_info.get('balance', 0),
+                    'subscription_status': balance_info.get('subscription_status', 'free_trial')
+                }), 402  # Payment Required
+
         # Execute tool asynchronously (for now, we'll execute synchronously)
         start_time = time.time()
 
@@ -311,6 +334,28 @@ def execute_tool(slug: str, tool_slug: str):
 
             # Check for background mode
             background_mode = data.get('background', False) and tool_slug in ['analyze-website', 'find-competitors', 'enrich-competitor', 'generate-campaign', 'generate-headlines', 'generate-full-creative', 'generate-script-hooks', 'generate-script', 'generate-offers']
+            
+            # For background mode tasks, deduct credits BEFORE execution
+            # This ensures credits are charged even if the task runs asynchronously
+            if background_mode and tool_cost > 0 and current_user_id:
+                credit_deducted = CreditService.deduct_credits(current_user_id, tool_cost, tool_slug, interaction_id)
+                if not credit_deducted:
+                    # Mark interaction as failed if it exists
+                    if interaction and interaction_id:
+                        interaction.mark_failed(
+                            error_message=f"Failed to deduct {tool_cost} credits for background task",
+                            execution_time=0
+                        )
+                        db.session.commit()
+                    
+                    logger.warning(f"Failed to deduct {tool_cost} credits from user {current_user_id} before background tool execution")
+                    return jsonify({
+                        'error': 'CREDIT_DEDUCTION_FAILED',
+                        'message': f'Failed to deduct {tool_cost} credits for this operation',
+                        'required_credits': tool_cost
+                    }), 500
+                else:
+                    logger.info(f"Pre-deducted {tool_cost} credits from user {current_user_id} for background task {tool_slug}")
             
             # Execute tool synchronously (no more asyncio needed)
             # Check if tool supports background mode
@@ -365,6 +410,16 @@ def execute_tool(slug: str, tool_slug: str):
                     except Exception as ads_error:
                         print(f'Error processing headlines: {ads_error}')
                         # Don't fail the entire request if ads processing fails
+
+                # Deduct credits for successful execution (skip if already deducted for background tasks)
+                if tool_cost > 0 and current_user_id and not background_mode:
+                    credit_deducted = CreditService.deduct_credits(current_user_id, tool_cost, tool_slug, interaction_id)
+                    if not credit_deducted:
+                        logger.warning(f"Failed to deduct {tool_cost} credits from user {current_user_id} after successful tool execution")
+                    else:
+                        logger.info(f"Post-deducted {tool_cost} credits from user {current_user_id} for synchronous task {tool_slug}")
+                elif background_mode and tool_cost > 0:
+                    logger.info(f"Skipping credit deduction for background task {tool_slug} - already deducted before execution")
 
                 # Mark interaction as completed (if it exists)
                 if interaction and interaction_id:

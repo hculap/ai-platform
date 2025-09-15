@@ -89,6 +89,7 @@ class EnrichCompetitorTool(PromptBasedTool):
     # Constants
     PROMPT_ID = 'pmpt_68b231ddbf6081958ef0ea802e04375e07b8425ce317b6bc'
     VERSION = '1.0.0'
+    COST = 10  # Credits required to enrich competitor data
 
     def __init__(self):
         # Create validator for competitor input (name or URL)

@@ -72,6 +72,14 @@ def register():
         db.session.add(user)
         db.session.commit()
 
+        # Initialize credit account for new user (50 free trial credits)
+        try:
+            from ..services.credit_service import CreditService
+            CreditService.get_or_create_user_credits(user.id)
+        except Exception as credit_error:
+            # Don't fail registration if credit initialization fails
+            print(f"Warning: Failed to initialize credits for new user {user.id}: {credit_error}")
+
         # Create access and refresh tokens
         access_token = create_access_token(identity=user.id)
         refresh_token = create_refresh_token(identity=user.id)

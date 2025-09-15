@@ -93,13 +93,13 @@ This is an AI-powered business analysis SaaS platform with a Flask backend and R
 ### Backend Architecture (Flask)
 - **Main entry point**: `backend/app.py` (creates Flask app, runs on port 5004)
 - **Application factory**: `backend/app/__init__.py` contains `create_app()` function
-- **Database**: PostgreSQL with SQLAlchemy ORM and Flask-Migrate
+- **Database**: SQLite with SQLAlchemy ORM and Flask-Migrate (single instance: `backend/instance/ai_platform.db`)
 - **Authentication**: JWT-based auth using Flask-JWT-Extended
 - **API Structure**: RESTful endpoints organized in blueprints
 
 #### Key Backend Components:
-- **Models** (`app/models/`): SQLAlchemy models for User, BusinessProfile, Competition, Interaction
-- **Routes** (`app/routes/`): API blueprints for auth, business_profiles, competitions, agents, offers
+- **Models** (`app/models/`): SQLAlchemy models for User, BusinessProfile, Competition, Interaction, PromptTemplate, UserCredit, CreditTransaction
+- **Routes** (`app/routes/`): API blueprints for auth, business_profiles, competitions, agents, offers, templates, credits
 - **Agents System** (`app/agents/`): Modular AI agent architecture
   - `agents/base.py`: Core agent registry and base classes
   - `agents/concierge/`: Business website analysis agent
@@ -119,10 +119,12 @@ This is an AI-powered business analysis SaaS platform with a Flask backend and R
 #### Key Frontend Components:
 - **Dashboard** (`components/Dashboard.tsx`): Main authenticated user interface
 - **Business Profiles** (`components/BusinessProfiles.tsx`): CRUD for business profiles
-- **Agents** (`components/Agents.tsx`): AI agent execution interface  
+- **Agents** (`components/Agents.tsx`): AI agent execution interface
 - **Competition** (`components/Competition.tsx`): Competitor management
+- **Prompt Templates** (`components/PromptTemplates.tsx`): Browse and personalize AI prompt templates
 - **Authentication Forms**: SignInForm, SignupForm components
 - **Types** (`types/index.ts`): Centralized TypeScript interfaces
+- **Template Personalization** (`utils/templatePersonalization.ts`): Frontend-only placeholder resolution engine
 
 ### Agent System Architecture
 The backend implements a flexible agent system:
@@ -140,6 +142,11 @@ The backend implements a flexible agent system:
 - **offers**: Product/service offerings linked to business profiles
 - **interactions**: Agent execution history
 - **analysis_requests**: Async processing status (via Alembic migrations)
+- **prompt_templates**: AI prompt templates with personalization support
+- **user_credits**: Credit tracking for user accounts
+- **credit_transactions**: Credit usage history
+
+**Database Location**: Single consolidated instance at `backend/instance/ai_platform.db`
 
 ### Authentication Flow
 1. User registers/logs in via `/api/auth/` endpoints
@@ -156,6 +163,8 @@ The backend implements a flexible agent system:
 - **Agent Execution**: Standardized tool execution with input validation
 - **Competition Management**: CRUD operations for competitor tracking
 - **Offer Management**: AI-powered offer catalog generation and CRUD operations
+- **Prompt Templates**: Personalized AI prompt library with 30+ placeholder types
+- **Credit System**: User credit tracking for AI service usage
 - **Multi-language Support**: Polish as primary language, English secondary
 
 ### Development Workflow

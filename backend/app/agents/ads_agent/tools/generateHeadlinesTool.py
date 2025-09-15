@@ -121,6 +121,7 @@ class GenerateHeadlinesTool(PromptBasedTool):
     # Constants
     PROMPT_ID = 'pmpt_68b8163a3dc88195a59a245eabdb52d80d13638419c965d2'
     VERSION = '1.0.0'
+    COST = 15  # Credits required for headline generation
 
     def __init__(self):
         # Initialize using factory pattern

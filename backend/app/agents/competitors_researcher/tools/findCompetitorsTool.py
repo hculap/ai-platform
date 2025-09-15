@@ -25,6 +25,7 @@ class FindCompetitorsTool(PromptBasedTool):
     # Constants
     PROMPT_ID = 'pmpt_68aecb2e0708819096cbf4dfc96863f20e5fe4e80a8d9a31'
     VERSION = '1.0.0'
+    COST = 15  # Credits required to find competitors
 
     def __init__(self):
         # Create validator for business profile ID

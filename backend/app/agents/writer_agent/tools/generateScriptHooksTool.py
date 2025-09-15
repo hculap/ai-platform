@@ -93,6 +93,7 @@ class GenerateScriptHooksTool(PromptBasedTool):
     # Constants
     PROMPT_ID = 'pmpt_68bc7fd71d288197a1f4bb2dff0b79350822e72caa8345e2'
     VERSION = '1.0.0'
+    COST = 5  # Credits required for script hooks generation
     
     # Category definitions
     CATEGORIES = {

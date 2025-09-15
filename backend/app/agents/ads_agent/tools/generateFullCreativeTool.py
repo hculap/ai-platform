@@ -115,6 +115,7 @@ class GenerateFullCreativeTool(PromptBasedTool):
     # Constants
     PROMPT_ID = 'pmpt_68b816560a3c81968971fce73cf9777d0ff8a4e4f5493aec'
     VERSION = '1.0.0'
+    COST = 25  # Credits required for full creative generation
 
     def __init__(self):
         # Initialize using factory pattern

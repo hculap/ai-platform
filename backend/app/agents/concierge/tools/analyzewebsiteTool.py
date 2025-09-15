@@ -19,6 +19,7 @@ class AnalyzeWebsiteTool(PromptBasedTool):
     # Constants
     PROMPT_ID = 'pmpt_68aec68cbe2081909e109ce3b087d6ba07eff42b26c15bb8'
     VERSION = '1.0.0'
+    COST = 20  # Credits required for website analysis
     
     def __init__(self):
         # Create validator for URL parameter
