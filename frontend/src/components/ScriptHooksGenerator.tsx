@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -134,7 +134,10 @@ const ScriptHooksGenerator: React.FC<ScriptHooksGeneratorProps> = ({
   // Get localized categories
   const SCRIPT_HOOK_CATEGORIES = getScriptHookCategories(t);
 
-  // State
+  // Generate storage key based on businessProfileId for isolation
+  const storageKey = `scriptHooks_${businessProfileId}`;
+
+  // State with localStorage persistence
   const [selectedCategory, setSelectedCategory] = useState('');
   const [additionalContext, setAdditionalContext] = useState('');
   const [isGenerating, setIsGenerating] = useState(false);
@@ -142,18 +145,60 @@ const ScriptHooksGenerator: React.FC<ScriptHooksGeneratorProps> = ({
   const [generatedHooks, setGeneratedHooks] = useState<ScriptHookGenerationResult | null>(null);
   const [copiedHooks, setCopiedHooks] = useState<Set<number>>(new Set());
 
-  // Get selected category details
-  const selectedCategoryData = SCRIPT_HOOK_CATEGORIES.find(
-    cat => cat.number === selectedCategory
+  // Restore results from localStorage on component mount
+  useEffect(() => {
+    const savedResults = localStorage.getItem(storageKey);
+    if (savedResults) {
+      try {
+        const parsed = JSON.parse(savedResults);
+        if (parsed.generatedHooks && parsed.timestamp && Date.now() - parsed.timestamp < 3600000) { // 1 hour
+          setGeneratedHooks(parsed.generatedHooks);
+          setSelectedCategory(parsed.selectedCategory || '');
+          setAdditionalContext(parsed.additionalContext || '');
+        } else {
+          // Clear expired data
+          localStorage.removeItem(storageKey);
+        }
+      } catch (error) {
+        console.error('Error loading saved hooks:', error);
+        localStorage.removeItem(storageKey);
+      }
+    }
+  }, [storageKey]);
+
+  // Save results to localStorage whenever they change
+  useEffect(() => {
+    if (generatedHooks) {
+      const dataToSave = {
+        generatedHooks,
+        selectedCategory,
+        additionalContext,
+        timestamp: Date.now()
+      };
+      localStorage.setItem(storageKey, JSON.stringify(dataToSave));
+    }
+  }, [generatedHooks, selectedCategory, additionalContext, storageKey]);
+
+  // Get selected category details with memoization
+  const selectedCategoryData = useMemo(() =>
+    SCRIPT_HOOK_CATEGORIES.find(cat => cat.number === selectedCategory),
+    [SCRIPT_HOOK_CATEGORIES, selectedCategory]
   );
 
-  // Handle generation
-  const handleGenerateHooks = async () => {
+  // Clear saved results when starting new generation
+  const clearSavedResults = useCallback(() => {
+    localStorage.removeItem(storageKey);
+  }, [storageKey]);
+
+  // Handle generation with optimization
+  const handleGenerateHooks = useCallback(async () => {
     if (!businessProfileId || !selectedCategory) return;
 
+    // Clear previous results and saved data
     setIsGenerating(true);
     setGenerationError(null);
     setGeneratedHooks(null);
+    clearSavedResults();
 
     const params: ScriptHookGenerationParams = {
       business_profile_id: businessProfileId,
@@ -195,10 +240,10 @@ const ScriptHooksGenerator: React.FC<ScriptHooksGeneratorProps> = ({
     } finally {
       setIsGenerating(false);
     }
-  };
+  }, [businessProfileId, selectedCategory, additionalContext, authToken, clearSavedResults]);
 
-  // Handle copy hook
-  const handleCopyHook = async (hook: ScriptHook | string, index: number) => {
+  // Handle copy hook with optimization
+  const handleCopyHook = useCallback(async (hook: ScriptHook | string, index: number) => {
     try {
       const hookText = typeof hook === 'string' ? hook : hook.hook;
       await navigator.clipboard.writeText(hookText);
@@ -215,10 +260,20 @@ const ScriptHooksGenerator: React.FC<ScriptHooksGeneratorProps> = ({
     } catch (error) {
       console.error('Failed to copy hook:', error);
     }
-  };
+  }, []);
 
-  // Handle use hook for script generation
-  const handleUseHook = (hook: ScriptHook | string) => {
+  // Handle start over - clear all results and return to form
+  const handleStartOver = useCallback(() => {
+    setGeneratedHooks(null);
+    setSelectedCategory('');
+    setAdditionalContext('');
+    setGenerationError(null);
+    setCopiedHooks(new Set());
+    clearSavedResults();
+  }, [clearSavedResults]);
+
+  // Handle use hook for script generation with optimization
+  const handleUseHook = useCallback((hook: ScriptHook | string) => {
     const hookText = typeof hook === 'string' ? hook : hook.hook;
     
     // Use callback if available (modal-based approach)
@@ -229,16 +284,7 @@ const ScriptHooksGenerator: React.FC<ScriptHooksGeneratorProps> = ({
       const encodedHook = encodeURIComponent(hookText);
       navigate(`/dashboard/scripts/generate?hook=${encodedHook}`);
     }
-  };
-
-  // Reset form
-  const handleStartOver = () => {
-    setSelectedCategory('');
-    setAdditionalContext('');
-    setGeneratedHooks(null);
-    setGenerationError(null);
-    setCopiedHooks(new Set());
-  };
+  }, [onHookSelected, navigate]);
 
   return (
     <div className="bg-white rounded-xl shadow-sm border border-gray-100">

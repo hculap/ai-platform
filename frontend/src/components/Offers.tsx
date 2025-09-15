@@ -61,12 +61,66 @@ const OffersComponent: React.FC<OffersProps> = ({
   const [aiGenerationError, setAiGenerationError] = useState<string | null>(null);
   const [aiGenerationSuccess, setAiGenerationSuccess] = useState<string | null>(null);
   const [offerGenerationJobId, setOfferGenerationJobId] = useState<string | null>(null);
-  
+
   // Selection states for generated offers
   const [generatedOffers, setGeneratedOffers] = useState<any[]>([]);
   const [selectedOffers, setSelectedOffers] = useState<Set<string>>(new Set());
   const [showGenerationResults, setShowGenerationResults] = useState(false);
   const [isSavingSelected, setIsSavingSelected] = useState(false);
+
+  // Storage key for persisting offer generation results
+  const storageKey = useMemo(() =>
+    businessProfileId ? `offers_${businessProfileId}` : null,
+    [businessProfileId]
+  );
+
+  // Restore offer generation results from localStorage
+  useEffect(() => {
+    if (!storageKey) return;
+
+    const savedResults = localStorage.getItem(storageKey);
+    if (savedResults) {
+      try {
+        const parsed = JSON.parse(savedResults);
+        // Check if saved data is not older than 1 hour
+        if (parsed.generatedOffers && parsed.timestamp && (Date.now() - parsed.timestamp) < 3600000) {
+          setGeneratedOffers(parsed.generatedOffers);
+          setSelectedOffers(new Set(parsed.selectedOffers || []));
+          // Don't auto-show modal, let user decide when to view results
+        } else {
+          // Clear expired data
+          localStorage.removeItem(storageKey);
+        }
+      } catch (error) {
+        console.error('Error parsing saved offer data:', error);
+        localStorage.removeItem(storageKey);
+      }
+    }
+  }, [storageKey]);
+
+  // Auto-save generated offer results to localStorage
+  useEffect(() => {
+    if (!storageKey || generatedOffers.length === 0) return;
+
+    const dataToSave = {
+      generatedOffers,
+      selectedOffers: Array.from(selectedOffers),
+      timestamp: Date.now()
+    };
+
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(dataToSave));
+    } catch (error) {
+      console.error('Error saving offer data to localStorage:', error);
+    }
+  }, [storageKey, generatedOffers, selectedOffers]);
+
+  // Function to clear saved offer results
+  const clearSavedResults = useCallback(() => {
+    if (storageKey) {
+      localStorage.removeItem(storageKey);
+    }
+  }, [storageKey]);
 
   // Debounce search query
   useEffect(() => {
@@ -220,10 +274,7 @@ const OffersComponent: React.FC<OffersProps> = ({
     setShowAIGenerationModal(false);
     setAiGenerationError(null);
     setAiGenerationSuccess(null);
-    setGeneratedOffers([]);
-    setSelectedOffers(new Set());
-    setShowGenerationResults(false);
-    setIsSavingSelected(false);
+    // Don't clear generated offers on modal close - preserve results
   }, []);
 
   const handleEditOffer = useCallback((offer: Offer) => {
@@ -313,6 +364,9 @@ const OffersComponent: React.FC<OffersProps> = ({
       setAiGenerationSuccess(null);
       setShowGenerationResults(false);
       setOfferGenerationJobId(null);
+      setGeneratedOffers([]);
+      setSelectedOffers(new Set());
+      clearSavedResults();
 
       // Start background offer generation
       const result = await startBackgroundOfferGeneration(businessProfileId);
@@ -329,7 +383,7 @@ const OffersComponent: React.FC<OffersProps> = ({
       setAiGenerationError('An unexpected error occurred while starting offer generation');
       setIsAIGenerationLoading(false);
     }
-  }, [businessProfileId]);
+  }, [businessProfileId, clearSavedResults]);
 
   const handleOfferSelect = useCallback((offerName: string, checked: boolean) => {
     setSelectedOffers(prev => {
@@ -353,7 +407,7 @@ const OffersComponent: React.FC<OffersProps> = ({
       setAiGenerationError(null);
 
       // Get selected offers from generated offers
-      const selectedOfferData = generatedOffers.filter(offer => 
+      const selectedOfferData = generatedOffers.filter(offer =>
         selectedOffers.has(offer.name)
       );
 
@@ -364,7 +418,8 @@ const OffersComponent: React.FC<OffersProps> = ({
         setShowGenerationResults(false);
         setGeneratedOffers([]);
         setSelectedOffers(new Set());
-        
+        clearSavedResults();
+
         // Refresh offers list
         fetchOffers();
         if (onOffersChanged) onOffersChanged();
@@ -377,7 +432,7 @@ const OffersComponent: React.FC<OffersProps> = ({
     } finally {
       setIsSavingSelected(false);
     }
-  }, [businessProfileId, selectedOffers, generatedOffers, authToken, fetchOffers, onOffersChanged]);
+  }, [businessProfileId, selectedOffers, generatedOffers, authToken, fetchOffers, onOffersChanged, clearSavedResults]);
 
   const truncateText = (text: string, maxLength: number = 150) => {
     if (text.length <= maxLength) return text;
@@ -838,9 +893,17 @@ const OffersComponent: React.FC<OffersProps> = ({
             </div>
 
             <div className="p-6">
-              {/* Execute Button - only show when no results */}
-              {!showGenerationResults && (
-                <div className="flex justify-center mb-6">
+              {/* Action buttons */}
+              <div className="flex justify-center gap-4 mb-6">
+                {generatedOffers.length > 0 && !isAIGenerationLoading && (
+                  <button
+                    onClick={() => setShowGenerationResults(true)}
+                    className="px-4 py-2 text-sm text-purple-600 hover:text-purple-700 hover:bg-purple-50 font-medium rounded-lg transition-colors"
+                  >
+                    {t('offers.aiGeneration.viewPreviousResults', 'Pokaż poprzednie wyniki')}
+                  </button>
+                )}
+                {!showGenerationResults && (
                   <button
                     onClick={handleExecuteAIGeneration}
                     disabled={isAIGenerationLoading}
@@ -858,8 +921,8 @@ const OffersComponent: React.FC<OffersProps> = ({
                       </>
                     )}
                   </button>
-                </div>
-              )}
+                )}
+              </div>
 
               {/* Status Messages */}
               {aiGenerationError && (
@@ -890,6 +953,17 @@ const OffersComponent: React.FC<OffersProps> = ({
                     </h3>
                     
                     <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => {
+                          setGeneratedOffers([]);
+                          setSelectedOffers(new Set());
+                          setShowGenerationResults(false);
+                          clearSavedResults();
+                        }}
+                        className="px-3 py-1 text-sm text-gray-600 hover:text-gray-700 hover:bg-gray-50 font-medium rounded-lg transition-colors"
+                      >
+                        {t('offers.aiGeneration.clearResults', 'Wyczyść wyniki')}
+                      </button>
                       <span className="text-sm text-gray-600">
                         {selectedOffers.size} {t('offers.aiGeneration.selected', 'wybranych')}
                       </span>

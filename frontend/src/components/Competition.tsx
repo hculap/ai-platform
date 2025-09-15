@@ -67,6 +67,61 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
   const [openaiResponseId, setOpenaiResponseId] = useState<string | null>(null);
   const [selectedCompetitors, setSelectedCompetitors] = useState<Set<string>>(new Set());
 
+  // Storage key for persisting competitor research results
+  const storageKey = useMemo(() =>
+    businessProfileId ? `competitors_${businessProfileId}` : null,
+    [businessProfileId]
+  );
+
+  // Restore competitor research results from localStorage
+  useEffect(() => {
+    if (!storageKey) return;
+
+    const savedResults = localStorage.getItem(storageKey);
+    if (savedResults) {
+      try {
+        const parsed = JSON.parse(savedResults);
+        // Check if saved data is not older than 1 hour
+        if (parsed.foundCompetitors && parsed.timestamp && (Date.now() - parsed.timestamp) < 3600000) {
+          setFoundCompetitors(parsed.foundCompetitors);
+          setSelectedCompetitors(new Set(parsed.selectedCompetitors || []));
+          setResearchStatus('completed');
+          // Don't auto-show modal, let user decide when to view results
+        } else {
+          // Clear expired data
+          localStorage.removeItem(storageKey);
+        }
+      } catch (error) {
+        console.error('Error parsing saved competitor data:', error);
+        localStorage.removeItem(storageKey);
+      }
+    }
+  }, [storageKey]);
+
+  // Auto-save competitor research results to localStorage
+  useEffect(() => {
+    if (!storageKey || foundCompetitors.length === 0) return;
+
+    const dataToSave = {
+      foundCompetitors,
+      selectedCompetitors: Array.from(selectedCompetitors),
+      timestamp: Date.now()
+    };
+
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(dataToSave));
+    } catch (error) {
+      console.error('Error saving competitor data to localStorage:', error);
+    }
+  }, [storageKey, foundCompetitors, selectedCompetitors]);
+
+  // Function to clear saved competitor results
+  const clearSavedResults = useCallback(() => {
+    if (storageKey) {
+      localStorage.removeItem(storageKey);
+    }
+  }, [storageKey]);
+
 
   // Debounce search query
   useEffect(() => {
@@ -211,10 +266,7 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
     setShowAIRearchModal(false);
     setAiResearchError(null);
     setAiResearchSuccess(null);
-    setFoundCompetitors([]);
-    setResearchStatus('idle');
-    setOpenaiResponseId(null);
-    setSelectedCompetitors(new Set());
+    // Don't clear found competitors on modal close - preserve results
   }, []);
 
   const handleEditCompetition = useCallback((competition: Competition) => {
@@ -289,6 +341,8 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
       setAiResearchError(null);
       setAiResearchSuccess(null);
       setFoundCompetitors([]);
+      setSelectedCompetitors(new Set());
+      clearSavedResults();
 
       const result = await startBackgroundCompetitorResearch(businessProfileId, authToken);
 
@@ -307,7 +361,7 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
     } finally {
       setIsAIRearchLoading(false);
     }
-  }, [businessProfileId, authToken, onTokenRefreshed]);
+  }, [businessProfileId, authToken, clearSavedResults]);
 
   const handleCompetitorSelect = useCallback((competitorName: string, isSelected: boolean) => {
     setSelectedCompetitors(prev => {
@@ -329,7 +383,7 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
 
     try {
       setIsAIRearchLoading(true);
-      const competitorsToSave = foundCompetitors.filter(competitor => 
+      const competitorsToSave = foundCompetitors.filter(competitor =>
         selectedCompetitors.has(competitor.name)
       );
 
@@ -364,10 +418,11 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
       if (savedCount > 0) {
         setAiResearchSuccess(t('competitions.aiResearch.savedSuccessfully', { count: savedCount }));
         // Remove saved competitors from the found list
-        setFoundCompetitors(prev => prev.filter(competitor => 
+        setFoundCompetitors(prev => prev.filter(competitor =>
           !selectedCompetitors.has(competitor.name)
         ));
         setSelectedCompetitors(new Set());
+        clearSavedResults();
         // Refresh competitions list
         fetchCompetitions();
         if (onCompetitionsChanged) onCompetitionsChanged();
@@ -382,7 +437,7 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
     } finally {
       setIsAIRearchLoading(false);
     }
-  }, [selectedCompetitors, foundCompetitors, businessProfileId, authToken, onTokenRefreshed, onCompetitionsChanged, fetchCompetitions, t]);
+  }, [selectedCompetitors, foundCompetitors, businessProfileId, authToken, onCompetitionsChanged, fetchCompetitions, t, clearSavedResults]);
 
   const truncateText = (text: string, maxLength: number = 150) => {
     if (text.length <= maxLength) return text;
@@ -844,8 +899,19 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
             </div>
 
             <div className="p-6">
-              {/* Execute Button */}
-              <div className="flex justify-center mb-6">
+              {/* Action buttons */}
+              <div className="flex justify-center gap-4 mb-6">
+                {foundCompetitors.length > 0 && researchStatus === 'completed' && (
+                  <button
+                    onClick={() => {
+                      // Show results by updating UI state
+                      setAiResearchSuccess(t('competitions.aiResearch.foundPotentialCompetitors', { count: foundCompetitors.length }));
+                    }}
+                    className="px-4 py-2 text-sm text-purple-600 hover:text-purple-700 hover:bg-purple-50 font-medium rounded-lg transition-colors"
+                  >
+                    {t('competitions.aiResearch.viewPreviousResults', 'Pokaż poprzednie wyniki')}
+                  </button>
+                )}
                 <button
                   onClick={handleExecuteAIRearch}
                   disabled={isAIRearchLoading || (researchStatus !== 'idle' && researchStatus !== 'completed' && researchStatus !== 'failed')}
@@ -897,6 +963,17 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
                     </h3>
                     
                     <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => {
+                          setFoundCompetitors([]);
+                          setSelectedCompetitors(new Set());
+                          setResearchStatus('idle');
+                          clearSavedResults();
+                        }}
+                        className="px-3 py-1 text-sm text-gray-600 hover:text-gray-700 hover:bg-gray-50 font-medium rounded-lg transition-colors"
+                      >
+                        {t('competitions.aiResearch.clearResults', 'Wyczyść wyniki')}
+                      </button>
                       <span className="text-sm text-gray-600">
                         {t('competitions.aiResearch.competitorsSelected', { count: selectedCompetitors.size })}
                       </span>

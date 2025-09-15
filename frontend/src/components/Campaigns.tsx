@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Search,
@@ -87,6 +87,12 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
   const [showGeneratedResult, setShowGeneratedResult] = useState(false);
   const [expandedCampaignId, setExpandedCampaignId] = useState<string | null>(null);
 
+  // Storage key for persisting campaign generation results
+  const storageKey = useMemo(() =>
+    businessProfileId ? `campaigns_${businessProfileId}` : null,
+    [businessProfileId]
+  );
+
   // Function to highlight search terms in text
   const highlightSearchTerm = useCallback((text: string, searchTerm: string) => {
     if (!searchTerm.trim()) return text;
@@ -137,6 +143,59 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
     deadline: undefined,
     selected_products: []
   });
+
+  // Restore campaign generation results from localStorage
+  useEffect(() => {
+    if (!storageKey) return;
+
+    const savedResults = localStorage.getItem(storageKey);
+    if (savedResults) {
+      try {
+        const parsed = JSON.parse(savedResults);
+        // Check if saved data is not older than 1 hour
+        if (parsed.generatedCampaign && parsed.timestamp && (Date.now() - parsed.timestamp) < 3600000) {
+          setGeneratedCampaign(parsed.generatedCampaign);
+          setGenerationParams(parsed.generationParams || {
+            campaign_goal: 'Brand Awareness',
+            budget: undefined,
+            deadline: undefined,
+            selected_products: []
+          });
+          // Don't auto-show modal, let user decide when to view results
+        } else {
+          // Clear expired data
+          localStorage.removeItem(storageKey);
+        }
+      } catch (error) {
+        console.error('Error parsing saved campaign data:', error);
+        localStorage.removeItem(storageKey);
+      }
+    }
+  }, [storageKey]);
+
+  // Auto-save generated campaign results to localStorage
+  useEffect(() => {
+    if (!storageKey || !generatedCampaign) return;
+
+    const dataToSave = {
+      generatedCampaign,
+      generationParams,
+      timestamp: Date.now()
+    };
+
+    try {
+      localStorage.setItem(storageKey, JSON.stringify(dataToSave));
+    } catch (error) {
+      console.error('Error saving campaign data to localStorage:', error);
+    }
+  }, [storageKey, generatedCampaign, generationParams]);
+
+  // Function to clear saved campaign results
+  const clearSavedResults = useCallback(() => {
+    if (storageKey) {
+      localStorage.removeItem(storageKey);
+    }
+  }, [storageKey]);
 
   // Debounce search query
   useEffect(() => {
@@ -224,16 +283,18 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
     }
   };
 
-  const handleGenerateCampaign = async () => {
+  const handleGenerateCampaign = useCallback(async () => {
     if (!businessProfileId) return;
 
     setIsGenerating(true);
     setError(null);
+    setGeneratedCampaign(null);
+    clearSavedResults();
 
     try {
       // Start campaign generation (returns job ID immediately)
       const response = await generateCampaign(businessProfileId, generationParams, authToken);
-      
+
       if (response.success && response.jobId) {
         // Start polling for results
         await pollCampaignGeneration(response.jobId);
@@ -247,7 +308,7 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
       setError('Failed to generate campaign');
       setIsGenerating(false);
     }
-  };
+  }, [businessProfileId, generationParams, authToken, clearSavedResults]);
 
   const pollCampaignGeneration = async (jobId: string): Promise<void> => {
     const maxAttempts = 30; // 5 minutes max (10s intervals)
@@ -330,7 +391,7 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
     });
   };
 
-  const handleSaveCampaign = async () => {
+  const handleSaveCampaign = useCallback(async () => {
     if (!businessProfileId || !generatedCampaign) return;
 
     try {
@@ -338,11 +399,12 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
         campaign_params: generationParams,
         campaign_data: generatedCampaign.campaign_data
       }, authToken);
-      
+
       if (response.success) {
         await fetchCampaigns(); // Refresh the list
         setShowGeneratedResult(false);
         setGeneratedCampaign(null);
+        clearSavedResults();
         onCampaignsChanged?.();
       } else {
         setError(response.error || 'Failed to save campaign');
@@ -351,7 +413,7 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
       console.error('Error saving campaign:', err);
       setError('Failed to save campaign');
     }
-  };
+  }, [businessProfileId, generatedCampaign, generationParams, authToken, fetchCampaigns, onCampaignsChanged, clearSavedResults]);
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -1026,30 +1088,43 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
             </div>
 
             {!isGenerating && (
-              <div className="flex items-center justify-end gap-4 p-6 border-t border-gray-200">
-              <button
-                onClick={() => setShowGenerationForm(false)}
-                className="px-6 py-3 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 font-medium rounded-xl transition-colors"
-              >
-                {t('campaigns.cancel', 'Anuluj')}
-              </button>
-              <button
-                onClick={handleGenerateCampaign}
-                disabled={isGenerating}
-                className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
-              >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    <span>{t('campaigns.generating', 'Generuję...')}</span>
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-5 h-5" />
-                    <span>{t('campaigns.generateStrategy', 'Generuj Strategię')}</span>
-                  </>
+              <div className="flex items-center justify-between gap-4 p-6 border-t border-gray-200">
+                {generatedCampaign && (
+                  <button
+                    onClick={() => {
+                      setShowGenerationForm(false);
+                      setShowGeneratedResult(true);
+                    }}
+                    className="px-4 py-2 text-sm text-blue-600 hover:text-blue-700 hover:bg-blue-50 font-medium rounded-lg transition-colors"
+                  >
+                    {t('campaigns.viewPreviousResult', 'Pokaż poprzedni wynik')}
+                  </button>
                 )}
-              </button>
+                <div className="flex gap-4">
+                  <button
+                    onClick={() => setShowGenerationForm(false)}
+                    className="px-6 py-3 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 font-medium rounded-xl transition-colors"
+                  >
+                    {t('campaigns.cancel', 'Anuluj')}
+                  </button>
+                  <button
+                    onClick={handleGenerateCampaign}
+                    disabled={isGenerating}
+                    className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+                  >
+                    {isGenerating ? (
+                      <>
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        <span>{t('campaigns.generating', 'Generuję...')}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Sparkles className="w-5 h-5" />
+                        <span>{t('campaigns.generateStrategy', 'Generuj Strategię')}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             )}
           </div>
@@ -1211,23 +1286,35 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
               </div>
             </div>
 
-            <div className="flex items-center justify-end gap-4 p-6 border-t border-gray-200">
+            <div className="flex items-center justify-between gap-4 p-6 border-t border-gray-200">
               <button
                 onClick={() => {
+                  setGeneratedCampaign(null);
                   setShowGeneratedResult(false);
-                  setShowGenerationForm(true);
+                  clearSavedResults();
                 }}
-                className="px-6 py-3 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 font-medium rounded-xl transition-colors"
+                className="px-4 py-2 text-sm text-gray-600 hover:text-gray-700 hover:bg-gray-50 font-medium rounded-lg transition-colors"
               >
-                {t('campaigns.regenerate', 'Generuj ponownie')}
+                {t('campaigns.clearResults', 'Wyczyść wyniki')}
               </button>
-              <button
-                onClick={handleSaveCampaign}
-                className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
-              >
-                <Save className="w-5 h-5" />
-                <span>{t('campaigns.acceptSave', 'Zaakceptuj i Zapisz')}</span>
-              </button>
+              <div className="flex gap-4">
+                <button
+                  onClick={() => {
+                    setShowGeneratedResult(false);
+                    setShowGenerationForm(true);
+                  }}
+                  className="px-6 py-3 text-gray-700 bg-white border border-gray-300 hover:bg-gray-50 font-medium rounded-xl transition-colors"
+                >
+                  {t('campaigns.regenerate', 'Generuj ponownie')}
+                </button>
+                <button
+                  onClick={handleSaveCampaign}
+                  className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+                >
+                  <Save className="w-5 h-5" />
+                  <span>{t('campaigns.acceptSave', 'Zaakceptuj i Zapisz')}</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
