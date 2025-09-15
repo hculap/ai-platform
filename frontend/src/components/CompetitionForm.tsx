@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Target, Award, Globe, FileText, Save, Loader2, Brain, AlertCircle, ToggleLeft, ToggleRight } from 'lucide-react';
-import { type Competition, enrichCompetitor } from '../services/api';
+import { type Competition, enrichCompetitor, getCreditBalance } from '../services/api';
+import { dispatchCreditUpdate } from '../utils/creditEvents';
 
 interface CompetitionFormProps {
   initialData?: Competition | null;
@@ -142,11 +143,25 @@ const CompetitionForm: React.FC<CompetitionFormProps> = ({
           description: result.data.description || '',
           usp: result.data.usp || ''
         });
-        
+
         // Mark that we have results and switch to manual mode for review
         setHasEnrichmentResults(true);
         setUseAIEnrichment(false);
         setEnrichmentInput('');
+
+        // Update credits and dispatch event for real-time updates
+        try {
+          const creditResult = await getCreditBalance();
+          if (creditResult.success && creditResult.data) {
+            dispatchCreditUpdate({
+              userId: 'current-user',
+              newBalance: creditResult.data.balance,
+              toolSlug: 'competitors-researcher'
+            });
+          }
+        } catch (creditError) {
+          console.error('Error updating credits after competitor enrichment:', creditError);
+        }
       } else {
         setEnrichmentError(result.error || 'Failed to enrich competitor data');
       }

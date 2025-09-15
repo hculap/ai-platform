@@ -19,16 +19,18 @@ import {
   TrendingUp,
   Award
 } from 'lucide-react';
-import { 
-  getCampaigns, 
-  deleteCampaign, 
+import {
+  getCampaigns,
+  deleteCampaign,
   generateCampaign,
   getCampaignGenerationStatus,
   saveCampaign,
-  getOffers
+  getOffers,
+  getCreditBalance
 } from '../services/api';
 import { Campaign, CampaignGoal, CampaignGenerationParams, CampaignGenerationResult, Offer } from '../types';
 import MarkdownRenderer from './MarkdownRenderer';
+import { dispatchCreditUpdate } from '../utils/creditEvents';
 
 interface CampaignsProps {
   businessProfileId?: string;
@@ -268,6 +270,21 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
               setShowGenerationForm(false);
               setShowGeneratedResult(true);
               setIsGenerating(false);
+
+              // Update credits and dispatch event for real-time updates
+              try {
+                const creditResult = await getCreditBalance();
+                if (creditResult.success && creditResult.data) {
+                  dispatchCreditUpdate({
+                    userId: 'current-user',
+                    newBalance: creditResult.data.balance,
+                    toolSlug: 'campaign-generator'
+                  });
+                }
+              } catch (creditError) {
+                console.error('Error updating credits after campaign generation:', creditError);
+              }
+
               resolve();
               return;
             } else if (statusResponse.status === 'failed') {

@@ -16,18 +16,20 @@ import {
   DollarSign,
   Save
 } from 'lucide-react';
-import { 
-  getOffers, 
-  deleteOffer, 
-  createOffer, 
-  updateOffer, 
+import {
+  getOffers,
+  deleteOffer,
+  createOffer,
+  updateOffer,
   generateOffers,
   startBackgroundOfferGeneration,
   checkOfferGenerationStatus,
-  saveSelectedOffers
+  saveSelectedOffers,
+  getCreditBalance
 } from '../services/api';
 import { Offer } from '../types';
 import OfferForm from './OfferForm';
+import { dispatchCreditUpdate } from '../utils/creditEvents';
 
 interface OffersProps {
   businessProfileId?: string;
@@ -158,6 +160,20 @@ const OffersComponent: React.FC<OffersProps> = ({
             setSelectedOffers(new Set());
             setIsAIGenerationLoading(false);
             setOfferGenerationJobId(null);
+
+            // Update credits and dispatch event for real-time updates
+            try {
+              const creditResult = await getCreditBalance();
+              if (creditResult.success && creditResult.data) {
+                dispatchCreditUpdate({
+                  userId: 'current-user',
+                  newBalance: creditResult.data.balance,
+                  toolSlug: 'offer-assistant'
+                });
+              }
+            } catch (creditError) {
+              console.error('Error updating credits after offer generation:', creditError);
+            }
           } else {
             console.error('No valid offers found in completed response:', statusResult.data);
             setAiGenerationError('No offers were generated - please try again');

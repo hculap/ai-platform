@@ -19,17 +19,19 @@ import {
   Eye,
   Save
 } from 'lucide-react';
-import { 
-  getCompetitions, 
-  deleteCompetition, 
-  createCompetition, 
-  updateCompetition, 
-  executeAgent, 
+import {
+  getCompetitions,
+  deleteCompetition,
+  createCompetition,
+  updateCompetition,
+  executeAgent,
   startBackgroundCompetitorResearch,
   checkCompetitorResearchStatus,
-  type Competition 
+  getCreditBalance,
+  type Competition
 } from '../services/api';
 import CompetitionForm from './CompetitionForm';
+import { dispatchCreditUpdate } from '../utils/creditEvents';
 
 interface CompetitionProps {
   businessProfileId?: string;
@@ -152,6 +154,22 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
         setResearchStatus('completed');
         setFoundCompetitors(Array.isArray(statusResult.data) ? statusResult.data : []);
         setAiResearchSuccess(t('competitions.aiResearch.foundPotentialCompetitors', { count: Array.isArray(statusResult.data) ? statusResult.data.length : 0 }));
+
+        // Update credits and dispatch event for real-time updates
+        (async () => {
+          try {
+            const creditResult = await getCreditBalance();
+            if (creditResult.success && creditResult.data) {
+              dispatchCreditUpdate({
+                userId: 'current-user',
+                newBalance: creditResult.data.balance,
+                toolSlug: 'competitors-researcher'
+              });
+            }
+          } catch (creditError) {
+            console.error('Error updating credits after competitor research:', creditError);
+          }
+        })();
       } else if (statusResult.status === 'failed' || statusResult.status === 'error') {
         setResearchStatus('failed');
         setAiResearchError(statusResult.error || t('competitions.aiResearch.researchFailed'));

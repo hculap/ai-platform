@@ -24,7 +24,8 @@ import {
   Type,
   StickyNote
 } from 'lucide-react';
-import { generateScript } from '../services/api';
+import { generateScript, getCreditBalance } from '../services/api';
+import { dispatchCreditUpdate } from '../utils/creditEvents';
 import {
   ScriptGenerationParams,
   ScriptGenerationResult,
@@ -162,6 +163,20 @@ const ScriptGenerator: React.FC<ScriptGeneratorProps> = ({
         setGeneratedScript(result.data);
         setShowPreview(true);
         console.log('Script generated:', result.data);
+
+        // Update credits and dispatch event for real-time updates
+        try {
+          const creditResult = await getCreditBalance();
+          if (creditResult.success && creditResult.data) {
+            dispatchCreditUpdate({
+              userId: 'current-user',
+              newBalance: creditResult.data.balance,
+              toolSlug: 'writer-agent'
+            });
+          }
+        } catch (creditError) {
+          console.error('Error updating credits after script generation:', creditError);
+        }
       } else {
         setGenerationError(result.error || 'Failed to generate script');
         

@@ -15,7 +15,8 @@ import {
   ChevronDown,
   ChevronUp
 } from 'lucide-react';
-import { analyzeStyle, deleteUserStyle } from '../services/api';
+import { analyzeStyle, deleteUserStyle, getCreditBalance } from '../services/api';
+import { dispatchCreditUpdate } from '../utils/creditEvents';
 
 interface UserStyle {
   id: string;
@@ -198,7 +199,21 @@ const StyleCopyTool: React.FC<StyleCopyToolProps> = ({
         setSuccess(t('styleCopyTool.success', 'Style analysis completed successfully!'));
         setActiveTab('browse');
         onStyleCreated();
-        
+
+        // Update credits and dispatch event for real-time updates
+        try {
+          const creditResult = await getCreditBalance();
+          if (creditResult.success && creditResult.data) {
+            dispatchCreditUpdate({
+              userId: 'current-user',
+              newBalance: creditResult.data.balance,
+              toolSlug: 'writer-agent'
+            });
+          }
+        } catch (creditError) {
+          console.error('Error updating credits after style analysis:', creditError);
+        }
+
         // Reset form with language-aware defaults
         setFormData({
           style_name: '',

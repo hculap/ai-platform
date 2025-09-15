@@ -12,7 +12,8 @@ import {
   MessageSquare,
   FileText
 } from 'lucide-react';
-import { generateScriptHooks } from '../services/api';
+import { generateScriptHooks, getCreditBalance } from '../services/api';
+import { dispatchCreditUpdate } from '../utils/creditEvents';
 import {
   ScriptHookGenerationParams,
   ScriptHookGenerationResult,
@@ -166,6 +167,20 @@ const ScriptHooksGenerator: React.FC<ScriptHooksGeneratorProps> = ({
       if (result.success && result.data) {
         setGeneratedHooks(result.data);
         console.log('Script hooks generated:', result.data);
+
+        // Update credits and dispatch event for real-time updates
+        try {
+          const creditResult = await getCreditBalance();
+          if (creditResult.success && creditResult.data) {
+            dispatchCreditUpdate({
+              userId: 'current-user',
+              newBalance: creditResult.data.balance,
+              toolSlug: 'writer-agent'
+            });
+          }
+        } catch (creditError) {
+          console.error('Error updating credits after script hooks generation:', creditError);
+        }
       } else {
         setGenerationError(result.error || 'Failed to generate script hooks');
         
