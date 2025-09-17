@@ -20,6 +20,7 @@ import Scripts from './Scripts';
 import ScriptGenerator from './ScriptGenerator';
 import CreditsCard from './CreditsCard';
 import PromptTemplates from './PromptTemplates';
+import UserProfile from './UserProfile';
 
 interface DashboardProps {
   user: UserType;
@@ -410,9 +411,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
       id: 'ai-tools',
       title: t('dashboard.nav.aiTools'),
       items: [
+        { id: 'prompts', label: t('dashboard.nav.prompts'), icon: FileText, count: templatesCount },
         { id: 'agents', label: t('dashboard.nav.agents'), icon: Bot, count: agentsCount },
         { id: 'automations', label: t('dashboard.nav.automations'), icon: Zap, count: 0 },
-        { id: 'prompts', label: t('dashboard.nav.prompts'), icon: FileText, count: templatesCount },
         { id: 'videos', label: t('dashboard.nav.videos'), icon: Video, count: 0 },
       ]
     }
@@ -1393,7 +1394,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                 />
               } />
               <Route path="videos" element={<VideosEmptyState />} />
-              <Route path="profile" element={<div className="text-center py-12"><p>{t('dashboard.sections.profile.comingSoon', 'Sekcja Profilu już wkrótce')}</p></div>} />
+              <Route path="profile" element={
+                <UserProfile
+                  user={user}
+                  authToken={authToken}
+                  onTokenRefreshed={onTokenRefreshed}
+                />
+              } />
             </Routes>
           </div>
         </main>

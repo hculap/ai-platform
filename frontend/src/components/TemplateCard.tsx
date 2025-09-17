@@ -141,7 +141,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
 
       {/* Preview button */}
       <div className="mt-4 pt-4 border-t border-gray-100">
-        <button className="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium py-2 px-4 rounded-md transition-colors duration-200 flex items-center justify-center">
+        <button className="w-full bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold py-3 px-4 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 flex items-center justify-center">
           <BookOpen className="w-4 h-4 mr-2" />
           {t('templateCard.viewTemplate')}
         </button>

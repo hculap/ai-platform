@@ -268,105 +268,137 @@ const PromptTemplates: React.FC<PromptTemplatesProps> = ({
   const readyCount = templates.filter(t => getTemplateDependencyStatus(t).isReady).length;
 
   return (
-    <div className="p-6">
-      {/* Header */}
-      <div className="mb-6">
-        <div className="flex items-center justify-between mb-4">
+    <div className="space-y-8">
+      {/* Enhanced Header Panel */}
+      <div className="relative bg-white rounded-xl border border-gray-200 p-6 shadow-sm overflow-hidden">
+        {/* Background Effects */}
+        <div className="absolute inset-0 bg-gradient-to-br from-purple-50/50 via-white to-blue-50/30"></div>
+        <div className="absolute -top-4 -right-4 w-24 h-24 bg-gradient-to-br from-purple-400/20 to-blue-400/20 rounded-full blur-2xl"></div>
+        <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-gradient-to-tr from-blue-400/10 to-purple-400/10 rounded-full blur-3xl"></div>
+
+        {/* Content with relative positioning */}
+        <div className="relative p-8">
+          {/* Header Section - Title and Count */}
+          <div className="flex justify-between items-center mb-8">
+            {/* Left - Title and Icon */}
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-gradient-to-r from-purple-600 to-blue-600 rounded-xl shadow-lg">
+                <BookOpen className="w-6 h-6 text-white" />
+              </div>
+              <div>
+                <h1 className="text-4xl font-black text-gray-900 tracking-tight">
+                  {t('promptTemplates.title')}
+                </h1>
+                <p className="text-lg text-gray-600 font-medium mt-1">
+                  {t('promptTemplates.subtitle')}
+                </p>
+              </div>
+            </div>
+
+            {/* Right - Available Count */}
+            <div className="bg-white/80 backdrop-blur-sm rounded-xl px-4 py-3 border border-gray-200/60 shadow-sm">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-lg">
+                  <Tag className="w-4 h-4 text-white" />
+                </div>
+                <div className="text-right">
+                  <p className="text-2xl font-bold text-gray-900">{templates.length}</p>
+                  <p className="text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    {t('promptTemplates.availableTemplates', 'Dostępnych szablonów')}
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Search Section */}
+          <div className="flex justify-start">
+            {/* Search Input */}
+            <div className="max-w-md">
+              <div className="relative bg-white/90 backdrop-blur-sm rounded-xl border border-gray-200/60 shadow-lg">
+                <div className="relative">
+                  <Search className="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    placeholder={t('promptTemplates.searchPlaceholder')}
+                    className="w-full pl-12 pr-4 py-3 bg-transparent border-0 focus:outline-none focus:ring-2 focus:ring-purple-500 text-gray-900 placeholder-gray-500 font-medium rounded-xl"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Filters */}
+      <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-              <BookOpen className="w-6 h-6 mr-2 text-blue-600" />
-              {t('promptTemplates.title')}
-            </h1>
-            <p className="text-gray-600 mt-1">
-              {t('promptTemplates.subtitle')}
-            </p>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {t('promptTemplates.category', 'Kategoria')}
+            </label>
+            <select
+              value={selectedCategory}
+              onChange={(e) => setSelectedCategory(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">{t('promptTemplates.allCategories')}</option>
+              {categories.map(category => (
+                <option key={category} value={category}>{category}</option>
+              ))}
+            </select>
           </div>
-          <button
-            onClick={handleRefresh}
-            disabled={loading}
-            className="flex items-center px-4 py-2 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-md transition-colors"
-          >
-            <RefreshCw className={`w-4 h-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
-            Refresh
-          </button>
-        </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div className="bg-blue-50 p-4 rounded-lg">
-            <div className="flex items-center">
-              <BookOpen className="w-8 h-8 text-blue-600 mr-3" />
-              <div>
-                <p className="text-2xl font-bold text-blue-600">{templates.length}</p>
-                <p className="text-blue-600 text-sm">{t('promptTemplates.totalTemplates')}</p>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {t('promptTemplates.status', 'Status')}
+            </label>
+            <select
+              value={showOnlyReady ? 'ready' : ''}
+              onChange={(e) => setShowOnlyReady(e.target.value === 'ready')}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            >
+              <option value="">{t('promptTemplates.allStatuses', 'Wszystkie Statusy')}</option>
+              <option value="ready">{t('promptTemplates.readyToUse')}</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {t('promptTemplates.dataRequirements', 'Wymagania danych')}
+            </label>
+            <select
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              disabled
+            >
+              <option>{t('promptTemplates.allRequirements', 'Wszystkie wymagania')}</option>
+            </select>
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              {t('promptTemplates.ready', 'Gotowość')}
+            </label>
+            <div className="flex items-center space-x-4 pt-2">
+              <div className="text-sm text-gray-600">
+                <span className="font-semibold text-green-600">{readyCount}</span> {t('promptTemplates.ready', 'gotowych')}
+              </div>
+              <div className="text-sm text-gray-600">
+                <span className="font-semibold text-orange-600">{templates.length - readyCount}</span> {t('promptTemplates.needsData', 'wymaga danych')}
               </div>
             </div>
           </div>
-          <div className="bg-green-50 p-4 rounded-lg">
-            <div className="flex items-center">
-              <CheckCircle className="w-8 h-8 text-green-600 mr-3" />
-              <div>
-                <p className="text-2xl font-bold text-green-600">{readyCount}</p>
-                <p className="text-green-600 text-sm">{t('promptTemplates.readyToUse')}</p>
-              </div>
-            </div>
-          </div>
-          <div className="bg-orange-50 p-4 rounded-lg">
-            <div className="flex items-center">
-              <AlertTriangle className="w-8 h-8 text-orange-600 mr-3" />
-              <div>
-                <p className="text-2xl font-bold text-orange-600">{templates.length - readyCount}</p>
-                <p className="text-orange-600 text-sm">Need Data</p>
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* Filters */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Search */}
-          <div className="relative">
-            <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
-            <input
-              type="text"
-              placeholder={t('promptTemplates.searchPlaceholder')}
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+        {/* Data loading indicator */}
+        {dataLoading && (
+          <div className="flex items-center justify-center py-2 text-sm text-gray-600">
+            <Loader2 className="w-4 h-4 animate-spin mr-2" />
+            {t('promptTemplates.loadingData', 'Ładowanie danych...')}
           </div>
-
-          {/* Category filter */}
-          <select
-            value={selectedCategory}
-            onChange={(e) => setSelectedCategory(e.target.value)}
-            className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-          >
-            <option value="">{t('promptTemplates.allCategories')}</option>
-            {categories.map(category => (
-              <option key={category} value={category}>{category}</option>
-            ))}
-          </select>
-
-          {/* Ready filter */}
-          <label className="flex items-center space-x-2 px-3 py-2 border border-gray-300 rounded-md cursor-pointer hover:bg-gray-50">
-            <input
-              type="checkbox"
-              checked={showOnlyReady}
-              onChange={(e) => setShowOnlyReady(e.target.checked)}
-              className="rounded text-blue-600 focus:ring-blue-500"
-            />
-            <span className="text-sm text-gray-700">{t('promptTemplates.readyToUse')} only</span>
-          </label>
-
-          {/* Data loading indicator */}
-          {dataLoading && (
-            <div className="flex items-center px-3 py-2 text-sm text-gray-600">
-              <Loader2 className="w-4 h-4 animate-spin mr-2" />
-              Loading data...
-            </div>
-          )}
-        </div>
+        )}
       </div>
 
       {/* Templates grid */}

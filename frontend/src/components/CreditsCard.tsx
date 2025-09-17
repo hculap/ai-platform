@@ -40,10 +40,10 @@ const CreditsCard: React.FC<CreditsCardProps> = ({ className = '', onCreditUpdat
           onCreditUpdate(result.data);
         }
       } else {
-        setError(result.error || 'Failed to load credits');
+        setError(result.error || t('credits.loadError', 'Failed to load credits'));
       }
     } catch (err) {
-      setError('Failed to load credits');
+      setError(t('credits.loadError', 'Failed to load credits'));
     } finally {
       setIsLoading(false);
     }
@@ -73,10 +73,10 @@ const CreditsCard: React.FC<CreditsCardProps> = ({ className = '', onCreditUpdat
           onCreditUpdate(result.data);
         }
       } else {
-        setError(result.error || 'Failed to upgrade subscription');
+        setError(result.error || t('credits.upgradeError', 'Failed to upgrade subscription'));
       }
     } catch (err) {
-      setError('Failed to upgrade subscription');
+      setError(t('credits.upgradeError', 'Failed to upgrade subscription'));
     } finally {
       setIsUpgrading(false);
     }
@@ -118,14 +118,14 @@ const CreditsCard: React.FC<CreditsCardProps> = ({ className = '', onCreditUpdat
       <div className={`bg-white rounded-xl border border-red-200 p-6 ${className}`}>
         <div className="flex items-center text-red-600 mb-4">
           <AlertTriangle className="h-5 w-5 mr-2" />
-          <span className="text-sm font-medium">Error Loading Credits</span>
+          <span className="text-sm font-medium">{t('credits.errorTitle', 'Error Loading Credits')}</span>
         </div>
         <p className="text-sm text-gray-600 mb-4">{error}</p>
         <button
           onClick={loadCredits}
           className="px-4 py-2 bg-blue-600 text-white text-sm rounded-lg hover:bg-blue-700 transition-colors"
         >
-          Retry
+          {t('credits.retry', 'Retry')}
         </button>
       </div>
     );
@@ -163,8 +163,8 @@ const CreditsCard: React.FC<CreditsCardProps> = ({ className = '', onCreditUpdat
               <Zap className="h-4 w-4 text-blue-600" />
             </div>
             <div className="ml-2">
-              <h3 className="text-sm font-semibold text-gray-900">Credits</h3>
-              <p className="text-xs text-gray-500 capitalize">{credits.subscription_status.replace('_', ' ')}</p>
+              <h3 className="text-sm font-semibold text-gray-900">{t('credits.title', 'Credits')}</h3>
+              <p className="text-xs text-gray-500 capitalize">{t(`credits.status.${credits.subscription_status}`, credits.subscription_status.replace('_', ' '))}</p>
             </div>
           </div>
           
@@ -184,7 +184,7 @@ const CreditsCard: React.FC<CreditsCardProps> = ({ className = '', onCreditUpdat
             </span>
             {credits.monthly_quota > 0 && (
               <span className="text-xs text-gray-500">
-                / {credits.monthly_quota} credits
+                / {credits.monthly_quota} {t('credits.credits', 'credits')}
               </span>
             )}
           </div>
@@ -203,14 +203,14 @@ const CreditsCard: React.FC<CreditsCardProps> = ({ className = '', onCreditUpdat
           {credits.balance < 10 && (
             <div className="flex items-center text-red-600 text-xs mb-2">
               <AlertTriangle className="h-3 w-3 mr-1" />
-              <span>Low balance</span>
+              <span>{t('credits.lowBalance', 'Low balance')}</span>
             </div>
           )}
           
           {credits.subscription_status === 'free_trial' && credits.balance > 30 && (
             <div className="flex items-center text-blue-600 text-xs mb-2">
               <CheckCircle className="h-3 w-3 mr-1" />
-              <span>Free trial</span>
+              <span>{t('credits.freeTrial', 'Free trial')}</span>
             </div>
           )}
         </div>
@@ -220,7 +220,7 @@ const CreditsCard: React.FC<CreditsCardProps> = ({ className = '', onCreditUpdat
           <div className="flex items-center text-xs text-gray-500 mb-3">
             <Calendar className="h-3 w-3 mr-1" />
             <span>
-              Renews {new Date(credits.renewal_date).toLocaleDateString()}
+              {t('credits.renews', 'Renews')} {new Date(credits.renewal_date).toLocaleDateString()}
             </span>
           </div>
         )}
@@ -233,7 +233,7 @@ const CreditsCard: React.FC<CreditsCardProps> = ({ className = '', onCreditUpdat
               className="flex-1 flex items-center justify-center px-3 py-2 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors"
             >
               <TrendingUp className="h-3 w-3 mr-1" />
-              Upgrade
+              {t('credits.upgrade', 'Upgrade')}
             </button>
           ) : (
             <button
@@ -241,7 +241,7 @@ const CreditsCard: React.FC<CreditsCardProps> = ({ className = '', onCreditUpdat
               className="flex-1 flex items-center justify-center px-3 py-2 border border-gray-300 text-gray-700 text-xs font-medium rounded-lg hover:bg-gray-50 transition-colors"
             >
               <CreditCard className="h-3 w-3 mr-1" />
-              Manage
+              {t('credits.manage', 'Manage')}
             </button>
           )}
         </div>
@@ -253,7 +253,7 @@ const CreditsCard: React.FC<CreditsCardProps> = ({ className = '', onCreditUpdat
           <div className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Transaction History</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{t('credits.transactionHistory', 'Transaction History')}</h3>
                 <button
                   onClick={() => setShowTransactions(false)}
                   className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
@@ -265,7 +265,7 @@ const CreditsCard: React.FC<CreditsCardProps> = ({ className = '', onCreditUpdat
             
             <div className="p-6 overflow-y-auto max-h-96">
               {transactions.length === 0 ? (
-                <p className="text-center text-gray-500 py-8">No transactions yet</p>
+                <p className="text-center text-gray-500 py-8">{t('credits.noTransactions', 'No transactions yet')}</p>
               ) : (
                 <div className="space-y-3">
                   {transactions.map((transaction) => (
@@ -288,7 +288,7 @@ const CreditsCard: React.FC<CreditsCardProps> = ({ className = '', onCreditUpdat
                           {transaction.amount > 0 ? '+' : ''}{transaction.amount}
                         </p>
                         <p className="text-sm text-gray-500">
-                          Balance: {transaction.balance_after}
+                          {t('credits.balance', 'Balance')}: {transaction.balance_after}
                         </p>
                       </div>
                     </div>
@@ -306,7 +306,7 @@ const CreditsCard: React.FC<CreditsCardProps> = ({ className = '', onCreditUpdat
           <div className="bg-white rounded-xl max-w-md w-full">
             <div className="p-6 border-b border-gray-200">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Upgrade Subscription</h3>
+                <h3 className="text-lg font-semibold text-gray-900">{t('credits.upgradeSubscription', 'Upgrade Subscription')}</h3>
                 <button
                   onClick={() => setShowUpgrade(false)}
                   className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg"
@@ -322,8 +322,8 @@ const CreditsCard: React.FC<CreditsCardProps> = ({ className = '', onCreditUpdat
                      onClick={() => handleUpgrade(500)}>
                   <div className="flex justify-between items-center">
                     <div>
-                      <h4 className="font-semibold text-gray-900">Starter Plan</h4>
-                      <p className="text-sm text-gray-500">500 credits/month</p>
+                      <h4 className="font-semibold text-gray-900">{t('credits.plans.starter.title', 'Starter Plan')}</h4>
+                      <p className="text-sm text-gray-500">{t('credits.plans.starter.description', '500 credits/month')}</p>
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-blue-600">$29/mo</p>
@@ -335,8 +335,8 @@ const CreditsCard: React.FC<CreditsCardProps> = ({ className = '', onCreditUpdat
                      onClick={() => handleUpgrade(1000)}>
                   <div className="flex justify-between items-center">
                     <div>
-                      <h4 className="font-semibold text-gray-900">Professional Plan</h4>
-                      <p className="text-sm text-gray-500">1000 credits/month</p>
+                      <h4 className="font-semibold text-gray-900">{t('credits.plans.professional.title', 'Professional Plan')}</h4>
+                      <p className="text-sm text-gray-500">{t('credits.plans.professional.description', '1000 credits/month')}</p>
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-blue-600">$49/mo</p>
@@ -348,8 +348,8 @@ const CreditsCard: React.FC<CreditsCardProps> = ({ className = '', onCreditUpdat
                      onClick={() => handleUpgrade(2500)}>
                   <div className="flex justify-between items-center">
                     <div>
-                      <h4 className="font-semibold text-gray-900">Business Plan</h4>
-                      <p className="text-sm text-gray-500">2500 credits/month</p>
+                      <h4 className="font-semibold text-gray-900">{t('credits.plans.business.title', 'Business Plan')}</h4>
+                      <p className="text-sm text-gray-500">{t('credits.plans.business.description', '2500 credits/month')}</p>
                     </div>
                     <div className="text-right">
                       <p className="font-bold text-blue-600">$99/mo</p>
@@ -361,7 +361,7 @@ const CreditsCard: React.FC<CreditsCardProps> = ({ className = '', onCreditUpdat
               {isUpgrading && (
                 <div className="flex items-center justify-center mt-6 py-4">
                   <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-blue-600 mr-3"></div>
-                  <span className="text-gray-600">Processing upgrade...</span>
+                  <span className="text-gray-600">{t('credits.processingUpgrade', 'Processing upgrade...')}</span>
                 </div>
               )}
             </div>

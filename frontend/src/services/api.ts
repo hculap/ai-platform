@@ -3555,4 +3555,145 @@ export const getTemplatesCount = async (): Promise<{ success: boolean; data?: nu
   }
 };
 
+// User Profile Management
+export const updateUserEmail = async (newEmail: string, authToken: string): Promise<{ success: boolean; data?: any; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.put('/auth/update-email',
+      { email: newEmail },
+      {
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
+      }
+    );
+
+    if (response.data) {
+      return {
+        success: true,
+        data: response.data
+      };
+    }
+
+    return {
+      success: false,
+      error: 'Failed to update email'
+    };
+  } catch (error: any) {
+    console.error('Error updating email:', error);
+
+    // Check if token is expired
+    if (error.response?.status === 401 || error.response?.data?.msg === 'Signature verification failed') {
+      // Try to refresh the token first
+      const refreshResult = await refreshAuthToken();
+
+      if (refreshResult.success && refreshResult.access_token) {
+        // Token refreshed successfully, retry the original request
+        try {
+          const retryResponse = await api.put('/auth/update-email',
+            { email: newEmail },
+            {
+              headers: {
+                'Authorization': `Bearer ${refreshResult.access_token}`
+              }
+            }
+          );
+
+          if (retryResponse.data) {
+            return {
+              success: true,
+              data: retryResponse.data
+            };
+          }
+        } catch (retryError) {
+          console.error('Retry after token refresh failed:', retryError);
+        }
+      }
+
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to update email'
+    };
+  }
+};
+
+export const updateUserPassword = async (currentPassword: string, newPassword: string, authToken: string): Promise<{ success: boolean; data?: any; error?: string; isTokenExpired?: boolean }> => {
+  try {
+    const response = await api.put('/auth/update-password',
+      {
+        current_password: currentPassword,
+        new_password: newPassword
+      },
+      {
+        headers: {
+          'Authorization': `Bearer ${authToken}`
+        }
+      }
+    );
+
+    if (response.data) {
+      return {
+        success: true,
+        data: response.data
+      };
+    }
+
+    return {
+      success: false,
+      error: 'Failed to update password'
+    };
+  } catch (error: any) {
+    console.error('Error updating password:', error);
+
+    // Check if token is expired
+    if (error.response?.status === 401 || error.response?.data?.msg === 'Signature verification failed') {
+      // Try to refresh the token first
+      const refreshResult = await refreshAuthToken();
+
+      if (refreshResult.success && refreshResult.access_token) {
+        // Token refreshed successfully, retry the original request
+        try {
+          const retryResponse = await api.put('/auth/update-password',
+            {
+              current_password: currentPassword,
+              new_password: newPassword
+            },
+            {
+              headers: {
+                'Authorization': `Bearer ${refreshResult.access_token}`
+              }
+            }
+          );
+
+          if (retryResponse.data) {
+            return {
+              success: true,
+              data: retryResponse.data
+            };
+          }
+        } catch (retryError) {
+          console.error('Retry after token refresh failed:', retryError);
+        }
+      }
+
+      return {
+        success: false,
+        error: 'Authentication token expired. Please log in again.',
+        isTokenExpired: true
+      };
+    }
+
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to update password'
+    };
+  }
+};
+
 export default api;
