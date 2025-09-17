@@ -525,6 +525,16 @@ const resources = {
       "dashboard.sections.automations.comingSoon": "Sekcja Automatyzacji już wkrótce",
       "dashboard.sections.prompts.comingSoon": "Sekcja Promptów już wkrótce",
 
+      // Dashboard Empty States
+      "dashboard.automations.empty.title": "Automatyzacje już wkrótce",
+      "dashboard.automations.empty.description": "Wkrótce będziesz mógł tworzyć inteligentne automatyzacje biznesowe, które oszczędzą Ci czas i zwiększą efektywność.",
+      "dashboard.automations.empty.action": "Wkrótce dostępne",
+      "dashboard.automations.empty.agentsAction": "Sprawdź Agentów AI",
+      "dashboard.videos.empty.title": "Biblioteka wideo już wkrótce",
+      "dashboard.videos.empty.description": "Wkrótce będziesz mógł tworzyć i zarządzać materiałami wideo dla swojego biznesu, wykorzystując moc sztucznej inteligencji.",
+      "dashboard.videos.empty.action": "Wkrótce dostępne",
+      "dashboard.videos.empty.scriptsAction": "Utwórz Skrypty",
+
       // Prompt Templates
       "promptTemplates.title": "Szablony Promptów AI",
       "promptTemplates.subtitle": "Gotowe do użycia prompty dla asystentów AI jak ChatGPT, Claude i Gemini",
@@ -1405,6 +1415,16 @@ const resources = {
       // Dashboard Sections - Coming Soon
       "dashboard.sections.automations.comingSoon": "Automations section coming soon",
       "dashboard.sections.prompts.comingSoon": "Prompts section coming soon",
+
+      // Dashboard Empty States
+      "dashboard.automations.empty.title": "Automations coming soon",
+      "dashboard.automations.empty.description": "Soon you'll be able to create intelligent business automations that will save you time and increase efficiency.",
+      "dashboard.automations.empty.action": "Coming soon",
+      "dashboard.automations.empty.agentsAction": "Check AI Agents",
+      "dashboard.videos.empty.title": "Video library coming soon",
+      "dashboard.videos.empty.description": "Soon you'll be able to create and manage video materials for your business using the power of artificial intelligence.",
+      "dashboard.videos.empty.action": "Coming soon",
+      "dashboard.videos.empty.scriptsAction": "Create Scripts",
 
       // Prompt Templates
       "promptTemplates.title": "AI Prompt Templates",

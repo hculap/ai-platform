@@ -124,24 +124,30 @@ def log_exception(logger, error, context="", include_request=True):
     # Log as error with all details
     logger.error("\n".join(error_details))
 
-def create_app(config_name='development'):
+def create_app(config_name=None):
     """Application factory pattern"""
-    print(f"DEBUG: Creating Flask app with config: {config_name}")
     import sys
     import os
+
+    # Determine config name from environment if not provided
+    if config_name is None:
+        config_name = os.getenv('FLASK_ENV', 'development')
+
+    print(f"DEBUG: Creating Flask app with config: {config_name}")
 
     # Add the parent directory to Python path for imports
     parent_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     if parent_dir not in sys.path:
         sys.path.insert(0, parent_dir)
 
-    from config import config
+    from config import config, get_config
 
     app = Flask(__name__)
     print("DEBUG: Flask app created")
 
-    # Load configuration
-    app.config.from_object(config[config_name])
+    # Load configuration using the new config system
+    config_class = get_config()
+    app.config.from_object(config_class)
     print("DEBUG: Configuration loaded")
 
     # Initialize extensions with app

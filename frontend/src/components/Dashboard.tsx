@@ -411,9 +411,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
       title: t('dashboard.nav.aiTools'),
       items: [
         { id: 'agents', label: t('dashboard.nav.agents'), icon: Bot, count: agentsCount },
-        { id: 'automations', label: t('dashboard.nav.automations'), icon: Zap, count: 12 },
+        { id: 'automations', label: t('dashboard.nav.automations'), icon: Zap, count: 0 },
         { id: 'prompts', label: t('dashboard.nav.prompts'), icon: FileText, count: templatesCount },
-        { id: 'videos', label: t('dashboard.nav.videos'), icon: Video, count: 3 },
+        { id: 'videos', label: t('dashboard.nav.videos'), icon: Video, count: 0 },
       ]
     }
   ];
@@ -708,6 +708,83 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
   };
 
   const businessTips = getSmartRecommendations();
+
+  // Empty State Components
+  const AutomationsEmptyState = () => (
+    <div className="text-center py-16">
+      <div className="relative inline-block">
+        <div className="w-24 h-24 bg-gradient-to-br from-purple-100 to-blue-200 rounded-3xl flex items-center justify-center mx-auto mb-6 transform rotate-3">
+          <Zap className="w-12 h-12 text-purple-600" />
+        </div>
+        <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full flex items-center justify-center">
+          <Bot className="w-4 h-4 text-white" />
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          {t('dashboard.automations.empty.title', 'Automatyzacje już wkrótce')}
+        </h3>
+        <p className="text-gray-600 mb-8 leading-relaxed max-w-md mx-auto">
+          {t('dashboard.automations.empty.description', 'Wkrótce będziesz mógł tworzyć inteligentne automatyzacje biznesowe, które oszczędzą Ci czas i zwiększą efektywność.')}
+        </p>
+        <div className="flex justify-center gap-4">
+          <button
+            className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+            disabled
+          >
+            <Zap className="w-5 h-5" />
+            <span>{t('dashboard.automations.empty.action', 'Wkrótce dostępne')}</span>
+          </button>
+          <button
+            onClick={() => window.location.href = '/dashboard/agents'}
+            className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+          >
+            <Bot className="w-5 h-5" />
+            <span>{t('dashboard.automations.empty.agentsAction', 'Sprawdź Agentów AI')}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  const VideosEmptyState = () => (
+    <div className="text-center py-16">
+      <div className="relative inline-block">
+        <div className="w-24 h-24 bg-gradient-to-br from-pink-100 to-purple-200 rounded-3xl flex items-center justify-center mx-auto mb-6 transform rotate-3">
+          <Video className="w-12 h-12 text-pink-600" />
+        </div>
+        <div className="absolute -top-2 -right-2 w-8 h-8 bg-gradient-to-r from-pink-500 to-purple-500 rounded-full flex items-center justify-center">
+          <Play className="w-4 h-4 text-white" />
+        </div>
+      </div>
+
+      <div>
+        <h3 className="text-xl font-semibold text-gray-900 mb-2">
+          {t('dashboard.videos.empty.title', 'Biblioteka wideo już wkrótce')}
+        </h3>
+        <p className="text-gray-600 mb-8 leading-relaxed max-w-md mx-auto">
+          {t('dashboard.videos.empty.description', 'Wkrótce będziesz mógł tworzyć i zarządzać materiałami wideo dla swojego biznesu, wykorzystując moc sztucznej inteligencji.')}
+        </p>
+        <div className="flex justify-center gap-4">
+          <button
+            className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+            disabled
+          >
+            <Video className="w-5 h-5" />
+            <span>{t('dashboard.videos.empty.action', 'Wkrótce dostępne')}</span>
+          </button>
+          <button
+            onClick={() => window.location.href = '/dashboard/scripts'}
+            className="inline-flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"
+          >
+            <FileText className="w-5 h-5" />
+            <span>{t('dashboard.videos.empty.scriptsAction', 'Utwórz Skrypty')}</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="h-screen bg-gray-50 flex overflow-hidden">
@@ -1283,7 +1360,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
               <Route path="" element={<Navigate to="overview" replace />} />
               
               {/* Placeholder routes for other sections */}
-              <Route path="automations" element={<div className="text-center py-12"><p>{t('dashboard.sections.automations.comingSoon', 'Sekcja Automatyzacji już wkrótce')}</p></div>} />
+              <Route path="automations" element={<AutomationsEmptyState />} />
               <Route path="prompts" element={
                 <PromptTemplates
                   user={user}
@@ -1315,6 +1392,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                   onScriptsChanged={refreshScriptsCount}
                 />
               } />
+              <Route path="videos" element={<VideosEmptyState />} />
               <Route path="profile" element={<div className="text-center py-12"><p>{t('dashboard.sections.profile.comingSoon', 'Sekcja Profilu już wkrótce')}</p></div>} />
             </Routes>
           </div>

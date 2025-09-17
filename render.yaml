@@ -1,0 +1,53 @@
+services:
+  # PostgreSQL Database
+  - type: pserv
+    name: ai-platform-db
+    databaseName: ai_platform
+    user: ai_platform_user
+    plan: free # Change to 'starter' or higher for production
+    region: oregon # Choose your preferred region
+
+  # Flask Backend API
+  - type: web
+    name: ai-platform-backend
+    runtime: python3
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn wsgi:application
+    plan: free # Change to 'starter' or higher for production
+    region: oregon
+    rootDir: ./backend
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: SECRET_KEY
+        generateValue: true # Render will generate a secure key
+      - key: JWT_SECRET_KEY
+        generateValue: true # Render will generate a secure key
+      - key: DATABASE_URL
+        fromDatabase:
+          name: ai-platform-db
+          property: connectionString
+      # These need to be set manually in Render dashboard
+      - key: OPENAI_API_KEY
+        sync: false # Must be set in dashboard
+      - key: OPENAI_BASE_URL
+        value: https://api.openai.com/v1
+      - key: OPENAI_DEFAULT_MODEL
+        value: gpt-4o
+
+  # React Frontend Static Site
+  - type: web
+    name: ai-platform-frontend
+    runtime: static
+    buildCommand: npm ci && npm run build
+    staticPublishPath: ./build
+    plan: free
+    region: oregon
+    rootDir: ./frontend
+    envVars:
+      - key: REACT_APP_API_URL
+        value: https://ai-platform-backend.onrender.com/api
+
+# Note: This render.yaml provides a template but manual setup through
+# the Render dashboard is recommended for better control over sensitive
+# environment variables like OPENAI_API_KEY
