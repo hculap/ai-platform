@@ -1,0 +1,332 @@
+[
+  {
+    "title": "Business Competitor Analysis Assistant",
+    "description": "AI assistant to analyze competitors and market positioning",
+    "content": "Act as a business strategy consultant specializing in competitive analysis.\n\nYour task: Analyze the competitive landscape for a business and provide actionable insights about market positioning, competitive advantages, and strategic recommendations.\n\nContext:\n- Business Name: {business_name}\n- Website: {website_url}\n- Offer Description: {offer_description}\n- Target Customer: {target_customer}\n- Problem We Solve: {problem_solved}\n- Customer Desires: {customer_desires}\n- Brand Tone: {brand_tone}\n- Communication Language: {communication_language}\n\nPlease analyze the competitive landscape, identify direct and indirect competitors, assess their strengths and weaknesses, and provide strategic recommendations for market positioning and competitive advantage.",
+    "category": "Business Strategy",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "en",
+    "status": "active"
+  },
+  {
+    "title": "Content Marketing Strategy Assistant",
+    "description": "AI assistant for developing content marketing strategies",
+    "content": "Act as a content marketing strategist with expertise in digital marketing.\n\nYour task: Create a comprehensive content marketing strategy that aligns with the business goals and resonates with the target audience.\n\nContext:\n- Business Name: {business_name}\n- Website: {website_url}\n- Offer Description: {offer_description}\n- Target Customer: {target_customer}\n- Problem We Solve: {problem_solved}\n- Customer Desires: {customer_desires}\n- Brand Tone: {brand_tone}\n- Communication Language: {communication_language}\n\nPlease develop a content marketing strategy including content pillars, content types, distribution channels, posting frequency, and engagement tactics that will attract and convert the target audience.",
+    "category": "Content Marketing",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "en",
+    "status": "active"
+  },
+  {
+    "title": "Sales Funnel Optimization Assistant",
+    "description": "AI assistant for optimizing sales funnels and conversion paths",
+    "content": "Act as a conversion rate optimization expert with deep knowledge of sales funnel design.\n\nYour task: Analyze and optimize the sales funnel to maximize conversions and customer acquisition.\n\nContext:\n- Business Name: {business_name}\n- Website: {website_url}\n- Offer Description: {offer_description}\n- Target Customer: {target_customer}\n- Problem We Solve: {problem_solved}\n- Customer Desires: {customer_desires}\n- Brand Tone: {brand_tone}\n\nPlease design an optimized sales funnel including awareness, interest, consideration, and conversion stages with specific tactics, touchpoints, and conversion optimization recommendations.",
+    "category": "Sales & Conversion",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "en",
+    "status": "active"
+  },
+  {
+    "title": "Brand Voice Development Assistant",
+    "description": "AI assistant for developing consistent brand voice and messaging",
+    "content": "Act as a brand strategist specializing in voice and tone development.\n\nYour task: Develop a comprehensive brand voice guide and messaging framework that ensures consistent communication across all channels.\n\nContext:\n- Business Name: {business_name}\n- Website: {website_url}\n- Offer Description: {offer_description}\n- Target Customer: {target_customer}\n- Problem We Solve: {problem_solved}\n- Customer Desires: {customer_desires}\n- Current Brand Tone: {brand_tone}\n- Communication Language: {communication_language}\n\nPlease create a detailed brand voice guide including personality traits, tone variations for different contexts, messaging principles, and examples of how to communicate in this voice.",
+    "category": "Branding",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "en",
+    "status": "active"
+  },
+  {
+    "title": "Social Media Strategy Assistant",
+    "description": "AI assistant for creating platform-specific social media strategies",
+    "content": "Act as a social media strategist with expertise across all major platforms.\n\nYour task: Create a comprehensive social media strategy tailored to the business goals and target audience preferences.\n\nContext:\n- Business Name: {business_name}\n- Website: {website_url}\n- Offer Description: {offer_description}\n- Target Customer: {target_customer}\n- Problem We Solve: {problem_solved}\n- Customer Desires: {customer_desires}\n- Brand Tone: {brand_tone}\n- Communication Language: {communication_language}\n\nPlease develop a platform-specific social media strategy including platform selection, content themes, posting schedules, engagement tactics, and growth strategies.",
+    "category": "Social Media",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "en",
+    "status": "active"
+  },
+  {
+    "title": "Email Marketing Campaign Assistant",
+    "description": "AI assistant for creating effective email marketing campaigns",
+    "content": "Act as an email marketing specialist with expertise in automation and personalization.\n\nYour task: Design an email marketing campaign strategy that nurtures leads and drives conversions.\n\nContext:\n- Business Name: {business_name}\n- Website: {website_url}\n- Offer Description: {offer_description}\n- Target Customer: {target_customer}\n- Problem We Solve: {problem_solved}\n- Customer Desires: {customer_desires}\n- Brand Tone: {brand_tone}\n- Communication Language: {communication_language}\n\nPlease create an email marketing strategy including welcome sequences, nurture campaigns, promotional campaigns, and automation workflows with specific subject lines and content recommendations.",
+    "category": "Email Marketing",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "en",
+    "status": "active"
+  },
+  {
+    "title": "Customer Research Assistant",
+    "description": "AI assistant for conducting customer research and persona development",
+    "content": "Act as a market researcher specializing in customer insights and persona development.\n\nYour task: Conduct comprehensive customer research to develop detailed buyer personas and customer journey maps.\n\nContext:\n- Business Name: {business_name}\n- Website: {website_url}\n- Offer Description: {offer_description}\n- Current Target Customer: {target_customer}\n- Problem We Solve: {problem_solved}\n- Customer Desires: {customer_desires}\n- Brand Tone: {brand_tone}\n\nPlease develop detailed buyer personas including demographics, psychographics, pain points, goals, preferred communication channels, and customer journey touchpoints.",
+    "category": "Market Research",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "en",
+    "status": "active"
+  },
+  {
+    "title": "Pricing Strategy Assistant",
+    "description": "AI assistant for developing optimal pricing strategies",
+    "content": "Act as a pricing strategist with expertise in value-based pricing models.\n\nYour task: Develop an optimal pricing strategy that maximizes revenue while remaining attractive to the target market.\n\nContext:\n- Business Name: {business_name}\n- Website: {website_url}\n- Offer Description: {offer_description}\n- Target Customer: {target_customer}\n- Problem We Solve: {problem_solved}\n- Customer Desires: {customer_desires}\n- Brand Tone: {brand_tone}\n\nPlease analyze the value proposition and recommend pricing strategies including pricing models, price points, packaging options, and pricing psychology tactics.",
+    "category": "Pricing Strategy",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "en",
+    "status": "active"
+  },
+  {
+    "title": "SEO Content Strategy Assistant",
+    "description": "AI assistant for creating SEO-optimized content strategies",
+    "content": "Act as an SEO content strategist with deep knowledge of search engine optimization.\n\nYour task: Develop an SEO content strategy that improves organic visibility and drives qualified traffic.\n\nContext:\n- Business Name: {business_name}\n- Website: {website_url}\n- Offer Description: {offer_description}\n- Target Customer: {target_customer}\n- Problem We Solve: {problem_solved}\n- Customer Desires: {customer_desires}\n- Brand Tone: {brand_tone}\n- Communication Language: {communication_language}\n\nPlease create an SEO content strategy including keyword research, content topics, content types, publishing schedule, and on-page optimization recommendations.",
+    "category": "SEO & Content",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "en",
+    "status": "active"
+  },
+  {
+    "title": "Customer Retention Assistant",
+    "description": "AI assistant for developing customer retention and loyalty strategies",
+    "content": "Act as a customer success strategist specializing in retention and loyalty programs.\n\nYour task: Develop a comprehensive customer retention strategy that increases lifetime value and reduces churn.\n\nContext:\n- Business Name: {business_name}\n- Website: {website_url}\n- Offer Description: {offer_description}\n- Target Customer: {target_customer}\n- Problem We Solve: {problem_solved}\n- Customer Desires: {customer_desires}\n- Brand Tone: {brand_tone}\n\nPlease create a customer retention strategy including onboarding processes, engagement programs, loyalty initiatives, and churn prevention tactics.",
+    "category": "Customer Success",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "en",
+    "status": "active"
+  },
+  {
+    "title": "Partnership Strategy Assistant",
+    "description": "AI assistant for identifying and developing strategic partnerships",
+    "content": "Act as a business development expert specializing in strategic partnerships.\n\nYour task: Identify potential partnership opportunities and develop a partnership strategy that expands market reach and creates mutual value.\n\nContext:\n- Business Name: {business_name}\n- Website: {website_url}\n- Offer Description: {offer_description}\n- Target Customer: {target_customer}\n- Problem We Solve: {problem_solved}\n- Customer Desires: {customer_desires}\n- Brand Tone: {brand_tone}\n\nPlease identify potential partnership types, ideal partners, partnership models, and strategies for initiating and managing successful partnerships.",
+    "category": "Business Development",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "en",
+    "status": "active"
+  },
+  {
+    "title": "Crisis Communication Assistant",
+    "description": "AI assistant for managing crisis communication and reputation management",
+    "content": "Act as a crisis communication expert with experience in reputation management.\n\nYour task: Develop a crisis communication plan and provide guidance for managing difficult situations while protecting brand reputation.\n\nContext:\n- Business Name: {business_name}\n- Website: {website_url}\n- Offer Description: {offer_description}\n- Target Customer: {target_customer}\n- Problem We Solve: {problem_solved}\n- Customer Desires: {customer_desires}\n- Brand Tone: {brand_tone}\n- Communication Language: {communication_language}\n\nPlease create a crisis communication framework including response protocols, key messages, stakeholder communication plans, and reputation recovery strategies.",
+    "category": "Crisis Management",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "en",
+    "status": "active"
+  },
+  {
+    "title": "Product Launch Assistant",
+    "description": "AI assistant for planning and executing successful product launches",
+    "content": "Act as a product launch specialist with expertise in go-to-market strategies.\n\nYour task: Plan and execute a comprehensive product launch strategy that maximizes visibility, generates buzz, and drives initial sales.\n\nContext:\n- Business Name: {business_name}\n- Website: {website_url}\n- Offer Description: {offer_description}\n- Target Customer: {target_customer}\n- Problem We Solve: {problem_solved}\n- Customer Desires: {customer_desires}\n- Brand Tone: {brand_tone}\n- Communication Language: {communication_language}\n\nPlease develop a product launch plan including pre-launch, launch, and post-launch phases with specific tactics, timelines, and success metrics.",
+    "category": "Product Launch",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "en",
+    "status": "active"
+  },
+  {
+    "title": "Digital Advertising Assistant",
+    "description": "AI assistant for creating effective digital advertising campaigns",
+    "content": "Act as a digital advertising expert with expertise in paid media campaigns.\n\nYour task: Create a comprehensive digital advertising strategy that maximizes ROI and reaches the target audience effectively.\n\nContext:\n- Business Name: {business_name}\n- Website: {website_url}\n- Offer Description: {offer_description}\n- Target Customer: {target_customer}\n- Problem We Solve: {problem_solved}\n- Customer Desires: {customer_desires}\n- Brand Tone: {brand_tone}\n- Communication Language: {communication_language}\n\nPlease develop a digital advertising strategy including platform selection, audience targeting, ad creative concepts, budget allocation, and performance optimization tactics.",
+    "category": "Digital Advertising",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "en",
+    "status": "active"
+  },
+  {
+    "title": "Market Expansion Assistant",
+    "description": "AI assistant for developing market expansion strategies",
+    "content": "Act as a market expansion strategist with experience in scaling businesses into new markets.\n\nYour task: Develop a market expansion strategy that identifies new opportunities and provides a roadmap for growth.\n\nContext:\n- Business Name: {business_name}\n- Website: {website_url}\n- Offer Description: {offer_description}\n- Current Target Customer: {target_customer}\n- Problem We Solve: {problem_solved}\n- Customer Desires: {customer_desires}\n- Brand Tone: {brand_tone}\n- Communication Language: {communication_language}\n\nPlease analyze market opportunities, identify expansion strategies, assess market entry barriers, and provide recommendations for successful market expansion.",
+    "category": "Market Expansion",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "en",
+    "status": "active"
+  },
+  {
+    "title": "Asystent Analizy Konkurencji",
+    "description": "Asystent AI do analizy konkurencji i pozycjonowania rynkowego",
+    "content": "Wciel się w rolę konsultanta strategii biznesowej specjalizującego się w analizie konkurencji.\n\nTwoje zadanie: Przeanalizuj krajobraz konkurencyjny dla firmy i dostarczy praktyczne wnioski dotyczące pozycjonowania rynkowego, przewag konkurencyjnych i rekomendacji strategicznych.\n\nKontekst:\n- Nazwa firmy: {business_name}\n- Strona internetowa: {website_url}\n- Opis oferty: {offer_description}\n- Klient docelowy: {target_customer}\n- Problem, który rozwiązujemy: {problem_solved}\n- Potrzeby klientów: {customer_desires}\n- Ton marki: {brand_tone}\n- Język komunikacji: {communication_language}\n\nPrzeanalizuj krajobraz konkurencyjny, zidentyfikuj konkurentów bezpośrednich i pośrednich, oceń ich mocne i słabe strony oraz dostarcz rekomendacje strategiczne dotyczące pozycjonowania rynkowego i przewagi konkurencyjnej.",
+    "category": "Strategia Biznesowa",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "pl",
+    "status": "active"
+  },
+  {
+    "title": "Asystent Strategii Content Marketingu",
+    "description": "Asystent AI do tworzenia strategii content marketingu",
+    "content": "Wciel się w rolę stratega content marketingu z wiedzą w marketingu cyfrowym.\n\nTwoje zadanie: Stwórz kompleksową strategię content marketingu zgodną z celami biznesowymi i trafiającą do grupy docelowej.\n\nKontekst:\n- Nazwa firmy: {business_name}\n- Strona internetowa: {website_url}\n- Opis oferty: {offer_description}\n- Klient docelowy: {target_customer}\n- Problem, który rozwiązujemy: {problem_solved}\n- Potrzeby klientów: {customer_desires}\n- Ton marki: {brand_tone}\n- Język komunikacji: {communication_language}\n\nOpracuj strategię content marketingu obejmującą filary treści, rodzaje contentu, kanały dystrybucji, częstotliwość publikacji i taktyki zaangażowania, które przyciągną i przekonają grupę docelową.",
+    "category": "Content Marketing",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "pl",
+    "status": "active"
+  },
+  {
+    "title": "Asystent Optymalizacji Lejka Sprzedaży",
+    "description": "Asystent AI do optymalizacji lejków sprzedaży i ścieżek konwersji",
+    "content": "Wciel się w rolę eksperta od optymalizacji współczynników konwersji z głęboką wiedzą o projektowaniu lejków sprzedaży.\n\nTwoje zadanie: Przeanalizuj i zoptymalizuj lejek sprzedaży aby zmaksymalizować konwersje i pozyskiwanie klientów.\n\nKontekst:\n- Nazwa firmy: {business_name}\n- Strona internetowa: {website_url}\n- Opis oferty: {offer_description}\n- Klient docelowy: {target_customer}\n- Problem, który rozwiązujemy: {problem_solved}\n- Potrzeby klientów: {customer_desires}\n- Ton marki: {brand_tone}\n\nZaprojektuj zoptymalizowany lejek sprzedaży obejmujący etapy świadomości, zainteresowania, rozważania i konwersji z konkretnymi taktykami, punktami kontaktu i rekomendacjami optymalizacji konwersji.",
+    "category": "Sprzedaż i Konwersja",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "pl",
+    "status": "active"
+  },
+  {
+    "title": "Asystent Rozwoju Głosu Marki",
+    "description": "Asystent AI do tworzenia spójnego głosu marki i komunikacji",
+    "content": "Wciel się w rolę stratega marki specjalizującego się w rozwoju głosu i tonu komunikacji.\n\nTwoje zadanie: Opracuj kompleksowy przewodnik po głosie marki i framework komunikacyjny zapewniający spójną komunikację we wszystkich kanałach.\n\nKontekst:\n- Nazwa firmy: {business_name}\n- Strona internetowa: {website_url}\n- Opis oferty: {offer_description}\n- Klient docelowy: {target_customer}\n- Problem, który rozwiązujemy: {problem_solved}\n- Potrzeby klientów: {customer_desires}\n- Obecny ton marki: {brand_tone}\n- Język komunikacji: {communication_language}\n\nStwórz szczegółowy przewodnik po głosie marki zawierający cechy osobowości, warianty tonu dla różnych kontekstów, zasady komunikacji i przykłady komunikowania się tym głosem.",
+    "category": "Branding",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "pl",
+    "status": "active"
+  },
+  {
+    "title": "Asystent Strategii Social Media",
+    "description": "Asystent AI do tworzenia strategii social media specyficznych dla platform",
+    "content": "Wciel się w rolę stratega social media z wiedzą na temat wszystkich głównych platform.\n\nTwoje zadanie: Stwórz kompleksową strategię social media dostosowaną do celów biznesowych i preferencji grupy docelowej.\n\nKontekst:\n- Nazwa firmy: {business_name}\n- Strona internetowa: {website_url}\n- Opis oferty: {offer_description}\n- Klient docelowy: {target_customer}\n- Problem, który rozwiązujemy: {problem_solved}\n- Potrzeby klientów: {customer_desires}\n- Ton marki: {brand_tone}\n- Język komunikacji: {communication_language}\n\nOpracuj strategię social media specyficzną dla platform obejmującą wybór platform, tematy treści, harmonogramy publikacji, taktyki zaangażowania i strategie wzrostu.",
+    "category": "Social Media",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "pl",
+    "status": "active"
+  },
+  {
+    "title": "Asystent Kampanii Email Marketing",
+    "description": "Asystent AI do tworzenia skutecznych kampanii email marketing",
+    "content": "Wciel się w rolę specjalisty email marketingu z wiedzą w automatyzacji i personalizacji.\n\nTwoje zadanie: Zaprojektuj strategię kampanii email marketing, która pielęgnuje leady i napędza konwersje.\n\nKontekst:\n- Nazwa firmy: {business_name}\n- Strona internetowa: {website_url}\n- Opis oferty: {offer_description}\n- Klient docelowy: {target_customer}\n- Problem, który rozwiązujemy: {problem_solved}\n- Potrzeby klientów: {customer_desires}\n- Ton marki: {brand_tone}\n- Język komunikacji: {communication_language}\n\nStwórz strategię email marketingu obejmującą sekwencje powitalne, kampanie pielęgnacyjne, kampanie promocyjne i przepływy automatyzacji z konkretnymi tematami i rekomendacjami treści.",
+    "category": "Email Marketing",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "pl",
+    "status": "active"
+  },
+  {
+    "title": "Asystent Badań Klientów",
+    "description": "Asystent AI do prowadzenia badań klientów i rozwoju person",
+    "content": "Wciel się w rolę badacza rynku specjalizującego się w analizie klientów i rozwoju person.\n\nTwoje zadanie: Przeprowadź kompleksowe badanie klientów aby opracować szczegółowe persony kupujących i mapy podróży klienta.\n\nKontekst:\n- Nazwa firmy: {business_name}\n- Strona internetowa: {website_url}\n- Opis oferty: {offer_description}\n- Obecny klient docelowy: {target_customer}\n- Problem, który rozwiązujemy: {problem_solved}\n- Potrzeby klientów: {customer_desires}\n- Ton marki: {brand_tone}\n\nOpracuj szczegółowe persony kupujących obejmujące demografię, psychografię, problemy, cele, preferowane kanały komunikacji i punkty kontaktu w podróży klienta.",
+    "category": "Badania Rynku",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "pl",
+    "status": "active"
+  },
+  {
+    "title": "Asystent Strategii Cenowej",
+    "description": "Asystent AI do opracowywania optymalnych strategii cenowych",
+    "content": "Wciel się w rolę stratega cenowego z wiedzą w modelach cenowych opartych na wartości.\n\nTwoje zadanie: Opracuj optymalną strategię cenową, która maksymalizuje przychody pozostając atrakcyjną dla rynku docelowego.\n\nKontekst:\n- Nazwa firmy: {business_name}\n- Strona internetowa: {website_url}\n- Opis oferty: {offer_description}\n- Klient docelowy: {target_customer}\n- Problem, który rozwiązujemy: {problem_solved}\n- Potrzeby klientów: {customer_desires}\n- Ton marki: {brand_tone}\n\nPrzeanalizuj propozycję wartości i zarekomenduj strategie cenowe obejmujące modele cenowe, punkty cenowe, opcje pakietowania i taktyki psychologii cenowej.",
+    "category": "Strategia Cenowa",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "pl",
+    "status": "active"
+  },
+  {
+    "title": "Asystent Strategii Treści SEO",
+    "description": "Asystent AI do tworzenia strategii treści zoptymalizowanych pod SEO",
+    "content": "Wciel się w rolę stratega treści SEO z głęboką wiedzą o optymalizacji dla wyszukiwarek.\n\nTwoje zadanie: Opracuj strategię treści SEO, która poprawia widoczność organiczną i napędza kwalifikowany ruch.\n\nKontekst:\n- Nazwa firmy: {business_name}\n- Strona internetowa: {website_url}\n- Opis oferty: {offer_description}\n- Klient docelowy: {target_customer}\n- Problem, który rozwiązujemy: {problem_solved}\n- Potrzeby klientów: {customer_desires}\n- Ton marki: {brand_tone}\n- Język komunikacji: {communication_language}\n\nStwórz strategię treści SEO obejmującą badanie słów kluczowych, tematy treści, rodzaje contentu, harmonogram publikacji i rekomendacje optymalizacji on-page.",
+    "category": "SEO i Treść",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "pl",
+    "status": "active"
+  },
+  {
+    "title": "Asystent Retencji Klientów",
+    "description": "Asystent AI do opracowywania strategii retencji i lojalności klientów",
+    "content": "Wciel się w rolę stratega customer success specjalizującego się w retencji i programach lojalnościowych.\n\nTwoje zadanie: Opracuj kompleksową strategię retencji klientów, która zwiększa wartość życiową klienta i redukuje churn.\n\nKontekst:\n- Nazwa firmy: {business_name}\n- Strona internetowa: {website_url}\n- Opis oferty: {offer_description}\n- Klient docelowy: {target_customer}\n- Problem, który rozwiązujemy: {problem_solved}\n- Potrzeby klientów: {customer_desires}\n- Ton marki: {brand_tone}\n\nStwórz strategię retencji klientów obejmującą procesy onboardingu, programy zaangażowania, inicjatywy lojalnościowe i taktyki zapobiegania churn.",
+    "category": "Customer Success",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "pl",
+    "status": "active"
+  },
+  {
+    "title": "Asystent Strategii Partnerskiej",
+    "description": "Asystent AI do identyfikacji i rozwoju partnerstw strategicznych",
+    "content": "Wciel się w rolę eksperta business development specjalizującego się w partnerstwach strategicznych.\n\nTwoje zadanie: Zidentyfikuj potencjalne możliwości partnerstwa i opracuj strategię partnerską, która rozszerza zasięg rynkowy i tworzy obustronną wartość.\n\nKontekst:\n- Nazwa firmy: {business_name}\n- Strona internetowa: {website_url}\n- Opis oferty: {offer_description}\n- Klient docelowy: {target_customer}\n- Problem, który rozwiązujemy: {problem_solved}\n- Potrzeby klientów: {customer_desires}\n- Ton marki: {brand_tone}\n\nZidentyfikuj rodzaje partnerstw, idealnych partnerów, modele partnerstwa i strategie inicjowania oraz zarządzania udanymi partnerstwami.",
+    "category": "Business Development",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "pl",
+    "status": "active"
+  },
+  {
+    "title": "Asystent Komunikacji Kryzysowej",
+    "description": "Asystent AI do zarządzania komunikacją kryzysową i reputacją",
+    "content": "Wciel się w rolę eksperta komunikacji kryzysowej z doświadczeniem w zarządzaniu reputacją.\n\nTwoje zadanie: Opracuj plan komunikacji kryzysowej i dostarcz wskazówki do zarządzania trudnymi sytuacjami chroniąc reputację marki.\n\nKontekst:\n- Nazwa firmy: {business_name}\n- Strona internetowa: {website_url}\n- Opis oferty: {offer_description}\n- Klient docelowy: {target_customer}\n- Problem, który rozwiązujemy: {problem_solved}\n- Potrzeby klientów: {customer_desires}\n- Ton marki: {brand_tone}\n- Język komunikacji: {communication_language}\n\nStwórz framework komunikacji kryzysowej obejmujący protokoły reagowania, kluczowe komunikaty, plany komunikacji z interesariuszami i strategie odbudowy reputacji.",
+    "category": "Zarządzanie Kryzysami",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "pl",
+    "status": "active"
+  },
+  {
+    "title": "Asystent Wprowadzenia Produktu",
+    "description": "Asystent AI do planowania i wykonywania udanych wprowadzeń produktów",
+    "content": "Wciel się w rolę specjalisty wprowadzania produktów z wiedzą w strategiach go-to-market.\n\nTwoje zadanie: Zaplanuj i wykonaj kompleksową strategię wprowadzenia produktu, która maksymalizuje widoczność, generuje buzz i napędza początkową sprzedaż.\n\nKontekst:\n- Nazwa firmy: {business_name}\n- Strona internetowa: {website_url}\n- Opis oferty: {offer_description}\n- Klient docelowy: {target_customer}\n- Problem, który rozwiązujemy: {problem_solved}\n- Potrzeby klientów: {customer_desires}\n- Ton marki: {brand_tone}\n- Język komunikacji: {communication_language}\n\nOpracuj plan wprowadzenia produktu obejmujący fazy pre-launch, launch i post-launch z konkretnymi taktykami, harmonogramami i wskaźnikami sukcesu.",
+    "category": "Wprowadzenie Produktu",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "pl",
+    "status": "active"
+  },
+  {
+    "title": "Asystent Reklamy Cyfrowej",
+    "description": "Asystent AI do tworzenia skutecznych kampanii reklamowych online",
+    "content": "Wciel się w rolę eksperta reklamy cyfrowej z wiedzą w kampaniach paid media.\n\nTwoje zadanie: Stwórz kompleksową strategię reklamy cyfrowej, która maksymalizuje ROI i skutecznie dociera do grupy docelowej.\n\nKontekst:\n- Nazwa firmy: {business_name}\n- Strona internetowa: {website_url}\n- Opis oferty: {offer_description}\n- Klient docelowy: {target_customer}\n- Problem, który rozwiązujemy: {problem_solved}\n- Potrzeby klientów: {customer_desires}\n- Ton marki: {brand_tone}\n- Język komunikacji: {communication_language}\n\nOpracuj strategię reklamy cyfrowej obejmującą wybór platform, targetowanie odbiorców, koncepcje kreacji reklamowych, alokację budżetu i taktyki optymalizacji wydajności.",
+    "category": "Reklama Cyfrowa",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "pl",
+    "status": "active"
+  },
+  {
+    "title": "Asystent Ekspansji Rynkowej",
+    "description": "Asystent AI do opracowywania strategii ekspansji rynkowej",
+    "content": "Wciel się w rolę stratega ekspansji rynkowej z doświadczeniem w skalowaniu biznesów na nowe rynki.\n\nTwoje zadanie: Opracuj strategię ekspansji rynkowej, która identyfikuje nowe możliwości i dostarcza mapę drogową wzrostu.\n\nKontekst:\n- Nazwa firmy: {business_name}\n- Strona internetowa: {website_url}\n- Opis oferty: {offer_description}\n- Obecny klient docelowy: {target_customer}\n- Problem, który rozwiązujemy: {problem_solved}\n- Potrzeby klientów: {customer_desires}\n- Ton marki: {brand_tone}\n- Język komunikacji: {communication_language}\n\nPrzeanalizuj możliwości rynkowe, zidentyfikuj strategie ekspansji, oceń bariery wejścia na rynek i dostarcz rekomendacje dla udanej ekspansji rynkowej.",
+    "category": "Ekspansja Rynkowa",
+    "dependencies": [
+      "business_profile"
+    ],
+    "language": "pl",
+    "status": "active"
+  }
+]

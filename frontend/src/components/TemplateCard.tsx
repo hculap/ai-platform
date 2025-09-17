@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslation } from 'react-i18next';
 import { PromptTemplate } from '../types';
 import { BookOpen, Clock, Tag, CheckCircle, AlertTriangle } from 'lucide-react';
 
@@ -15,20 +16,21 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
   missingDependencies,
   onClick
 }) => {
+  const { t } = useTranslation();
   const isReady = missingDependencies.length === 0;
 
   const getDependencyDisplayName = (dep: string): string => {
-    const names: Record<string, string> = {
-      'business_profile': 'Business Profile',
-      'competitors': 'Competitors',
-      'offers': 'Offers',
-      'campaigns': 'Campaigns',
-      'scripts': 'Scripts',
-      'ads': 'Ads',
-      'user': 'User Data',
-      'user_credits': 'Credits'
+    const dependencyKeys: Record<string, string> = {
+      'business_profile': 'dependencies.businessProfile',
+      'competitors': 'dependencies.competitors',
+      'offers': 'dependencies.offers',
+      'campaigns': 'dependencies.campaigns',
+      'scripts': 'dependencies.scripts',
+      'ads': 'dependencies.ads',
+      'user': 'dependencies.user',
+      'user_credits': 'dependencies.userCredits'
     };
-    return names[dep] || dep;
+    return dependencyKeys[dep] ? t(dependencyKeys[dep]) : dep;
   };
 
   const getCategoryColor = (category: string): string => {
@@ -92,7 +94,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
       <div className="mb-4">
         {template.dependencies.length > 0 ? (
           <div className="space-y-2">
-            <div className="text-xs font-medium text-gray-700">Dependencies:</div>
+            <div className="text-xs font-medium text-gray-700">{t('templateCard.dependencies')}:</div>
             <div className="flex flex-wrap gap-1">
               {template.dependencies.map((dep) => {
                 const isAvailable = availableDependencies.includes(dep);
@@ -113,7 +115,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
           </div>
         ) : (
           <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-700">
-            No dependencies
+            {t('templateCard.noDependencies')}
           </span>
         )}
       </div>
@@ -122,10 +124,10 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
       <div className="flex items-center justify-between">
         <div className="flex items-center text-sm">
           {isReady ? (
-            <span className="text-green-600 font-medium">Ready to use</span>
+            <span className="text-green-600 font-medium">{t('templateCard.readyToUse')}</span>
           ) : (
             <span className="text-orange-600 font-medium">
-              Missing: {missingDependencies.map(getDependencyDisplayName).join(', ')}
+              {t('templateCard.missing')}: {missingDependencies.map(getDependencyDisplayName).join(', ')}
             </span>
           )}
         </div>
@@ -141,7 +143,7 @@ const TemplateCard: React.FC<TemplateCardProps> = ({
       <div className="mt-4 pt-4 border-t border-gray-100">
         <button className="w-full bg-blue-50 hover:bg-blue-100 text-blue-700 font-medium py-2 px-4 rounded-md transition-colors duration-200 flex items-center justify-center">
           <BookOpen className="w-4 h-4 mr-2" />
-          View Template
+          {t('templateCard.viewTemplate')}
         </button>
       </div>
     </div>

@@ -17,6 +17,7 @@ class BusinessProfile(db.Model):
     communication_language = db.Column(db.String(10))
     analysis_status = db.Column(db.String(50), default='pending')
     is_active = db.Column(db.Boolean, default=False)
+
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     updated_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc), onupdate=lambda: datetime.now(timezone.utc))
 

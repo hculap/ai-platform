@@ -64,15 +64,28 @@ const PromptTemplates: React.FC<PromptTemplatesProps> = ({
   const [personalizationData, setPersonalizationData] = useState<TemplatePersonalizationData>({});
   const [dataLoading, setDataLoading] = useState(false);
 
-  // Current language for templates
+  // Current language for templates - use user's language preference
   const currentLanguage = i18n.language === 'pl' ? 'pl' : 'en';
 
   // Load user data for personalization
   const loadPersonalizationData = useCallback(async () => {
     setDataLoading(true);
     try {
+      // First get business profiles to find the active one
+      const businessProfilesResult = await getBusinessProfiles(authToken);
+
+      let activeBusinessProfile = undefined;
+      let activeBusinessProfileId = undefined;
+
+      if (businessProfilesResult.success && businessProfilesResult.data && businessProfilesResult.data.length > 0) {
+        activeBusinessProfile = businessProfilesResult.data.find((bp: any) => bp.is_active) || businessProfilesResult.data[0];
+        activeBusinessProfileId = activeBusinessProfile?.id;
+      }
+
+      console.log('Loading personalization data for business profile:', activeBusinessProfile?.name, 'ID:', activeBusinessProfileId);
+
+      // Now load profile-specific data
       const [
-        businessProfilesResult,
         competitionsResult,
         offersResult,
         campaignsResult,
@@ -80,20 +93,26 @@ const PromptTemplates: React.FC<PromptTemplatesProps> = ({
         scriptsResult,
         creditsResult
       ] = await Promise.all([
-        getBusinessProfiles(authToken),
-        getCompetitions(authToken),
-        getOffers(authToken, ''), // Empty string for business profile ID - will get all
-        getCampaigns(authToken, ''), // Empty string for business profile ID - will get all
-        getAds(authToken, ''), // Empty string for business profile ID - will get all
-        getScripts(authToken, ''), // Empty string for business profile ID - will get all
+        activeBusinessProfileId ? getCompetitions(authToken, activeBusinessProfileId) : Promise.resolve({ success: true, data: [] }),
+        activeBusinessProfileId ? getOffers(authToken, activeBusinessProfileId) : Promise.resolve({ success: true, data: [] }),
+        activeBusinessProfileId ? getCampaigns(authToken, activeBusinessProfileId) : Promise.resolve({ success: true, data: [] }),
+        activeBusinessProfileId ? getAds(authToken, activeBusinessProfileId) : Promise.resolve({ success: true, data: [] }),
+        activeBusinessProfileId ? getScripts(authToken, activeBusinessProfileId) : Promise.resolve({ success: true, data: [] }),
         getCreditBalance()
       ]);
 
+      console.log('Loaded data:', {
+        businessProfile: activeBusinessProfile?.name,
+        competitors: competitionsResult.success ? competitionsResult.data?.length : 0,
+        offers: offersResult.success ? offersResult.data?.length : 0,
+        campaigns: campaignsResult.success ? campaignsResult.data?.length : 0,
+        ads: adsResult.success ? adsResult.data?.length : 0,
+        scripts: scriptsResult.success ? scriptsResult.data?.length : 0
+      });
+
       const data: TemplatePersonalizationData = {
         user,
-        businessProfile: businessProfilesResult.success && businessProfilesResult.data && businessProfilesResult.data.length > 0
-          ? businessProfilesResult.data.find((bp: any) => bp.is_active) || businessProfilesResult.data[0]
-          : undefined,
+        businessProfile: activeBusinessProfile,
         competitors: competitionsResult.success ? competitionsResult.data : [],
         offers: offersResult.success ? offersResult.data : [],
         campaigns: campaignsResult.success ? campaignsResult.data : [],
@@ -103,12 +122,20 @@ const PromptTemplates: React.FC<PromptTemplatesProps> = ({
       };
 
       setPersonalizationData(data);
+      console.log('DEBUG: Personalization data loaded:', {
+        hasBusinessProfile: !!data.businessProfile,
+        competitorsCount: data.competitors?.length || 0,
+        offersCount: data.offers?.length || 0,
+        campaignsCount: data.campaigns?.length || 0,
+        adsCount: data.ads?.length || 0,
+        scriptsCount: data.scripts?.length || 0
+      });
     } catch (error) {
       console.error('Error loading personalization data:', error);
     } finally {
       setDataLoading(false);
     }
-  }, [user]);
+  }, [user, authToken]);
 
   // Load templates and categories
   const loadTemplates = useCallback(async () => {
@@ -122,8 +149,11 @@ const PromptTemplates: React.FC<PromptTemplatesProps> = ({
       ]);
 
       if (templatesResult.success && templatesResult.data) {
+        console.log('DEBUG: API returned templates:', templatesResult.data.templates?.length, 'templates');
+        console.log('DEBUG: Templates data structure:', templatesResult.data);
         setTemplates(templatesResult.data.templates);
       } else {
+        console.log('DEBUG: API error or no data:', templatesResult);
         setError(templatesResult.error || 'Failed to load templates');
       }
 
@@ -161,6 +191,16 @@ const PromptTemplates: React.FC<PromptTemplatesProps> = ({
   // Get dependency status for each template
   const getTemplateDependencyStatus = (template: PromptTemplate) => {
     const validation = TemplatePersonalizationEngine.validateDependencies(template, personalizationData);
+
+    if (template.title?.includes('Sales') || template.title?.includes('Content')) {
+      console.log(`DEBUG: Template "${template.title}" validation:`, {
+        dependencies: template.dependencies,
+        available: validation.available,
+        missing: validation.missing,
+        isReady: validation.valid
+      });
+    }
+
     return {
       available: validation.available,
       missing: validation.missing,
@@ -172,6 +212,12 @@ const PromptTemplates: React.FC<PromptTemplatesProps> = ({
   const filteredTemplates = showOnlyReady
     ? templates.filter(template => getTemplateDependencyStatus(template).isReady)
     : templates;
+
+  console.log('DEBUG: Current state - templates:', templates.length, 'filtered:', filteredTemplates.length, 'showOnlyReady:', showOnlyReady);
+
+  // Let's also check how many templates are ready vs not ready
+  const readyTemplates = templates.filter(template => getTemplateDependencyStatus(template).isReady);
+  console.log('DEBUG: Ready templates count:', readyTemplates.length, 'Not ready:', templates.length - readyTemplates.length);
 
   // Handle template click
   const handleTemplateClick = (template: PromptTemplate) => {
@@ -196,7 +242,7 @@ const PromptTemplates: React.FC<PromptTemplatesProps> = ({
       <div className="flex items-center justify-center h-64">
         <div className="text-center">
           <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-blue-600" />
-          <p className="text-gray-600">Loading templates...</p>
+          <p className="text-gray-600">{t('promptTemplates.loading')}</p>
         </div>
       </div>
     );
@@ -229,10 +275,10 @@ const PromptTemplates: React.FC<PromptTemplatesProps> = ({
           <div>
             <h1 className="text-2xl font-bold text-gray-900 flex items-center">
               <BookOpen className="w-6 h-6 mr-2 text-blue-600" />
-              Prompt Templates
+              {t('promptTemplates.title')}
             </h1>
             <p className="text-gray-600 mt-1">
-              Ready-made prompts personalized with your business data
+              {t('promptTemplates.subtitle')}
             </p>
           </div>
           <button
@@ -252,7 +298,7 @@ const PromptTemplates: React.FC<PromptTemplatesProps> = ({
               <BookOpen className="w-8 h-8 text-blue-600 mr-3" />
               <div>
                 <p className="text-2xl font-bold text-blue-600">{templates.length}</p>
-                <p className="text-blue-600 text-sm">Total Templates</p>
+                <p className="text-blue-600 text-sm">{t('promptTemplates.totalTemplates')}</p>
               </div>
             </div>
           </div>
@@ -261,7 +307,7 @@ const PromptTemplates: React.FC<PromptTemplatesProps> = ({
               <CheckCircle className="w-8 h-8 text-green-600 mr-3" />
               <div>
                 <p className="text-2xl font-bold text-green-600">{readyCount}</p>
-                <p className="text-green-600 text-sm">Ready to Use</p>
+                <p className="text-green-600 text-sm">{t('promptTemplates.readyToUse')}</p>
               </div>
             </div>
           </div>
@@ -283,7 +329,7 @@ const PromptTemplates: React.FC<PromptTemplatesProps> = ({
             <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
             <input
               type="text"
-              placeholder="Search templates..."
+              placeholder={t('promptTemplates.searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
@@ -296,7 +342,7 @@ const PromptTemplates: React.FC<PromptTemplatesProps> = ({
             onChange={(e) => setSelectedCategory(e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-md focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
           >
-            <option value="">All Categories</option>
+            <option value="">{t('promptTemplates.allCategories')}</option>
             {categories.map(category => (
               <option key={category} value={category}>{category}</option>
             ))}
@@ -310,7 +356,7 @@ const PromptTemplates: React.FC<PromptTemplatesProps> = ({
               onChange={(e) => setShowOnlyReady(e.target.checked)}
               className="rounded text-blue-600 focus:ring-blue-500"
             />
-            <span className="text-sm text-gray-700">Ready to use only</span>
+            <span className="text-sm text-gray-700">{t('promptTemplates.readyToUse')} only</span>
           </label>
 
           {/* Data loading indicator */}
@@ -327,11 +373,11 @@ const PromptTemplates: React.FC<PromptTemplatesProps> = ({
       {filteredTemplates.length === 0 ? (
         <div className="text-center py-12">
           <BookOpen className="w-16 h-16 mx-auto text-gray-400 mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">No templates found</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">{t('promptTemplates.noTemplatesTitle')}</h3>
           <p className="text-gray-600">
             {showOnlyReady
-              ? "No templates are ready to use with your current data. Try adding business profiles, competitors, or offers."
-              : "Try adjusting your search or filters."
+              ? t('promptTemplates.noDataMessage')
+              : t('promptTemplates.noTemplatesMessage')
             }
           </p>
         </div>

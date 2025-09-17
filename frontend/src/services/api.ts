@@ -210,7 +210,6 @@ export const loginUser = async (email: string, password: string): Promise<{ succ
 };
 
 
-
 // Dashboard data API functions
 export const getAgentsCount = async (authToken: string): Promise<{ success: boolean; data?: number; error?: string }> => {
   try {
@@ -3448,7 +3447,10 @@ export const getTemplates = async (language?: string, category?: string, search?
     if (category) params.category = category;
     if (search) params.search = search;
 
-    const response = await api.get('/templates', { params });
+    const response = await api.get('/templates/', { params });
+
+    console.log('DEBUG: API /templates/ response:', response.data);
+    console.log('DEBUG: Templates array length:', response.data?.templates?.length);
 
     return {
       success: true,
@@ -3527,6 +3529,28 @@ export const getTemplateCategories = async (language?: string): Promise<{ succes
     return {
       success: false,
       error: error.response?.data?.message || error.message || 'Failed to fetch template categories'
+    };
+  }
+};
+
+export const getTemplatesCount = async (): Promise<{ success: boolean; data?: number; error?: string }> => {
+  try {
+    const response = await api.get('/templates/');
+    return {
+      success: true,
+      data: response.data.count || 0
+    };
+  } catch (error: any) {
+    console.error('Error fetching templates count:', error);
+    if (error.response?.status === 401) {
+      return {
+        success: false,
+        error: 'Unauthorized - please log in again'
+      };
+    }
+    return {
+      success: false,
+      error: error.response?.data?.message || error.message || 'Failed to fetch templates count'
     };
   }
 };

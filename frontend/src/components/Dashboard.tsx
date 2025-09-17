@@ -9,7 +9,7 @@ import {
   BarChart3, Globe, Heart, MessageSquare, Share2, Eye
 } from 'lucide-react';
 import { User as UserType, UserCredit } from '../types';
-import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, updateBusinessProfile, getCompetitionsCount, getOffersCount, getCampaignsCount, getAdsCount, getScriptsCount, getOffers, getCampaigns, getUserStyles } from '../services/api';
+import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, updateBusinessProfile, getCompetitionsCount, getOffersCount, getCampaignsCount, getAdsCount, getScriptsCount, getOffers, getCampaigns, getUserStyles, getTemplatesCount } from '../services/api';
 import BusinessProfiles from './BusinessProfiles';
 import Agents from './Agents';
 import Competition from './Competition';
@@ -68,6 +68,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
   const [scriptsCount, setScriptsCount] = useState<number>(0);
   const [interactionsCount, setInteractionsCount] = useState<number>(0);
   const [userStylesCount, setUserStylesCount] = useState<number>(0);
+  const [templatesCount, setTemplatesCount] = useState<number>(0);
   const [credits, setCredits] = useState<UserCredit | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState<boolean>(true);
 
@@ -240,6 +241,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     }
   }, [authToken, selectedBusinessProfile?.id]);
 
+  // Function to refresh templates count
+  const refreshTemplatesCount = useCallback(async () => {
+    try {
+      const templatesResult = await getTemplatesCount();
+      if (templatesResult.success && templatesResult.data !== undefined) {
+        setTemplatesCount(templatesResult.data);
+      }
+    } catch (error) {
+      console.error('Error refreshing templates count:', error);
+    }
+  }, []);
+
   // Fetch real dashboard data
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -270,6 +283,9 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
         // Fetch user styles count (will use selectedBusinessProfile?.id automatically)
         await refreshUserStylesCount();
 
+        // Fetch templates count
+        await refreshTemplatesCount();
+
         // Fetch interactions count
         const interactionsResult = await getInteractionsCount(authToken);
         if (interactionsResult.success && interactionsResult.data !== undefined) {
@@ -283,7 +299,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     };
 
     fetchDashboardData();
-  }, [authToken, refreshCompetitionsCount, refreshOffersCount, refreshCampaignsCount, refreshAdsCount, refreshScriptsCount, refreshUserStylesCount]);
+  }, [authToken, refreshCompetitionsCount, refreshOffersCount, refreshCampaignsCount, refreshAdsCount, refreshScriptsCount, refreshUserStylesCount, refreshTemplatesCount]);
 
   // Fetch business profiles separately
   useEffect(() => {
@@ -364,6 +380,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
     }
   }, [selectedBusinessProfile?.id, authToken, refreshUserStylesCount]);
 
+  // Refresh templates count (independent of business profile)
+  useEffect(() => {
+    refreshTemplatesCount();
+
+    // Set up real-time refresh for templates count every 30 seconds
+    const interval = setInterval(() => {
+      refreshTemplatesCount();
+    }, 30000);
+
+    return () => clearInterval(interval);
+  }, [refreshTemplatesCount]);
+
   // Update navigation sections with current data
   const navigationSections: NavSection[] = [
     {
@@ -383,9 +411,8 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
       title: t('dashboard.nav.aiTools'),
       items: [
         { id: 'agents', label: t('dashboard.nav.agents'), icon: Bot, count: agentsCount },
-        { id: 'templates', label: t('dashboard.nav.templates'), icon: BookOpen, count: 0 },
         { id: 'automations', label: t('dashboard.nav.automations'), icon: Zap, count: 12 },
-        { id: 'prompts', label: t('dashboard.nav.prompts'), icon: FileText, count: 28 },
+        { id: 'prompts', label: t('dashboard.nav.prompts'), icon: FileText, count: templatesCount },
         { id: 'videos', label: t('dashboard.nav.videos'), icon: Video, count: 3 },
       ]
     }
@@ -766,13 +793,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
             {/* Navigation Links */}
             <nav className="space-y-1 px-2 mb-3">
               <Link
-                to="/dashboard/settings"
-                className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors"
-              >
-                <Settings className="w-5 h-5 mr-3 flex-shrink-0" />
-                {!sidebarCollapsed && t('dashboard.nav.settings')}
-              </Link>
-              <Link
                 to="/dashboard/profile"
                 className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors"
               >
@@ -918,13 +938,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                 />
               } />
 
-              <Route path="templates" element={
-                <PromptTemplates
-                  user={user}
-                  authToken={authToken}
-                  onTokenRefreshed={onTokenRefreshed}
-                />
-              } />
               
               <Route path="competition" element={
                 <Competition
@@ -1271,7 +1284,13 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
               
               {/* Placeholder routes for other sections */}
               <Route path="automations" element={<div className="text-center py-12"><p>{t('dashboard.sections.automations.comingSoon', 'Sekcja Automatyzacji już wkrótce')}</p></div>} />
-              <Route path="prompts" element={<div className="text-center py-12"><p>{t('dashboard.sections.prompts.comingSoon', 'Sekcja Promptów już wkrótce')}</p></div>} />
+              <Route path="prompts" element={
+                <PromptTemplates
+                  user={user}
+                  authToken={authToken}
+                  onTokenRefreshed={onTokenRefreshed}
+                />
+              } />
               <Route path="campaigns" element={
                 <Campaigns
                   businessProfileId={selectedBusinessProfile?.id}
@@ -1296,7 +1315,6 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                   onScriptsChanged={refreshScriptsCount}
                 />
               } />
-              <Route path="settings" element={<div className="text-center py-12"><p>{t('dashboard.sections.settings.comingSoon', 'Sekcja Ustawień już wkrótce')}</p></div>} />
               <Route path="profile" element={<div className="text-center py-12"><p>{t('dashboard.sections.profile.comingSoon', 'Sekcja Profilu już wkrótce')}</p></div>} />
             </Routes>
           </div>

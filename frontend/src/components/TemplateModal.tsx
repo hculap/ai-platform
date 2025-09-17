@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   X, Copy, CheckCircle, AlertTriangle, Eye, EyeOff,
   ExternalLink, Settings, Tag, Calendar, FileText
@@ -23,6 +24,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
   isOpen,
   onClose
 }) => {
+  const { t } = useTranslation();
   const [personalizedTemplate, setPersonalizedTemplate] = useState<PersonalizedTemplate | null>(null);
   const [showRawTemplate, setShowRawTemplate] = useState(false);
   const [copySuccess, setCopySuccess] = useState(false);
@@ -68,17 +70,17 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
   };
 
   const getDependencyDisplayName = (dep: string): string => {
-    const names: Record<string, string> = {
-      'business_profile': 'Business Profile',
-      'competitors': 'Competitors',
-      'offers': 'Offers',
-      'campaigns': 'Campaigns',
-      'scripts': 'Scripts',
-      'ads': 'Ads',
-      'user': 'User Data',
-      'user_credits': 'Credits'
+    const dependencyKeys: Record<string, string> = {
+      'business_profile': 'dependencies.businessProfile',
+      'competitors': 'dependencies.competitors',
+      'offers': 'dependencies.offers',
+      'campaigns': 'dependencies.campaigns',
+      'scripts': 'dependencies.scripts',
+      'ads': 'dependencies.ads',
+      'user': 'dependencies.user',
+      'user_credits': 'dependencies.userCredits'
     };
-    return names[dep] || dep;
+    return dependencyKeys[dep] ? t(dependencyKeys[dep]) : dep;
   };
 
   const getDependencyLink = (dep: string): string => {
@@ -136,12 +138,12 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
                 {isReady ? (
                   <div className="flex items-center text-green-600">
                     <CheckCircle className="w-5 h-5 mr-1" />
-                    <span className="text-sm font-medium">Ready</span>
+                    <span className="text-sm font-medium">{t('templateModal.ready')}</span>
                   </div>
                 ) : (
                   <div className="flex items-center text-orange-600">
                     <AlertTriangle className="w-5 h-5 mr-1" />
-                    <span className="text-sm font-medium">Missing Data</span>
+                    <span className="text-sm font-medium">{t('templateModal.missingData')}</span>
                   </div>
                 )}
                 <button
@@ -166,9 +168,9 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
                         : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
                     }`}
                   >
-                    {tab === 'overview' && 'Overview'}
-                    {tab === 'template' && 'Template'}
-                    {tab === 'personalize' && 'Personalize'}
+                    {tab === 'overview' && t('templateModal.overview')}
+                    {tab === 'template' && t('templateModal.template')}
+                    {tab === 'personalize' && t('templateModal.personalize')}
                   </button>
                 ))}
               </nav>
@@ -183,14 +185,14 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
                 {/* Description */}
                 {template.description && (
                   <div>
-                    <h4 className="text-sm font-medium text-gray-900 mb-2">Description</h4>
+                    <h4 className="text-sm font-medium text-gray-900 mb-2">{t('templateModal.description')}</h4>
                     <p className="text-gray-600">{template.description}</p>
                   </div>
                 )}
 
                 {/* Dependencies */}
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-3">Data Requirements</h4>
+                  <h4 className="text-sm font-medium text-gray-900 mb-3">{t('templateModal.dataRequirements')}</h4>
                   {template.dependencies.length > 0 ? (
                     <div className="space-y-2">
                       {template.dependencies.map((dep) => {
@@ -212,7 +214,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
                                 href={getDependencyLink(dep)}
                                 className="inline-flex items-center text-sm text-blue-600 hover:text-blue-800"
                               >
-                                Generate
+                                {t('templateModal.generate')}
                                 <ExternalLink className="w-3 h-3 ml-1" />
                               </a>
                             )}
@@ -221,13 +223,13 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
                       })}
                     </div>
                   ) : (
-                    <p className="text-gray-600 text-sm">No data requirements - ready to use immediately</p>
+                    <p className="text-gray-600 text-sm">{t('templateModal.noDataRequirements')}</p>
                   )}
                 </div>
 
                 {/* Placeholders */}
                 <div>
-                  <h4 className="text-sm font-medium text-gray-900 mb-3">Available Placeholders</h4>
+                  <h4 className="text-sm font-medium text-gray-900 mb-3">{t('templateModal.availablePlaceholders')}</h4>
                   <div className="bg-gray-50 p-4 rounded-md">
                     <pre className="text-xs text-gray-600 whitespace-pre-wrap">
                       {TemplatePersonalizationEngine.extractPlaceholders(template.content).join('\n')}
@@ -241,13 +243,13 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
             {activeTab === 'template' && (
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
-                  <h4 className="text-sm font-medium text-gray-900">Template Content</h4>
+                  <h4 className="text-sm font-medium text-gray-900">{t('templateModal.templateContent')}</h4>
                   <button
                     onClick={() => setShowRawTemplate(!showRawTemplate)}
                     className="flex items-center text-sm text-gray-600 hover:text-gray-800"
                   >
                     {showRawTemplate ? <EyeOff className="w-4 h-4 mr-1" /> : <Eye className="w-4 h-4 mr-1" />}
-                    {showRawTemplate ? 'Hide' : 'Show'} Placeholders
+                    {showRawTemplate ? t('templateModal.hidePlaceholders') : t('templateModal.showPlaceholders')}
                   </button>
                 </div>
                 <div className="bg-gray-50 p-4 rounded-md">
@@ -267,9 +269,9 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
                     <div className="flex">
                       <AlertTriangle className="w-5 h-5 text-orange-400 mr-2 flex-shrink-0 mt-0.5" />
                       <div>
-                        <h4 className="text-sm font-medium text-orange-800">Missing Data</h4>
+                        <h4 className="text-sm font-medium text-orange-800">{t('templateModal.missingDataTitle')}</h4>
                         <p className="text-sm text-orange-700 mt-1">
-                          This template requires the following data to be fully personalized:
+                          {t('templateModal.missingDataText')}
                         </p>
                         <ul className="mt-2 space-y-1">
                           {personalizedTemplate.missingDependencies.map((dep) => (
@@ -279,7 +281,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
                                 href={getDependencyLink(dep)}
                                 className="ml-2 text-orange-600 hover:text-orange-800 underline"
                               >
-                                Generate now
+                                {t('templateModal.generateNow')}
                               </a>
                             </li>
                           ))}
@@ -292,7 +294,7 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
                 {/* Personalized content */}
                 <div>
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="text-sm font-medium text-gray-900">Personalized Prompt</h4>
+                    <h4 className="text-sm font-medium text-gray-900">{t('templateModal.personalizedPrompt')}</h4>
                     <button
                       onClick={() => handleCopyToClipboard(personalizedTemplate?.personalizedContent || template.content)}
                       className="flex items-center px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium rounded-md transition-colors"
@@ -300,12 +302,12 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
                       {copySuccess ? (
                         <>
                           <CheckCircle className="w-3 h-3 mr-1" />
-                          Copied!
+                          {t('templateModal.copied')}
                         </>
                       ) : (
                         <>
                           <Copy className="w-3 h-3 mr-1" />
-                          Copy
+                          {t('templateModal.copy')}
                         </>
                       )}
                     </button>
@@ -322,12 +324,12 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
                   <div className="flex">
                     <FileText className="w-5 h-5 text-blue-400 mr-2 flex-shrink-0 mt-0.5" />
                     <div>
-                      <h4 className="text-sm font-medium text-blue-800">Usage Tips</h4>
+                      <h4 className="text-sm font-medium text-blue-800">{t('templateModal.usageTips')}</h4>
                       <ul className="text-sm text-blue-700 mt-1 space-y-1">
-                        <li>• Copy the personalized prompt above</li>
-                        <li>• Paste it into your preferred AI tool (ChatGPT, Claude, etc.)</li>
-                        <li>• Add any additional context specific to your current needs</li>
-                        <li>• Review and modify the output as needed</li>
+                        <li>• {t('templateModal.tip1')}</li>
+                        <li>• {t('templateModal.tip2')}</li>
+                        <li>• {t('templateModal.tip3')}</li>
+                        <li>• {t('templateModal.tip4')}</li>
                       </ul>
                     </div>
                   </div>
@@ -346,14 +348,14 @@ const TemplateModal: React.FC<TemplateModalProps> = ({
                 onClick={onClose}
                 className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50"
               >
-                Close
+                {t('templateModal.close')}
               </button>
               {isReady && (
                 <button
                   onClick={() => handleCopyToClipboard(personalizedTemplate?.personalizedContent || template.content)}
                   className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700"
                 >
-                  {copySuccess ? 'Copied!' : 'Copy Prompt'}
+                  {copySuccess ? t('templateModal.copied') : t('templateModal.copyPrompt')}
                 </button>
               )}
             </div>

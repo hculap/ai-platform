@@ -20,9 +20,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Run tests**: `pytest`
 - **Run tests with coverage**: `pytest --cov=app --cov-report=html`
 - **Run specific test**: `pytest app/tests/test_auth.py`
-- **Database migrations**: 
+- **Database migrations**:
   - Create migration: `flask db migrate -m "Description"`
   - Apply migrations: `flask db upgrade`
+- **Populate prompt templates database**: `./scripts/deploy_populate_templates.sh` (for deployment)
 
 ### Frontend (React/TypeScript)
 - **Run development server**: `cd frontend && npm start` (runs on port 3000, proxies to backend on 5004)

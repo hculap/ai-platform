@@ -42,6 +42,9 @@ def get_templates():
         # Execute query and order by creation date
         templates = query.order_by(PromptTemplate.created_at.desc()).all()
 
+        print(f"DEBUG: Found {len(templates)} templates for language={language}, category={category}, search={search}")
+        print(f"DEBUG: Template titles: {[t.title for t in templates[:5]]}")  # First 5 titles
+
         return jsonify({
             'templates': [template.to_dict() for template in templates],
             'count': len(templates)

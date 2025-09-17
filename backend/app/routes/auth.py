@@ -188,3 +188,4 @@ def refresh():
             'error': ERROR_SERVER_ERROR,
             'message': 'token_refresh_failed'
         }), 500
+

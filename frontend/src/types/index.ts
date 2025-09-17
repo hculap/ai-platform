@@ -21,6 +21,7 @@ export interface BusinessProfileApi {
   brand_tone?: string;
   communication_language?: string;
   is_active?: boolean;
+
 }
 
 export interface AnalysisResult {
