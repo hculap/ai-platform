@@ -8,20 +8,20 @@ interface ProblemSolutionSectionProps {
 const problems = [
   {
     icon: DollarSign,
-    title: 'Kosztowny dział marketingu',
-    description: 'Strategista (8000 zł), Copywriter (6000 zł), Grafik (5000 zł), Social Media Manager (4500 zł). Łączny koszt: 23,500+ zł miesięcznie.',
+    title: 'Agencje marketingowe',
+    description: 'Agencja marketingowa kosztuje 5000-15000 zł/miesiąc za podstawowe usługi: strategię, kreacje, kampanie i analizy.',
     color: 'text-red-500'
   },
   {
     icon: Clock,
-    title: 'Zewnętrzni freelancerzy i agencje',
-    description: 'Płacisz 150-300 zł/h za specjalistów. Agencja marketingowa kosztuje 5000-15000 zł/miesiąc za podstawowe usługi.',
+    title: 'Freelancerzy i specjaliści',
+    description: 'Copywriter (150-300 zł/h), specjalista od reklam (200-400 zł/h), analityk (150-250 zł/h). Trudno znaleźć, drogo utrzymać.',
     color: 'text-orange-500'
   },
   {
     icon: AlertCircle,
-    title: 'Drogie narzędzia + brak integracji',
-    description: 'HubSpot (2000zł), Canva Pro (200zł), Buffer (300zł), Analytics (500zł). Razem 3000+ zł/mies + brak synchronizacji.',
+    title: 'Drogie narzędzia marketingowe',
+    description: 'Canva Pro (200 zł/mies), Buffer (300 zł/mies), analityki (500 zł/mies). Każde narzędzie osobno, bez integracji.',
     color: 'text-yellow-500'
   }
 ];
@@ -29,20 +29,20 @@ const problems = [
 const solutions = [
   {
     icon: Zap,
-    title: 'Cały zespół AI w jednej platformie',
-    description: 'Alex (Strategista AI), Maya (Creator AI), Viktor (Analityk AI), Sophia (Growth Manager AI) - zastępują cały dział marketingu za ułamek kosztu.',
+    title: '10 narzędzi AI zamiast agencji',
+    description: 'Analiza konkurencji, tworzenie kampanii, generowanie kreacji, skrypty do treści - wszystko w jednej platformie za ułamek kosztu agencji.',
     color: 'text-blue-500'
   },
   {
     icon: Target,
-    title: 'Koniec z agencjami i freelancerami',
-    description: 'Żadnych godzinowych stawek, opóźnień, jakościowych problemów. AI pracuje 24/7 z konsystentną jakością i natychmiastową realizacją.',
+    title: 'Płać tylko za to, czego używasz',
+    description: 'System kredytowy - 15-50 kredytów za narzędzie. Żadnych miesięcznych abonamentów, żadnych ukrytych kosztów. Transparentne ceny.',
     color: 'text-green-500'
   },
   {
     icon: TrendingUp,
-    title: 'Wszystkie narzędzia + AI w jednej cenie',
-    description: 'Marketing automation, design, copywriting, analytics, social media - wszystko zintegrowane i zarządzane przez AI za 199zł/mies.',
+    title: 'Jeden toolkit zastępuje wszystko',
+    description: 'Od analizy strony przez konkurencję po kompletne kampanie reklamowe. Wszystko zintegrowane, dostępne 24/7, bez umów długoterminowych.',
     color: 'text-purple-500'
   }
 ];
@@ -82,15 +82,15 @@ const ProblemSolutionSection: React.FC<ProblemSolutionSectionProps> = ({ isVisib
         >
           <h2 className="text-4xl md:text-5xl font-bold mb-6">
             <span className="bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
-              Drogie Zespoły & Narzędzia
+              Agencje & Narzędzia
             </span>
             <span className="mx-4 text-gray-400">vs</span>
             <span className="bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
-              Jeden AI Growth OS
+              AI Business Toolkit
             </span>
           </h2>
           <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-            Przestań płacić za dział marketingu, zewnętrznych specjalistów i drogie narzędzia - zastąp ich jedną platformą AI
+            Przestań płacić agencjom tysiące złotych miesięcznie - zastąp je narzędziami AI za ułamek kosztu
           </p>
         </div>
 
@@ -110,7 +110,7 @@ const ProblemSolutionSection: React.FC<ProblemSolutionSectionProps> = ({ isVisib
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              Drogie Zespoły & Narzędzia
+              Agencje & Narzędzia
             </button>
             <button
               onClick={() => setActiveTab('solutions')}
@@ -120,7 +120,7 @@ const ProblemSolutionSection: React.FC<ProblemSolutionSectionProps> = ({ isVisib
                   : 'text-gray-600 hover:text-gray-900'
               }`}
             >
-              AI Growth OS
+              AI Business Toolkit
             </button>
           </div>
         </div>
@@ -140,8 +140,8 @@ const ProblemSolutionSection: React.FC<ProblemSolutionSectionProps> = ({ isVisib
                   <div className="w-20 h-20 bg-gradient-to-br from-red-500 to-orange-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                     <AlertCircle className="w-10 h-10 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Drogie Zespoły & Narzędzia</h3>
-                  <p className="text-gray-600">Kosztowne, nieefektywne, skomplikowane</p>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">Agencje & Narzędzia</h3>
+                  <p className="text-gray-600">Drogie, nieelastyczne, długoterminowe umowy</p>
                 </div>
 
                 <div className="space-y-6">
@@ -170,8 +170,8 @@ const ProblemSolutionSection: React.FC<ProblemSolutionSectionProps> = ({ isVisib
                 {/* Cost indicator */}
                 <div className="mt-8 p-4 bg-red-100 rounded-2xl border border-red-200">
                   <div className="text-center">
-                    <p className="text-red-700 font-semibold text-lg">Koszt: 25,000+ zł/miesiąc</p>
-                    <p className="text-red-600 text-sm">Zespół + agencje + narzędzia</p>
+                    <p className="text-red-700 font-semibold text-lg">Koszt: 5,000-15,000 zł/miesiąc</p>
+                    <p className="text-red-600 text-sm">Agencje marketingowe + narzędzia</p>
                   </div>
                 </div>
               </div>
@@ -191,8 +191,8 @@ const ProblemSolutionSection: React.FC<ProblemSolutionSectionProps> = ({ isVisib
                   <div className="w-20 h-20 bg-gradient-to-br from-blue-500 to-green-500 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
                     <Lightbulb className="w-10 h-10 text-white" />
                   </div>
-                  <h3 className="text-2xl font-bold text-gray-900 mb-2">AI Growth OS</h3>
-                  <p className="text-gray-600">Jedna platforma, nieskończone możliwości</p>
+                  <h3 className="text-2xl font-bold text-gray-900 mb-2">AI Business Toolkit</h3>
+                  <p className="text-gray-600">10 narzędzi AI, płać za użycie</p>
                 </div>
 
                 <div className="space-y-6">
@@ -224,8 +224,8 @@ const ProblemSolutionSection: React.FC<ProblemSolutionSectionProps> = ({ isVisib
                 {/* Cost indicator */}
                 <div className="mt-8 p-4 bg-green-100 rounded-2xl border border-green-200">
                   <div className="text-center">
-                    <p className="text-green-700 font-semibold text-lg">Koszt: Od 199 zł/miesiąc</p>
-                    <p className="text-green-600 text-sm">Zastępuje cały zespół + wszystkie narzędzia</p>
+                    <p className="text-green-700 font-semibold text-lg">Koszt: 15-50 kredytów/narzędzie</p>
+                    <p className="text-green-600 text-sm">Płać tylko za to, czego używasz</p>
                   </div>
                 </div>
               </div>
@@ -243,11 +243,11 @@ const ProblemSolutionSection: React.FC<ProblemSolutionSectionProps> = ({ isVisib
           <div className="bg-gradient-to-r from-blue-600 to-green-600 text-white rounded-3xl p-8 max-w-4xl mx-auto">
             <h3 className="text-2xl font-bold mb-4">Różnica jest oczywista</h3>
             <p className="text-lg mb-6 opacity-90">
-              Przestań płacić 25,000+ zł miesięcznie za zespoły, agencje i narzędzia. 
-              Zastąp ich jedną platformą AI za 199 zł/miesiąc.
+              Przestań płacić agencjom 5,000-15,000 zł miesięcznie.
+              Użyj 10 narzędzi AI za ułamek tego kosztu.
             </p>
             <button className="px-8 py-4 bg-white text-blue-600 font-semibold rounded-2xl hover:shadow-lg transform hover:scale-105 transition-all duration-300">
-              Uruchom AI Growth OS
+              Uruchom AI Business Toolkit
             </button>
           </div>
         </div>

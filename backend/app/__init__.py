@@ -142,7 +142,11 @@ def create_app(config_name=None):
 
     from config import config, get_config
 
-    app = Flask(__name__)
+    # Configure static files to serve React build
+    static_folder = os.path.join(parent_dir, '..', 'frontend', 'build', 'static')
+    template_folder = os.path.join(parent_dir, '..', 'frontend', 'build')
+
+    app = Flask(__name__, static_folder=static_folder, template_folder=template_folder)
     print("DEBUG: Flask app created")
 
     # Load configuration using the new config system
@@ -199,6 +203,32 @@ def create_app(config_name=None):
     # Initialize agents
     from .agents import initialize_agents
     initialize_agents()
+
+    # Add routes to serve React frontend
+    @app.route('/')
+    def serve_react_app():
+        """Serve React app's index.html for root route"""
+        from flask import send_from_directory
+        return send_from_directory(app.template_folder, 'index.html')
+
+    @app.route('/<path:path>')
+    def serve_react_static(path):
+        """Serve React static files, fallback to index.html for SPA routing"""
+        from flask import send_from_directory
+        import os
+
+        # Try to serve static file first
+        file_path = os.path.join(app.template_folder, path)
+        if os.path.exists(file_path) and os.path.isfile(file_path):
+            return send_from_directory(app.template_folder, path)
+
+        # For SPA routing, serve index.html for non-API routes
+        if not path.startswith('api/'):
+            return send_from_directory(app.template_folder, 'index.html')
+
+        # If it's an API route that doesn't exist, let Flask handle 404
+        from flask import abort
+        abort(404)
 
     # Add global error handlers
     @app.errorhandler(500)

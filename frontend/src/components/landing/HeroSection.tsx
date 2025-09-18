@@ -95,14 +95,14 @@ const HeroSection: React.FC<HeroSectionProps> = ({
 
       <div className="max-w-6xl mx-auto text-center relative z-10">
         {/* Trust indicator */}
-        <div 
+        <div
           className={`inline-flex items-center space-x-2 px-4 py-2 mb-8 bg-white/10 backdrop-blur-md rounded-full border border-white/20 text-sm font-medium text-gray-700 transition-all duration-1000 transform ${
             isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
           }`}
           style={{ transitionDelay: '0.2s' }}
         >
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
-          <span>Już <span className="font-bold text-blue-600">{animatedCount.toLocaleString()}</span> firm rozwija się z naszym AI</span>
+          <span>11 narzędzi AI dla rozwoju Twojego biznesu</span>
           <Sparkles className="w-4 h-4 text-yellow-500" />
         </div>
 
@@ -110,12 +110,12 @@ const HeroSection: React.FC<HeroSectionProps> = ({
         <div className={`transition-all duration-1000 transform ${isVisible ? 'translate-y-0 opacity-100' : 'translate-y-12 opacity-0'}`}>
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 leading-tight">
             <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 bg-clip-text text-transparent">
-              Twój AI Growth OS
+              AI Business Growth Toolkit
             </span>
           </h1>
-          
+
           <p className="text-xl md:text-3xl lg:text-4xl font-medium mb-6 text-gray-900">
-            Jeden system. Nieskończony wzrost.
+            Od analizy strony do kampanii reklamowych
           </p>
         </div>
 
@@ -125,7 +125,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
           style={{ transitionDelay: '0.4s' }}
         >
           <p className="text-lg md:text-2xl lg:text-3xl max-w-3xl mx-auto font-medium mb-12 text-gray-900">
-            Zastąp dziesiątki narzędzi jedną platformą AI
+            Wszystko czego potrzebujesz do rozwoju biznesu z AI
           </p>
         </div>
 
@@ -194,14 +194,14 @@ const HeroSection: React.FC<HeroSectionProps> = ({
                 ) : (
                   <div className="flex items-center space-x-2">
                     <Sparkles className="w-5 h-5" />
-                    <span>Uruchom AI Growth OS Bezpłatnie</span>
+                    <span>Uruchom AI Business Toolkit</span>
                     <ArrowRight className="w-5 h-5 transform group-hover:translate-x-1 transition-transform" />
                   </div>
                 )}
               </button>
               
               <p className="text-sm text-gray-500 mt-3">
-                14 dni za darmo, anuluj w każdej chwili
+                Zestaw narzędzi AI za ułamek kosztu agencji
               </p>
 
               {/* Alternative CTA */}
@@ -228,7 +228,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
             <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg mx-auto mb-3">
               <TrendingUp className="w-8 h-8 text-white" />
             </div>
-            <h3 className="font-semibold text-gray-900">Strategia</h3>
+            <h3 className="font-semibold text-gray-900">Analiza</h3>
           </div>
           
           <div className="text-center">
@@ -249,7 +249,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
             <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-red-600 rounded-xl flex items-center justify-center shadow-lg mx-auto mb-3">
               <Globe className="w-8 h-8 text-white" />
             </div>
-            <h3 className="font-semibold text-gray-900">Asystenci</h3>
+            <h3 className="font-semibold text-gray-900">Marketing</h3>
           </div>
         </div>
       </div>

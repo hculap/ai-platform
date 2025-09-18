@@ -21,6 +21,8 @@ import ScriptGenerator from './ScriptGenerator';
 import CreditsCard from './CreditsCard';
 import PromptTemplates from './PromptTemplates';
 import UserProfile from './UserProfile';
+import CommandPalette from './command-palette/CommandPalette';
+import { useKeyboardShortcuts, createCommandPaletteShortcuts } from '../hooks/useKeyboardShortcuts';
 
 interface DashboardProps {
   user: UserType;
@@ -83,6 +85,27 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
 
   // Credits state
   const [userCredits, setUserCredits] = useState<UserCredit | null>(null);
+
+  // Command Palette state
+  const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+
+  // Command Palette handlers
+  const openCommandPalette = useCallback(() => {
+    setIsCommandPaletteOpen(true);
+  }, []);
+
+  const closeCommandPalette = useCallback(() => {
+    setIsCommandPaletteOpen(false);
+  }, []);
+
+  const handleModalOpen = useCallback((modalType: string) => {
+    // Handle different modal types
+    console.log('Open modal:', modalType);
+    // TODO: Implement modal opening logic based on modalType
+  }, []);
+
+  // Setup keyboard shortcuts for command palette
+  useKeyboardShortcuts(createCommandPaletteShortcuts(openCommandPalette));
 
   // Function to update active profile (only one can be active at a time)
   const updateActiveProfile = useCallback(async (profileId: string) => {
@@ -971,7 +994,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                 <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
-                  placeholder={t('dashboard.search.placeholder')}
+                  placeholder={t('dashboard.search.placeholder', 'Search...')}
                   className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 />
               </div>
@@ -1405,6 +1428,16 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
           </div>
         </main>
       </div>
+
+      {/* Command Palette */}
+      <CommandPalette
+        isOpen={isCommandPaletteOpen}
+        onClose={closeCommandPalette}
+        onOpenModal={handleModalOpen}
+        userCredits={userCredits?.balance || 0}
+        hasBusinessProfile={!!selectedBusinessProfile}
+        isAuthenticated={!!user}
+      />
     </div>
   );
 };

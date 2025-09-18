@@ -1,17 +1,19 @@
-services:
-  # PostgreSQL Database
-  - type: pserv
-    name: ai-platform-db
-    databaseName: ai_platform
-    user: ai_platform_user
-    plan: free # Change to 'starter' or higher for production
-    region: oregon # Choose your preferred region
+databases:
+  - name: ai-platform-db
+    plan: free
+    region: oregon
 
-  # Flask Backend API
+services:
+  # Flask Backend with integrated Frontend
   - type: web
-    name: ai-platform-backend
+    name: ai-platform-fullstack
     runtime: python3
-    buildCommand: pip install -r requirements.txt
+    buildCommand: |
+      # Install Node.js and build frontend
+      curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
+      sudo apt-get install -y nodejs
+      cd ../frontend && npm ci && npm run build
+      cd ../backend && pip install -r requirements.txt
     startCommand: gunicorn wsgi:application
     plan: free # Change to 'starter' or higher for production
     region: oregon
@@ -34,19 +36,8 @@ services:
         value: https://api.openai.com/v1
       - key: OPENAI_DEFAULT_MODEL
         value: gpt-4o
-
-  # React Frontend Static Site
-  - type: web
-    name: ai-platform-frontend
-    runtime: static
-    buildCommand: npm ci && npm run build
-    staticPublishPath: ./build
-    plan: free
-    region: oregon
-    rootDir: ./frontend
-    envVars:
       - key: REACT_APP_API_URL
-        value: https://ai-platform-backend.onrender.com/api
+        value: /api
 
 # Note: This render.yaml provides a template but manual setup through
 # the Render dashboard is recommended for better control over sensitive
