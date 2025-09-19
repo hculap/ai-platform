@@ -143,8 +143,13 @@ def create_app(config_name=None):
     from config import config, get_config
 
     # Configure static files to serve React build
-    static_folder = os.path.join(parent_dir, '..', 'frontend', 'build', 'static')
-    template_folder = os.path.join(parent_dir, '..', 'frontend', 'build')
+    # Navigate to the project root directory (AI-Platform)
+    current_file_dir = os.path.dirname(os.path.abspath(__file__))  # app directory
+    backend_dir = os.path.dirname(current_file_dir)  # backend directory
+    project_root = os.path.dirname(backend_dir)  # AI-Platform directory
+    frontend_build_dir = os.path.join(project_root, 'frontend', 'build')
+    static_folder = os.path.join(frontend_build_dir, 'static')
+    template_folder = frontend_build_dir
 
     app = Flask(__name__, static_folder=static_folder, template_folder=template_folder)
     print("DEBUG: Flask app created")
