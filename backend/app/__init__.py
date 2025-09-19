@@ -255,15 +255,28 @@ def create_app(config_name=None):
 
     @app.errorhandler(404)
     def handle_not_found(error):
-        """Handle 404 Not Found"""
-        from flask import jsonify, request
-        app.logger.warning(f"404 Not Found: {request.url} - Method: {request.method}")
-        
-        return jsonify({
-            'error': 'NOT_FOUND',
-            'message': 'The requested resource was not found.',
-            'timestamp': datetime.now().isoformat()
-        }), 404
+        """Handle 404 Not Found - serve React app for non-API routes"""
+        from flask import jsonify, request, send_from_directory
+
+        # For API routes, return JSON 404
+        if request.path.startswith('/api/'):
+            app.logger.warning(f"404 Not Found: {request.url} - Method: {request.method}")
+            return jsonify({
+                'error': 'NOT_FOUND',
+                'message': 'The requested resource was not found.',
+                'timestamp': datetime.now().isoformat()
+            }), 404
+
+        # For non-API routes, serve React app (SPA routing)
+        try:
+            return send_from_directory(app.template_folder, 'index.html')
+        except Exception as e:
+            app.logger.error(f"Failed to serve React app: {e}")
+            return jsonify({
+                'error': 'NOT_FOUND',
+                'message': 'The requested resource was not found.',
+                'timestamp': datetime.now().isoformat()
+            }), 404
 
     @app.errorhandler(400)
     def handle_bad_request(error):
