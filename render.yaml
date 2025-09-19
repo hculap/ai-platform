@@ -12,12 +12,12 @@ services:
       # Install Node.js and build frontend
       curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
       sudo apt-get install -y nodejs
-      cd ../frontend && npm ci && npm run build
-      cd ../backend && pip install -r requirements.txt
-    startCommand: gunicorn wsgi:application
+      cd frontend && npm ci && npm run build
+      cd backend && pip install -r requirements.txt
+    startCommand: cd backend && gunicorn wsgi:application
     plan: free # Change to 'starter' or higher for production
     region: oregon
-    rootDir: ./backend
+    rootDir: .
     envVars:
       - key: FLASK_ENV
         value: production
