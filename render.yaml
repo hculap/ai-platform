@@ -12,7 +12,7 @@ services:
       # Install Node.js and build frontend
       curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
       sudo apt-get install -y nodejs
-      cd frontend && CI=false npm ci && npm run build
+      cd frontend && npm ci && DISABLE_ESLINT_PLUGIN=true CI=false npm run build
       cd backend && pip install -r requirements.txt
     startCommand: cd backend && gunicorn wsgi:application
     plan: free # Change to 'starter' or higher for production

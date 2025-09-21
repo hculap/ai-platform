@@ -1,6 +1,6 @@
 import {
   Home, Bot, FileText, Video, Zap, Building2, Target, Package,
-  TrendingUp, Megaphone, User, Settings, Plus, Search, Globe,
+  TrendingUp, Megaphone, User, Search, Globe,
   CreditCard, Palette
 } from 'lucide-react';
 
