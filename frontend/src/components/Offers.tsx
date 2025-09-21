@@ -21,7 +21,6 @@ import {
   deleteOffer,
   createOffer,
   updateOffer,
-  generateOffers,
   startBackgroundOfferGeneration,
   checkOfferGenerationStatus,
   saveSelectedOffers,

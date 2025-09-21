@@ -196,6 +196,68 @@ const Agents: React.FC<AgentsProps> = ({
     setExecutionError('');
   }, []);
 
+  const startPolling = useCallback((responseId: string) => {
+    // Don't start if already polling for the same response ID
+    if (isPolling && openaiResponseId === responseId) {
+      return;
+    }
+
+    // Clear any existing polling first
+    if (pollingInterval) {
+      clearInterval(pollingInterval);
+      setPollingInterval(null);
+    }
+
+    setIsPolling(true);
+    setOpenaiResponseId(responseId);
+
+    const interval = setInterval(async () => {
+      try {
+        const statusResult = await checkAnalysisStatus(responseId);
+
+        if (statusResult.status === 'completed' && statusResult.data) {
+          // Analysis completed successfully
+          setAnalysisResult(statusResult.data);
+          setShowBusinessForm(true);
+          setShowAgentModal(false);
+          setIsPolling(false);
+          setOpenaiResponseId(null);
+          clearInterval(interval);
+          setPollingInterval(null);
+
+          // Refresh credits and dispatch event for real-time updates
+          fetchCredits();
+          if (userCredits) {
+            dispatchCreditUpdate({
+              userId: 'current-user',
+              newBalance: userCredits.balance,
+              toolSlug: selectedAgent?.slug
+            });
+          }
+        } else if (statusResult.status === 'failed' || statusResult.status === 'error') {
+          // Analysis failed
+          setExecutionError(statusResult.error || 'Analysis failed');
+          setIsPolling(false);
+          setOpenaiResponseId(null);
+          clearInterval(interval);
+          setPollingInterval(null);
+        } else {
+          // Still processing
+        }
+        // Continue polling for 'pending', 'queued', 'in_progress' statuses
+      } catch (error) {
+        console.error('Polling error:', error);
+        setExecutionError('Failed to check analysis status');
+        setIsPolling(false);
+        setOpenaiResponseId(null);
+        clearInterval(interval);
+        setPollingInterval(null);
+      }
+    }, 2000); // Poll every 2 seconds
+
+    setPollingInterval(interval);
+  }, [fetchCredits, userCredits, selectedAgent, isPolling, openaiResponseId, pollingInterval]);
+
   const handleExecuteAgent = useCallback(async () => {
     if (!selectedAgent || !websiteUrl.trim()) return;
 
@@ -265,7 +327,7 @@ const Agents: React.FC<AgentsProps> = ({
     } finally {
       setIsExecuting(false);
     }
-  }, [selectedAgent, websiteUrl, authToken, t, fetchCredits]);
+  }, [selectedAgent, websiteUrl, authToken, t, fetchCredits, startPolling]);
 
   const handleCloseModal = useCallback(() => {
     setShowAgentModal(false);
@@ -281,67 +343,6 @@ const Agents: React.FC<AgentsProps> = ({
     setOpenaiResponseId(null);
   }, [pollingInterval]); // Need pollingInterval to clear it
 
-  const startPolling = useCallback((responseId: string) => {
-    // Don't start if already polling for the same response ID
-    if (isPolling && openaiResponseId === responseId) {
-      return;
-    }
-
-    // Clear any existing polling first
-    if (pollingInterval) {
-      clearInterval(pollingInterval);
-      setPollingInterval(null);
-    }
-
-    setIsPolling(true);
-    setOpenaiResponseId(responseId);
-
-    const interval = setInterval(async () => {
-      try {
-        const statusResult = await checkAnalysisStatus(responseId);
-
-        if (statusResult.status === 'completed' && statusResult.data) {
-          // Analysis completed successfully
-          setAnalysisResult(statusResult.data);
-          setShowBusinessForm(true);
-          setShowAgentModal(false);
-          setIsPolling(false);
-          setOpenaiResponseId(null);
-          clearInterval(interval);
-          setPollingInterval(null);
-          
-          // Refresh credits and dispatch event for real-time updates
-          fetchCredits();
-          if (userCredits) {
-            dispatchCreditUpdate({
-              userId: 'current-user',
-              newBalance: userCredits.balance,
-              toolSlug: selectedAgent?.slug
-            });
-          }
-        } else if (statusResult.status === 'failed' || statusResult.status === 'error') {
-          // Analysis failed
-          setExecutionError(statusResult.error || 'Analysis failed');
-          setIsPolling(false);
-          setOpenaiResponseId(null);
-          clearInterval(interval);
-          setPollingInterval(null);
-        } else {
-          // Still processing
-        }
-        // Continue polling for 'pending', 'queued', 'in_progress' statuses
-      } catch (error) {
-        console.error('Polling error:', error);
-        setExecutionError('Failed to check analysis status');
-        setIsPolling(false);
-        setOpenaiResponseId(null);
-        clearInterval(interval);
-        setPollingInterval(null);
-      }
-    }, 2000); // Poll every 2 seconds
-
-    setPollingInterval(interval);
-  }, [fetchCredits, userCredits, selectedAgent, isPolling, openaiResponseId, pollingInterval]); // Add missing dependencies
 
   const handleUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setWebsiteUrl(e.target.value);

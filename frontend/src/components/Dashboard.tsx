@@ -17,7 +17,6 @@ import Offers from './Offers';
 import Campaigns from './Campaigns';
 import Ads from './Ads';
 import Scripts from './Scripts';
-import ScriptGenerator from './ScriptGenerator';
 import CreditsCard from './CreditsCard';
 import PromptTemplates from './PromptTemplates';
 import UserProfile from './UserProfile';

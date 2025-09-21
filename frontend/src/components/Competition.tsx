@@ -289,7 +289,7 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
     } finally {
       setShowDeleteConfirm(null);
     }
-  }, [authToken, onTokenRefreshed, onCompetitionsChanged]);
+  }, [authToken, onCompetitionsChanged]);
 
   const handleCompetitionFormSubmit = useCallback(async (competitionData: Omit<Competition, 'id' | 'created_at' | 'updated_at'>) => {
     try {
@@ -321,7 +321,7 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
     } catch (error) {
       console.error('Error saving competition:', error);
     }
-  }, [businessProfileId, editingCompetition, authToken, onTokenRefreshed, onCompetitionsChanged, fetchCompetitions]);
+  }, [businessProfileId, editingCompetition, authToken, onCompetitionsChanged, fetchCompetitions]);
 
   const handleCancelForm = useCallback(() => {
     setShowCompetitionForm(false);

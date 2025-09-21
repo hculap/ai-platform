@@ -114,39 +114,6 @@ export const useCommandPalette = ({
     }
   }, [isOpen]);
 
-  // Handle keyboard navigation
-  const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (!isOpen) return;
-
-    switch (e.key) {
-      case 'Escape':
-        e.preventDefault();
-        onClose();
-        break;
-
-      case 'ArrowDown':
-        e.preventDefault();
-        setSelectedIndex(prev =>
-          prev < results.length - 1 ? prev + 1 : 0
-        );
-        break;
-
-      case 'ArrowUp':
-        e.preventDefault();
-        setSelectedIndex(prev =>
-          prev > 0 ? prev - 1 : results.length - 1
-        );
-        break;
-
-      case 'Enter':
-        e.preventDefault();
-        if (results[selectedIndex]) {
-          executeCommand(results[selectedIndex].command);
-        }
-        break;
-    }
-  }, [isOpen, results, selectedIndex, onClose]);
-
   // Execute command
   const executeCommand = useCallback((command: Command) => {
     // Save to recent commands
@@ -182,6 +149,40 @@ export const useCommandPalette = ({
         break;
     }
   }, [onClose, navigate, onOpenModal]);
+
+  // Handle keyboard navigation
+  const handleKeyDown = useCallback((e: KeyboardEvent) => {
+    if (!isOpen) return;
+
+    switch (e.key) {
+      case 'Escape':
+        e.preventDefault();
+        onClose();
+        break;
+
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedIndex(prev =>
+          prev < results.length - 1 ? prev + 1 : 0
+        );
+        break;
+
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedIndex(prev =>
+          prev > 0 ? prev - 1 : results.length - 1
+        );
+        break;
+
+      case 'Enter':
+        e.preventDefault();
+        if (results[selectedIndex]) {
+          executeCommand(results[selectedIndex].command);
+        }
+        break;
+    }
+  }, [isOpen, results, selectedIndex, onClose, executeCommand]);
+
 
   // Scroll selected item into view
   useEffect(() => {

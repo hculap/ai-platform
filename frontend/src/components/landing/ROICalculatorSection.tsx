@@ -112,7 +112,7 @@ const ROICalculatorSection: React.FC<ROICalculatorSectionProps> = ({ isVisible }
         setAnimatedResults(prev => ({ ...prev, paybackMonths: value / 10 }))
       );
     }
-  }, [results, isVisible]);
+  }, [results, isVisible, animatedResults.annualSavings, animatedResults.monthlySavings, animatedResults.paybackMonths, animatedResults.timeFreed]);
 
   const handleInputChange = (key: keyof typeof inputs, value: number) => {
     setInputs(prev => ({ ...prev, [key]: value }));

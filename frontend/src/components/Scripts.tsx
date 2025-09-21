@@ -8,13 +8,10 @@ import {
   Eye,
   Edit3,
   Trash2,
-  Copy,
   Check,
-  Zap,
   PenTool,
   Target,
   Bot,
-  Lightbulb,
   Palette,
   Activity
 } from 'lucide-react';
@@ -160,11 +157,6 @@ const Scripts: React.FC<ScriptsProps> = ({
     }
   };
 
-  const closeAllModals = () => {
-    setModals({ styleClone: false, hookGenerator: false, scriptCreator: false, preview: false });
-    setSelectedScript(null);
-    setPrefilledHook('');
-  };
 
   // Handle refresh after changes
   const handleDataChange = useCallback(() => {

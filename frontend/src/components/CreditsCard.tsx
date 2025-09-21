@@ -83,7 +83,7 @@ const CreditsCard: React.FC<CreditsCardProps> = ({ className = '', onCreditUpdat
 
   useEffect(() => {
     loadCredits();
-  }, []);
+  }, [loadCredits]);
 
   // Listen for credit update events from other components
   useEffect(() => {
@@ -94,13 +94,13 @@ const CreditsCard: React.FC<CreditsCardProps> = ({ className = '', onCreditUpdat
 
     window.addEventListener('creditUpdate', handleCreditUpdate as EventListener);
     return () => window.removeEventListener('creditUpdate', handleCreditUpdate as EventListener);
-  }, []);
+  }, [loadCredits]);
 
   useEffect(() => {
     if (showTransactions && transactions.length === 0) {
       loadTransactions();
     }
-  }, [showTransactions]);
+  }, [showTransactions, transactions.length]);
 
   if (isLoading) {
     return (

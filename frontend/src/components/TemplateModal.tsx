@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   X, Copy, CheckCircle, AlertTriangle, Eye, EyeOff,
-  ExternalLink, Settings, Tag, Calendar, FileText
+  ExternalLink, Tag, Calendar, FileText
 } from 'lucide-react';
 import {
   PromptTemplate,

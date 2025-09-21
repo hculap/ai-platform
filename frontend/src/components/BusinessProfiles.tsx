@@ -159,7 +159,7 @@ const BusinessProfiles: React.FC<BusinessProfilesProps> = ({
       console.error('Delete profile error:', error);
       alert(t('businessProfiles.deleteFailed', 'Usuwanie nie powiodło się'));
     }
-  }, [authToken, fetchBusinessProfiles, t]);
+  }, [authToken, fetchBusinessProfiles, t, onProfilesChanged]);
 
   const handleCreateProfile = useCallback(() => {
     setEditingProfile(null);
@@ -218,7 +218,7 @@ const BusinessProfiles: React.FC<BusinessProfilesProps> = ({
       console.error('Save profile error:', error);
       alert(t('businessProfiles.form.saving', 'Zapisywanie...'));
     }
-  }, [authToken, editingProfile, fetchBusinessProfiles, t]);
+  }, [authToken, editingProfile, fetchBusinessProfiles, t, onProfilesChanged]);
 
   const handleCancelForm = useCallback(() => {
     setShowProfileForm(false);

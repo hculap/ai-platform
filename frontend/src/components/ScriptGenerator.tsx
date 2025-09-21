@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import {
@@ -9,7 +9,6 @@ import {
   Sparkles,
   ArrowLeft,
   Save,
-  Eye,
   Palette,
   Clock,
   Play,
@@ -31,7 +30,6 @@ import {
   ScriptGenerationResult,
   ScriptType,
   ScriptTypeInfo,
-  GeneratedScript
 } from '../types';
 
 // Define script type information

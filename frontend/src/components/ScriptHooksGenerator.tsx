@@ -240,7 +240,7 @@ const ScriptHooksGenerator: React.FC<ScriptHooksGeneratorProps> = ({
     } finally {
       setIsGenerating(false);
     }
-  }, [businessProfileId, selectedCategory, additionalContext, authToken, clearSavedResults]);
+  }, [businessProfileId, selectedCategory, additionalContext, authToken, clearSavedResults, onTokenRefreshed]);
 
   // Handle copy hook with optimization
   const handleCopyHook = useCallback(async (hook: ScriptHook | string, index: number) => {

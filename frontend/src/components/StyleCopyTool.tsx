@@ -4,10 +4,8 @@ import {
   Bot, 
   Plus, 
   Trash2, 
-  Copy,
   Check,
   X,
-  FileText,
   Loader,
   Eye,
   EyeOff,
@@ -230,7 +228,7 @@ const StyleCopyTool: React.FC<StyleCopyToolProps> = ({
     } finally {
       setIsAnalyzing(false);
     }
-  }, [formData, validateForm, authToken, t, onStyleCreated, getDefaultBanlist, i18n.language]);
+  }, [formData, validateForm, authToken, t, onStyleCreated, getDefaultBanlist, i18n.language, businessProfileId]);
   
   // Clear messages
   const clearMessages = useCallback(() => {

@@ -1,21 +1,13 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
-  Search, Filter, BookOpen, AlertCircle, Loader2,
-  RefreshCw, Tag, CheckCircle, AlertTriangle
+  Search, BookOpen, AlertCircle, Loader2,
+  Tag
 } from 'lucide-react';
 import {
   PromptTemplate,
-  TemplatesResponse,
-  CategoriesResponse,
   TemplatePersonalizationData,
-  BusinessProfileApi,
-  Offer,
-  Campaign,
-  Ad,
-  GeneratedScript,
-  User,
-  UserCredit
+  User
 } from '../types';
 import {
   getTemplates,
@@ -181,12 +173,12 @@ const PromptTemplates: React.FC<PromptTemplatesProps> = ({
     }, 300);
 
     return () => clearTimeout(delayedSearch);
-  }, [searchTerm]);
+  }, [searchTerm, loadTemplates]);
 
   // Category filter change
   useEffect(() => {
     loadTemplates();
-  }, [selectedCategory]);
+  }, [selectedCategory, loadTemplates]);
 
   // Get dependency status for each template
   const getTemplateDependencyStatus = (template: PromptTemplate) => {
