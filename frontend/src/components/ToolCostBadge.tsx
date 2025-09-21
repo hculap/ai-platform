@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useTranslation } from 'react-i18next';
+// import { useTranslation } from 'react-i18next';
 import { Zap, AlertTriangle, Info } from 'lucide-react';
 import { getToolCost } from '../services/api';
 
@@ -18,7 +18,7 @@ const ToolCostBadge: React.FC<ToolCostBadgeProps> = ({
   userBalance,
   compact = false
 }) => {
-  const { t } = useTranslation();
+  // const { t } = useTranslation();
   const [cost, setCost] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [showDetails, setShowDetails] = useState(false);

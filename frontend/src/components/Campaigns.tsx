@@ -283,34 +283,7 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
     }
   };
 
-  const handleGenerateCampaign = useCallback(async () => {
-    if (!businessProfileId) return;
-
-    setIsGenerating(true);
-    setError(null);
-    setGeneratedCampaign(null);
-    clearSavedResults();
-
-    try {
-      // Start campaign generation (returns job ID immediately)
-      const response = await generateCampaign(businessProfileId, generationParams, authToken);
-
-      if (response.success && response.jobId) {
-        // Start polling for results
-        await pollCampaignGeneration(response.jobId);
-      } else {
-        console.error('No jobId in response:', response);
-        setError(response.error || 'Failed to start campaign generation');
-        setIsGenerating(false);
-      }
-    } catch (err) {
-      console.error('Error generating campaign:', err);
-      setError('Failed to generate campaign');
-      setIsGenerating(false);
-    }
-  }, [businessProfileId, generationParams, authToken, clearSavedResults]);
-
-  const pollCampaignGeneration = async (jobId: string): Promise<void> => {
+  const pollCampaignGeneration = useCallback(async (jobId: string): Promise<void> => {
     const maxAttempts = 30; // 5 minutes max (10s intervals)
     let attempts = 0;
 
@@ -319,7 +292,7 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
         try {
           attempts++;
           const statusResponse = await getCampaignGenerationStatus(jobId, authToken);
-          
+
           if (statusResponse.success) {
             if (statusResponse.status === 'completed' && statusResponse.data) {
               // Generation completed successfully - merge with original parameters
@@ -389,7 +362,35 @@ const CampaignsComponent: React.FC<CampaignsProps> = ({
 
       poll();
     });
-  };
+  }, [authToken, generationParams]);
+
+  const handleGenerateCampaign = useCallback(async () => {
+    if (!businessProfileId) return;
+
+    setIsGenerating(true);
+    setError(null);
+    setGeneratedCampaign(null);
+    clearSavedResults();
+
+    try {
+      // Start campaign generation (returns job ID immediately)
+      const response = await generateCampaign(businessProfileId, generationParams, authToken);
+
+      if (response.success && response.jobId) {
+        // Start polling for results
+        await pollCampaignGeneration(response.jobId);
+      } else {
+        console.error('No jobId in response:', response);
+        setError(response.error || 'Failed to start campaign generation');
+        setIsGenerating(false);
+      }
+    } catch (err) {
+      console.error('Error generating campaign:', err);
+      setError('Failed to generate campaign');
+      setIsGenerating(false);
+    }
+  }, [businessProfileId, generationParams, authToken, clearSavedResults, pollCampaignGeneration]);
+
 
   const handleSaveCampaign = useCallback(async () => {
     if (!businessProfileId || !generatedCampaign) return;

@@ -186,7 +186,7 @@ export class TemplatePersonalizationEngine {
     // Default/fallback placeholders with smart defaults and current date
     const now = new Date();
     const currentYear = now.getFullYear();
-    const currentMonth = now.toLocaleDateString('en-US', { month: 'long' });
+    // const currentMonth = now.toLocaleDateString('en-US', { month: 'long' });
     const currentDate = now.toLocaleDateString();
 
     const defaultReplacements = {

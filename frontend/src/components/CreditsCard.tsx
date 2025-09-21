@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   Zap,
@@ -30,7 +30,7 @@ const CreditsCard: React.FC<CreditsCardProps> = ({ className = '', onCreditUpdat
   const [error, setError] = useState<string | null>(null);
 
   // Load credit data
-  const loadCredits = async () => {
+  const loadCredits = useCallback(async () => {
     try {
       const result = await getCreditBalance();
       if (result.success && result.data) {
@@ -46,7 +46,7 @@ const CreditsCard: React.FC<CreditsCardProps> = ({ className = '', onCreditUpdat
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [onCreditUpdate, t]);
 
   // Load transaction history
   const loadTransactions = async () => {

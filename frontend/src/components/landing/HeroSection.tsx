@@ -20,7 +20,7 @@ const HeroSection: React.FC<HeroSectionProps> = ({
   const { t } = useTranslation();
   const [url, setUrl] = useState('');
   const [isValid, setIsValid] = useState(false);
-  const [animatedCount, setAnimatedCount] = useState(0);
+  // const [animatedCount, setAnimatedCount] = useState(0);
 
   const normalizeUrl = (inputUrl: string): string => {
     let cleanUrl = inputUrl.trim().toLowerCase();
@@ -53,10 +53,10 @@ const HeroSection: React.FC<HeroSectionProps> = ({
       const timer = setInterval(() => {
         currentCount += increment;
         if (currentCount >= targetCount) {
-          setAnimatedCount(targetCount);
+          // setAnimatedCount(targetCount);
           clearInterval(timer);
         } else {
-          setAnimatedCount(Math.floor(currentCount));
+          // setAnimatedCount(Math.floor(currentCount));
         }
       }, 16);
 

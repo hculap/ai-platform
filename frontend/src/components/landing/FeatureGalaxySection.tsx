@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from 'react';
-import { Brain, Target, TrendingUp, Globe, Users, Zap, Shield, Clock, ArrowRight, Search, FileText, Megaphone, Package } from 'lucide-react';
+import React, { useState } from 'react';
+import { Brain, Target, TrendingUp, Globe, Zap, Search, FileText, Megaphone, Package } from 'lucide-react';
 
 interface FeatureGalaxySectionProps {
   isVisible: boolean;

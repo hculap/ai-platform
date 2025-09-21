@@ -1,11 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Play, Globe, Brain, Target, TrendingUp, CheckCircle, ArrowRight, Zap } from 'lucide-react';
+import React from 'react';
+import { Play, Globe, Brain, Target, Zap, ArrowRight } from 'lucide-react';
 
 interface AIDemoSectionProps {
   isVisible: boolean;
   onTryDemo: (url: string) => void;
 }
 
+/* Commented out demoSteps array to fix build
 const demoSteps = [
   {
     id: 1,
@@ -44,66 +45,67 @@ const demoSteps = [
     result: 'Zespół AI przygotował kompleksowy plan wzrostu na Q4'
   }
 ];
+End of commented out demoSteps array */
 
-const sampleResults = {
-  strategy: {
-    opportunities: [
-      'Niezagospodarowany segment młodych profesjonalistów (25-35 lat)',
-      'Możliwość wejścia na rynek niemiecki - mała konkurencja',
-      'Trend AI w branży - 67% firm planuje inwestycje w 2024'
-    ],
-    competitors: [
-      { name: 'Digital Pro Agency', gap: 'Brak AI w ofercie', opportunity: 'Pozycjonowanie jako lider AI' },
-      { name: 'TechGrow', gap: 'Słaba obecność social media', opportunity: 'Dominacja LinkedIn' }
-    ]
-  },
-  content: [
-    { type: 'Post LinkedIn', title: '"3 trendy AI, które zmienią Twoją branżę w 2024"', engagement: '+234% CTR' },
-    { type: 'Kampania Facebook', title: 'Targeting: młodzi profesjonaliści', conversion: '+156% konwersji' },
-    { type: 'Landing Page', title: 'Optymalizacja pod słowa kluczowe AI', seo: 'Ranking #1 Google' }
-  ],
-  automation: [
-    { name: 'Publikowanie LinkedIn', frequency: '2 posty dziennie', status: 'Aktywne' },
-    { name: 'Email nurturing', segments: '3 segmenty klientów', open_rate: '47% open rate' },
-    { name: 'Lead scoring', leads: '23 hot leads dziś', conversion: '+89% jakość leadów' }
-  ],
-  team_coordination: {
-    alex: 'Przygotowuje strategię wejścia na rynek niemiecki',
-    maya: 'Tworzy serię 20 postów o AI dla młodych profesjonalistów',
-    viktor: 'Optymalizuje kampanie pod nowe segmenty',
-    sophia: 'Koordynuje Q4 launch plan - wszystkie elementy gotowe za 3 dni'
-  }
-};
+// const sampleResults = {
+//   strategy: {
+//     opportunities: [
+//       'Niezagospodarowany segment młodych profesjonalistów (25-35 lat)',
+//       'Możliwość wejścia na rynek niemiecki - mała konkurencja',
+//       'Trend AI w branży - 67% firm planuje inwestycje w 2024'
+//     ],
+//     competitors: [
+//       { name: 'Digital Pro Agency', gap: 'Brak AI w ofercie', opportunity: 'Pozycjonowanie jako lider AI' },
+//       { name: 'TechGrow', gap: 'Słaba obecność social media', opportunity: 'Dominacja LinkedIn' }
+//     ]
+//   },
+//   content: [
+//     { type: 'Post LinkedIn', title: '"3 trendy AI, które zmienią Twoją branżę w 2024"', engagement: '+234% CTR' },
+//     { type: 'Kampania Facebook', title: 'Targeting: młodzi profesjonaliści', conversion: '+156% konwersji' },
+//     { type: 'Landing Page', title: 'Optymalizacja pod słowa kluczowe AI', seo: 'Ranking #1 Google' }
+//   ],
+//   automation: [
+//     { name: 'Publikowanie LinkedIn', frequency: '2 posty dziennie', status: 'Aktywne' },
+//     { name: 'Email nurturing', segments: '3 segmenty klientów', open_rate: '47% open rate' },
+//     { name: 'Lead scoring', leads: '23 hot leads dziś', conversion: '+89% jakość leadów' }
+//   ],
+//   team_coordination: {
+//     alex: 'Przygotowuje strategię wejścia na rynek niemiecki',
+//     maya: 'Tworzy serię 20 postów o AI dla młodych profesjonalistów',
+//     viktor: 'Optymalizuje kampanie pod nowe segmenty',
+//     sophia: 'Koordynuje Q4 launch plan - wszystkie elementy gotowe za 3 dni'
+//   }
+// };
 
 const AIDemoSection: React.FC<AIDemoSectionProps> = ({ isVisible, onTryDemo }) => {
-  const [demoState, setDemoState] = useState<'ready' | 'running' | 'completed'>('ready');
-  const [currentStep, setCurrentStep] = useState(0);
-  const [showResults, setShowResults] = useState(false);
-  const [demoUrl, setDemoUrl] = useState('example.com');
+  // const [demoState, setDemoState] = useState<'ready' | 'running' | 'completed'>('ready');
+  // const [currentStep, setCurrentStep] = useState(0);
+  // const [showResults, setShowResults] = useState(false);
+  // const [demoUrl, setDemoUrl] = useState('example.com');
 
-  const startDemo = () => {
-    setDemoState('running');
-    setCurrentStep(0);
-    setShowResults(false);
-    runDemoSequence();
-  };
+  // const startDemo = () => {
+  //   setDemoState('running');
+  //   setCurrentStep(0);
+  //   setShowResults(false);
+  //   runDemoSequence();
+  // };
 
-  const runDemoSequence = async () => {
-    for (let i = 0; i < demoSteps.length; i++) {
-      setCurrentStep(i);
-      await new Promise(resolve => setTimeout(resolve, demoSteps[i].duration));
-    }
-    setShowResults(true);
-    setTimeout(() => {
-      setDemoState('completed');
-    }, 1000);
-  };
+  // const runDemoSequence = async () => {
+  //   for (let i = 0; i < demoSteps.length; i++) {
+  //     setCurrentStep(i);
+  //     await new Promise(resolve => setTimeout(resolve, demoSteps[i].duration));
+  //   }
+  //   setShowResults(true);
+  //   setTimeout(() => {
+  //     setDemoState('completed');
+  //   }, 1000);
+  // };
 
-  const resetDemo = () => {
-    setDemoState('ready');
-    setCurrentStep(0);
-    setShowResults(false);
-  };
+  // const resetDemo = () => {
+  //   setDemoState('ready');
+  //   setCurrentStep(0);
+  //   setShowResults(false);
+  // };
 
   return (
     <section 

@@ -1,7 +1,7 @@
 import React from 'react';
 import { useTranslation } from 'react-i18next';
 import { ChevronRight, Zap } from 'lucide-react';
-import { Command, COMMAND_CATEGORIES } from './commandDefinitions';
+import { COMMAND_CATEGORIES } from './commandDefinitions';
 import { SearchResult } from './commandSearch';
 
 interface CommandItemProps {

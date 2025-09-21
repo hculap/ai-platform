@@ -3,7 +3,7 @@ import axios from 'axios';
 // Constants
 const TOKEN_REFRESH_BUFFER_MINUTES = 5; // Refresh token 5 minutes before expiry
 const TOKEN_CHECK_INTERVAL_MS = 60000; // Check token every minute
-const MAX_RETRY_ATTEMPTS = 3;
+// const MAX_RETRY_ATTEMPTS = 3;
 
 // Token refresh state
 let refreshPromise: Promise<string> | null = null;

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Check, Zap, Crown, Rocket, Star, ArrowRight } from 'lucide-react';
+import { Check, Zap, Crown, Rocket, ArrowRight } from 'lucide-react';
 
 interface PricingSectionProps {
   isVisible: boolean;

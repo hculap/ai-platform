@@ -24,7 +24,7 @@ const ROICalculatorSection: React.FC<ROICalculatorSectionProps> = ({ isVisible }
 
   // Calculate ultra-realistic ROI whenever inputs change
   useEffect(() => {
-    const { currentRevenue, currentCosts, teamSize, timeSpentHours } = inputs;
+    const { currentRevenue, currentCosts, timeSpentHours } = inputs;
     
     const aiPlatformCost = 199; // Monthly cost
     

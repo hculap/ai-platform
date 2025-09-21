@@ -408,7 +408,7 @@ export const getBusinessProfiles = async (authToken: string): Promise<{ success:
 
 export const deleteBusinessProfile = async (profileId: string, authToken: string): Promise<{ success: boolean; error?: string; isTokenExpired?: boolean }> => {
   try {
-    const response = await api.delete(`/business-profiles/${profileId}`, {
+    await api.delete(`/business-profiles/${profileId}`, {
       headers: {
         'Authorization': `Bearer ${authToken}`
       }
