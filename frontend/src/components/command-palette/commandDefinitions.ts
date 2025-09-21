@@ -1,7 +1,7 @@
 import {
   Home, Bot, FileText, Video, Zap, Building2, Target, Package,
   TrendingUp, Megaphone, User, Settings, Plus, Search, Globe,
-  CreditCard, Palette, BookOpen, Lightbulb, Users, Activity
+  CreditCard, Palette
 } from 'lucide-react';
 
 export interface Command {
