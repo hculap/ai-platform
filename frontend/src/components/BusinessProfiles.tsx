@@ -7,13 +7,11 @@ import {
   Building2,
   Globe,
   FileText,
-  MoreHorizontal,
-  Eye,
   Trash2,
-  ExternalLink,
-  Calendar,
   Activity,
-  X
+  X,
+  Calendar,
+  ExternalLink
 } from 'lucide-react';
 import { getBusinessProfiles, deleteBusinessProfile, createBusinessProfile, updateBusinessProfile } from '../services/api';
 import BusinessProfileForm from './BusinessProfileForm';
@@ -135,14 +133,6 @@ const BusinessProfiles: React.FC<BusinessProfilesProps> = ({
 
 
 
-  const handleEditProfile = useCallback((profile: BusinessProfile) => {
-    if (onEditProfile) {
-      onEditProfile(profile);
-    } else {
-      // Fallback: show profile details in an alert
-      alert(`${t('businessProfiles.editProfile', 'Edytuj Profil')}: ${profile.name}\n\n${t('businessProfiles.website', 'Strona internetowa')}: ${profile.website_url}\n\n${t('businessProfiles.description', 'Opis')}: ${profile.offer_description}\n\n${t('businessProfiles.status', 'Status')}: ${profile.is_active ? t('businessProfiles.active', 'Aktywny') : t('businessProfiles.inactive', 'Nieaktywny')}`);
-    }
-  }, [onEditProfile]);
 
   const handleDeleteProfile = useCallback(async (profile: BusinessProfile) => {
     try {

@@ -2,14 +2,14 @@ import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import {
-  User, Building2, Settings, LogOut, Search, Bell,
+  User, Building2, LogOut, Search, Bell,
   Bot, Zap, FileText, Video, Target, TrendingUp, Megaphone,
   Users, Activity, Clock, CheckCircle, Plus, Menu, Package,
-  Play, BookOpen, Lightbulb, ChevronLeft, ChevronRight, Check, X, Home, Palette, TrendingUp as TrendingUpIcon, TrendingDown, Calendar, Star,
+  Play, Lightbulb, ChevronLeft, ChevronRight, Check, Home, Palette, TrendingUp as TrendingUpIcon, TrendingDown, Star,
   BarChart3, Globe, Heart, MessageSquare, Share2, Eye
 } from 'lucide-react';
 import { User as UserType, UserCredit } from '../types';
-import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, updateBusinessProfile, getCompetitionsCount, getOffersCount, getCampaignsCount, getAdsCount, getScriptsCount, getOffers, getCampaigns, getUserStyles, getTemplatesCount } from '../services/api';
+import { getAgentsCount, getBusinessProfilesCount, getInteractionsCount, getBusinessProfiles, updateBusinessProfile, getCompetitionsCount, getOffersCount, getCampaignsCount, getAdsCount, getScriptsCount, getUserStyles, getTemplatesCount } from '../services/api';
 import BusinessProfiles from './BusinessProfiles';
 import Agents from './Agents';
 import Competition from './Competition';
@@ -69,10 +69,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
   const [campaignsCount, setCampaignsCount] = useState<number>(0);
   const [adsCount, setAdsCount] = useState<number>(0);
   const [scriptsCount, setScriptsCount] = useState<number>(0);
-  const [interactionsCount, setInteractionsCount] = useState<number>(0);
+  const [, setInteractionsCount] = useState<number>(0);
   const [userStylesCount, setUserStylesCount] = useState<number>(0);
   const [templatesCount, setTemplatesCount] = useState<number>(0);
-  const [credits, setCredits] = useState<UserCredit | null>(null);
+  const [, setCredits] = useState<UserCredit | null>(null);
   const [isLoadingStats, setIsLoadingStats] = useState<boolean>(true);
 
   // Business profiles state
@@ -84,7 +84,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
   const [currentTipIndex, setCurrentTipIndex] = useState<number>(0);
 
   // Credits state
-  const [userCredits, setUserCredits] = useState<UserCredit | null>(null);
+  const [userCredits, ] = useState<UserCredit | null>(null);
 
   // Command Palette state
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);

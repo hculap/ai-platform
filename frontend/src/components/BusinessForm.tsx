@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FormData, BusinessProfile } from '../types';
-import { ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 
 interface BusinessFormProps {
   initialData?: BusinessProfile | null;

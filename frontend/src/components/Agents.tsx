@@ -4,10 +4,7 @@ import {
   Search,
   Bot,
   Zap,
-  Globe,
   FileText,
-  ExternalLink,
-  Calendar,
   Activity,
   X,
   Play,
@@ -17,8 +14,8 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { getAgents, executeAgent, checkAnalysisStatus, createBusinessProfile, getCreditBalance } from '../services/api';
-import BusinessForm, { BusinessFormProps } from './BusinessForm';
-import { BusinessProfile, BusinessProfileApi, UserCredit, CreditError } from '../types';
+import BusinessForm from './BusinessForm';
+import { BusinessProfile, BusinessProfileApi, UserCredit } from '../types';
 import ToolCostBadge from './ToolCostBadge';
 import { dispatchCreditUpdate } from '../utils/creditEvents';
 
@@ -73,7 +70,7 @@ const Agents: React.FC<AgentsProps> = ({
   
   // Credits state
   const [userCredits, setUserCredits] = useState<UserCredit | null>(null);
-  const [isLoadingCredits, setIsLoadingCredits] = useState(false);
+  const [, setIsLoadingCredits] = useState(false);
 
   // Debounce search query
   useEffect(() => {
@@ -268,7 +265,7 @@ const Agents: React.FC<AgentsProps> = ({
     } finally {
       setIsExecuting(false);
     }
-  }, [selectedAgent, websiteUrl, authToken, t]);
+  }, [selectedAgent, websiteUrl, authToken, t, fetchCredits]);
 
   const handleCloseModal = useCallback(() => {
     setShowAgentModal(false);
@@ -344,7 +341,7 @@ const Agents: React.FC<AgentsProps> = ({
     }, 2000); // Poll every 2 seconds
 
     setPollingInterval(interval);
-  }, []); // Removed pollingInterval dependency to prevent stale closure
+  }, [fetchCredits, userCredits, selectedAgent, isPolling, openaiResponseId, pollingInterval]); // Add missing dependencies
 
   const handleUrlChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setWebsiteUrl(e.target.value);
@@ -400,7 +397,7 @@ const Agents: React.FC<AgentsProps> = ({
         'error'
       );
     }
-  }, [authToken, onTokenRefreshed, onNavigateToBusinessProfiles, onProfileCreated, onProfilesChanged]);
+  }, [authToken, onNavigateToBusinessProfiles, onProfileCreated, onProfilesChanged]);
 
   const handleBusinessFormReanalyze = useCallback(() => {
     setShowBusinessForm(false);

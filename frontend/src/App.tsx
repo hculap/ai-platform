@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LoadingState, BusinessProfile, User, AuthResponse } from './types';
+import { LoadingState, BusinessProfile, User } from './types';
 import { startBackgroundAnalysis, checkAnalysisStatus, registerUser, loginUser, createBusinessProfile } from './services/api';
 import { tokenManager } from './services/tokenManager';
 
@@ -24,7 +24,7 @@ function AppContent() {
   const location = useLocation();
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analysisData, setAnalysisData] = useState<BusinessProfile | null>(null);
-  const [openaiResponseId, setOpenaiResponseId] = useState<string | null>(null);
+  const [, setOpenaiResponseId] = useState<string | null>(null);
   const [loadingState, setLoadingState] = useState<LoadingState>({
     isLoading: false,
     progress: 0,
@@ -177,12 +177,12 @@ function AppContent() {
     navigate('/form');
   };
 
-  const handleReanalyze = () => {
+  const handleReanalyze = useCallback(() => {
     navigate('/');
     setAnalysisData(null);
     setOpenaiResponseId(null);
     setAcceptedProfileData(null);
-  };
+  }, [navigate]);
 
   const handleAcceptProfile = (profileData: BusinessProfile) => {
     setAcceptedProfileData(profileData);
@@ -419,7 +419,7 @@ function AppContent() {
     return () => {
       tokenManager.stopTokenMonitoring();
     };
-  }, []);
+  }, [location.pathname, navigate]);
 
   // Auto-redirect if user is already signed in (but allow navigation to other authenticated sections)
   useEffect(() => {

@@ -24,7 +24,6 @@ import {
   deleteCompetition,
   createCompetition,
   updateCompetition,
-  executeAgent,
   startBackgroundCompetitorResearch,
   checkCompetitorResearchStatus,
   getCreditBalance,

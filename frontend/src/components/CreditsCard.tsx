@@ -1,15 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { 
-  Zap, 
-  CreditCard, 
-  History, 
-  Calendar, 
-  TrendingUp, 
+import {
+  Zap,
+  CreditCard,
+  History,
+  Calendar,
+  TrendingUp,
   AlertTriangle,
   CheckCircle,
-  X,
-  ExternalLink
+  X
 } from 'lucide-react';
 import { UserCredit, CreditTransaction } from '../types';
 import { getCreditBalance, getCreditTransactions, upgradeSubscription } from '../services/api';
