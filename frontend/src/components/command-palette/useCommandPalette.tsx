@@ -92,7 +92,7 @@ export const useCommandPalette = ({
         setResults(recentResults);
       }
     } else {
-      const searchResults = searchCommands(availableCommands, query, t);
+      const searchResults = searchCommands(availableCommands, query, t as (key: string, fallback?: string) => string);
       setResults(searchResults.slice(0, 10)); // Limit to 10 results
     }
 
