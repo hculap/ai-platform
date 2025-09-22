@@ -13,12 +13,17 @@ services:
       curl -fsSL https://deb.nodesource.com/setup_18.x | sudo -E bash -
       sudo apt-get install -y nodejs
       cd frontend && npm ci && DISABLE_ESLINT_PLUGIN=true CI=false npm run build
-      cd backend && pip install -r requirements.txt
+      cd ../backend && pip install -r requirements.txt
+      # Run database migrations (ensure Flask app is discoverable)
+      export FLASK_APP=app.py
+      flask db upgrade
     startCommand: cd backend && gunicorn wsgi:application
     plan: free # Change to 'starter' or higher for production
     region: oregon
     rootDir: .
     envVars:
+      - key: FLASK_APP
+        value: app.py
       - key: FLASK_ENV
         value: production
       - key: SECRET_KEY
