@@ -78,7 +78,13 @@ def register():
             CreditService.get_or_create_user_credits(user.id)
         except Exception as credit_error:
             # Don't fail registration if credit initialization fails
+            import traceback
             print(f"Warning: Failed to initialize credits for new user {user.id}: {credit_error}")
+            print(f"Credit error traceback: {traceback.format_exc()}")
+            # Log specific database table errors
+            if "no such table" in str(credit_error).lower() or "relation" in str(credit_error).lower() and "does not exist" in str(credit_error).lower():
+                print("ERROR: Credit tables (user_credits, credit_transactions) do not exist in database. Migration may have failed.")
+            # Continue with registration - user can use the platform without credits initially
 
         # Create access and refresh tokens
         access_token = create_access_token(identity=user.id)

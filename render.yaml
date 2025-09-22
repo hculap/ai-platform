@@ -14,9 +14,18 @@ services:
       sudo apt-get install -y nodejs
       cd frontend && npm ci && DISABLE_ESLINT_PLUGIN=true CI=false npm run build
       cd ../backend && pip install -r requirements.txt
-      # Run database migrations (ensure Flask app is discoverable)
+      # Run database migrations with enhanced logging
       export FLASK_APP=app.py
-      flask db upgrade
+      echo "=== Starting database migration ==="
+      echo "Current directory: $(pwd)"
+      echo "Flask app: $FLASK_APP"
+      echo "Database URL: $DATABASE_URL"
+      echo "Checking database connectivity..."
+      python -c "from app import create_app; app = create_app(); print('Database connection successful')" || echo "Database connection failed"
+      echo "Running migrations..."
+      flask db current || echo "No current migration found"
+      flask db upgrade || (echo "Migration failed with exit code $?"; exit 1)
+      echo "=== Migration completed successfully ==="
     startCommand: cd backend && gunicorn wsgi:application
     plan: free # Change to 'starter' or higher for production
     region: oregon
