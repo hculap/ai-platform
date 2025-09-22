@@ -205,9 +205,12 @@ def create_app(config_name=None):
     from .models.script import Script
     from .models.prompt_template import PromptTemplate
 
-    # Initialize agents
-    from .agents import initialize_agents
-    initialize_agents()
+    # Initialize agents (skip during migrations)
+    if not os.getenv('SKIP_AGENT_INIT'):
+        from .agents import initialize_agents
+        initialize_agents()
+    else:
+        app.logger.info("Skipping agent initialization (SKIP_AGENT_INIT set)")
 
     # Add routes to serve React frontend
     @app.route('/')
