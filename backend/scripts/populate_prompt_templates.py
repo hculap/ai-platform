@@ -70,12 +70,17 @@ def check_existing_templates():
 
         return total_count, en_count, pl_count
     except Exception as e:
-        logger.error(f"Error checking existing templates: {str(e)}")
+        logger.warning(f"Could not check existing templates (table may not exist yet): {str(e)}")
         return 0, 0, 0
 
 def template_exists(title, language):
     """Check if a template with the given title and language already exists."""
-    return PromptTemplate.query.filter_by(title=title, language=language).first() is not None
+    try:
+        return PromptTemplate.query.filter_by(title=title, language=language).first() is not None
+    except Exception as e:
+        # If table doesn't exist yet, return False
+        logger.debug(f"Error checking template existence (table may not exist yet): {e}")
+        return False
 
 def create_template(template_data):
     """Create a new PromptTemplate from template data."""

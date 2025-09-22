@@ -168,6 +168,75 @@ run_python_migrations() {
     fi
 }
 
+# Function to populate prompt templates
+populate_prompt_templates() {
+    log_info "=== Starting Prompt Templates Population ==="
+
+    # Check if templates population script exists
+    if [[ ! -f "scripts/populate_prompt_templates.py" ]]; then
+        log_error "Prompt templates population script not found"
+        return 1
+    fi
+
+    # Check if templates data file exists
+    if [[ ! -f "scripts/prompt_templates_export.json" ]]; then
+        log_error "Prompt templates data file not found"
+        return 1
+    fi
+
+    # Check current template count
+    log_info "Checking existing prompt templates..."
+    template_count=$(python -c "
+import os
+import sys
+os.environ['SKIP_AGENT_INIT'] = '1'
+try:
+    from app import create_app
+    from app.models.prompt_template import PromptTemplate
+    app = create_app()
+    with app.app_context():
+        count = PromptTemplate.query.count()
+        print(count)
+except Exception as e:
+    print(0)
+" 2>/dev/null | grep -E '^[0-9]+$' | tail -n1 || echo "0")
+
+    log_info "Found $template_count existing templates in database"
+
+    # If templates already exist, skip population
+    if [[ "$template_count" -gt 20 ]]; then
+        log_success "Prompt templates already populated ($template_count templates found)"
+        return 0
+    fi
+
+    # Run template population
+    log_info "Populating prompt templates database..."
+    if python scripts/populate_prompt_templates.py --force; then
+        # Verify population success
+        final_count=$(python -c "
+import os
+import sys
+os.environ['SKIP_AGENT_INIT'] = '1'
+try:
+    from app import create_app
+    from app.models.prompt_template import PromptTemplate
+    app = create_app()
+    with app.app_context():
+        count = PromptTemplate.query.count()
+        print(count)
+except Exception as e:
+    print(0)
+" 2>/dev/null | grep -E '^[0-9]+$' | tail -n1 || echo "0")
+
+        log_success "Prompt templates population completed successfully"
+        log_info "Final template count: $final_count"
+        return 0
+    else
+        log_error "Prompt templates population failed"
+        return 1
+    fi
+}
+
 # Main migration function
 run_migrations() {
     log_info "=== Starting Database Migration ==="
@@ -208,12 +277,22 @@ main() {
 
     # Step 5: Run migrations
     if run_migrations; then
-        log_success "=== Migration Process Completed Successfully ==="
-        exit 0
+        log_success "Database migrations completed successfully"
     else
         log_error "=== Migration Process Failed ==="
         exit 1
     fi
+
+    # Step 6: Populate prompt templates
+    if populate_prompt_templates; then
+        log_success "Prompt templates population completed successfully"
+    else
+        log_error "=== Prompt Templates Population Failed ==="
+        exit 1
+    fi
+
+    log_success "=== Complete Deployment Process Completed Successfully ==="
+    exit 0
 }
 
 # Execute main function

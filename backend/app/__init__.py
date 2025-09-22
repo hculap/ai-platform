@@ -124,6 +124,53 @@ def log_exception(logger, error, context="", include_request=True):
     # Log as error with all details
     logger.error("\n".join(error_details))
 
+def ensure_prompt_templates_populated(app):
+    """
+    Startup fallback to ensure prompt templates are populated.
+    This runs during app initialization as a safety net.
+    """
+    with app.app_context():
+        try:
+            from .models.prompt_template import PromptTemplate
+
+            # Check if templates already exist
+            template_count = PromptTemplate.query.count()
+
+            if template_count >= 20:  # We expect 30+ templates
+                app.logger.info(f"Prompt templates already populated ({template_count} templates found)")
+                return
+
+            app.logger.warning(f"Only {template_count} prompt templates found, attempting to populate...")
+
+            # Try to populate templates
+            import subprocess
+            import sys
+            import os
+
+            # Get the backend directory path
+            backend_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+            script_path = os.path.join(backend_dir, 'scripts', 'populate_prompt_templates.py')
+
+            if os.path.exists(script_path):
+                # Run the population script
+                result = subprocess.run([
+                    sys.executable, script_path, '--force'
+                ], cwd=backend_dir, capture_output=True, text=True)
+
+                if result.returncode == 0:
+                    # Verify population success
+                    final_count = PromptTemplate.query.count()
+                    app.logger.info(f"Prompt templates populated successfully during startup. Final count: {final_count}")
+                else:
+                    app.logger.error(f"Failed to populate prompt templates during startup: {result.stderr}")
+            else:
+                app.logger.error(f"Prompt templates population script not found at: {script_path}")
+
+        except Exception as e:
+            app.logger.error(f"Error during startup prompt template check: {str(e)}")
+            # Don't fail app startup if template population fails
+            pass
+
 def create_app(config_name=None):
     """Application factory pattern"""
     import sys
@@ -355,6 +402,9 @@ def create_app(config_name=None):
         response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
         
         return response
+
+    # Ensure prompt templates are populated (startup fallback)
+    ensure_prompt_templates_populated(app)
 
     app.logger.info("Flask application setup completed")
     return app
