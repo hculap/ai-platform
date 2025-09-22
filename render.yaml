@@ -14,22 +14,8 @@ services:
       sudo apt-get install -y nodejs
       cd frontend && npm ci && DISABLE_ESLINT_PLUGIN=true CI=false npm run build
       cd ../backend && pip install -r requirements.txt
-      # Run database migrations with enhanced logging
-      export FLASK_APP=app.py
-      export PYTHONPATH=$(pwd):$PYTHONPATH
-      echo "=== Starting database migration ==="
-      echo "Current directory: $(pwd)"
-      echo "Flask app: $FLASK_APP"
-      echo "PYTHONPATH: $PYTHONPATH"
-      echo "Database URL: $DATABASE_URL"
-      echo "Python version: $(python --version)"
-      echo "Flask version: $(python -c 'import flask; print(flask.__version__)')"
-      echo "Checking database connectivity..."
-      python -c "from app import create_app; app = create_app(); print('Database connection successful')" || echo "Database connection failed"
-      echo "Running migrations using Flask CLI with optimized environment..."
-      export SKIP_AGENT_INIT=1
-      flask db upgrade || (echo "Flask CLI migration failed with exit code $?"; echo "Trying simplified Python script..."; python simple_migrate.py) || (echo "All migration attempts failed with exit code $?"; exit 1)
-      echo "=== Migration completed successfully ==="
+      # Run database migrations using dedicated script
+      bash scripts/deploy_migrate.sh
     startCommand: cd backend && gunicorn wsgi:application
     plan: free # Change to 'starter' or higher for production
     region: oregon

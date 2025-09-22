@@ -42,7 +42,7 @@ def setup_logging():
     """Configure basic logging"""
     logging.basicConfig(
         level=logging.INFO,
-        format='%(asctime)s [MIGRATE] %(message)s',
+        format='%(asctime)s [MIGRATE-PYTHON] %(message)s',
         handlers=[logging.StreamHandler(sys.stdout)]
     )
     return logging.getLogger(__name__)
