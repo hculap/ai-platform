@@ -122,7 +122,7 @@ const ROICalculatorSection: React.FC<ROICalculatorSectionProps> = ({ isVisible }
     <section 
       id="roi-calculator" 
       data-section 
-      className="py-20 bg-gradient-to-br from-indigo-50 to-purple-50 relative overflow-hidden"
+      className="relative overflow-hidden bg-gradient-to-br from-indigo-50 to-purple-50 py-16 sm:py-20"
     >
       {/* Background elements */}
       <div className="absolute inset-0">
@@ -130,14 +130,14 @@ const ROICalculatorSection: React.FC<ROICalculatorSectionProps> = ({ isVisible }
         <div className="absolute bottom-20 right-20 w-80 h-80 bg-gradient-to-r from-purple-200/20 to-pink-200/20 rounded-full blur-3xl" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6">
         {/* Section header */}
         <div 
           className={`text-center mb-16 transition-all duration-1000 transform ${
             isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
           }`}
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+          <h2 className="mb-6 text-3xl font-bold sm:text-4xl md:text-5xl">
             <span className="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
               Kalkulator
             </span>
@@ -146,13 +146,13 @@ const ROICalculatorSection: React.FC<ROICalculatorSectionProps> = ({ isVisible }
               Zwrotu z Inwestycji
             </span>
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="mx-auto max-w-3xl text-base text-gray-600 sm:text-lg md:text-xl">
             Sprawdź dokładnie, ile możesz zaoszczędzić i zarobić dzięki naszej platformie AI. 
             Dostosuj parametry do swojego biznesu.
           </p>
         </div>
 
-        <div className="grid lg:grid-cols-2 gap-12">
+        <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
           {/* Calculator inputs */}
           <div 
             className={`transition-all duration-1000 transform ${
@@ -160,12 +160,12 @@ const ROICalculatorSection: React.FC<ROICalculatorSectionProps> = ({ isVisible }
             }`}
             style={{ transitionDelay: '0.2s' }}
           >
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 border border-white/50 shadow-xl">
-              <div className="flex items-center space-x-3 mb-8">
-                <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
-                  <Calculator className="w-6 h-6 text-white" />
+            <div className="rounded-3xl border border-white/50 bg-white/80 p-6 shadow-xl backdrop-blur-sm sm:p-8">
+              <div className="mb-8 flex items-center gap-3">
+                <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-blue-500 to-purple-600">
+                  <Calculator className="h-6 w-6 text-white" />
                 </div>
-                <h3 className="text-2xl font-bold text-gray-900">Dane Twojego Biznesu</h3>
+                <h3 className="text-xl font-bold text-gray-900 sm:text-2xl">Dane Twojego Biznesu</h3>
               </div>
 
               <div className="space-y-8">
@@ -299,8 +299,8 @@ const ROICalculatorSection: React.FC<ROICalculatorSectionProps> = ({ isVisible }
                   {/* Time freed */}
                   <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
                     <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center space-x-2">
-                        <Clock className="w-5 h-5 text-blue-300" />
+                      <div className="flex items-center gap-2">
+                        <Clock className="h-5 w-5 text-blue-300" />
                         <span className="text-blue-100">Uwolniony czas miesięcznie</span>
                       </div>
                     </div>
@@ -315,8 +315,8 @@ const ROICalculatorSection: React.FC<ROICalculatorSectionProps> = ({ isVisible }
                   {/* Monthly savings */}
                   <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
                     <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center space-x-2">
-                        <DollarSign className="w-5 h-5 text-green-300" />
+                      <div className="flex items-center gap-2">
+                        <DollarSign className="h-5 w-5 text-green-300" />
                         <span className="text-blue-100">Miesięczne oszczędności netto</span>
                       </div>
                     </div>
@@ -331,8 +331,8 @@ const ROICalculatorSection: React.FC<ROICalculatorSectionProps> = ({ isVisible }
                   {/* Annual savings */}
                   <div className="bg-white/10 backdrop-blur-sm rounded-2xl p-6">
                     <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center space-x-2">
-                        <Target className="w-5 h-5 text-purple-300" />
+                      <div className="flex items-center gap-2">
+                        <Target className="h-5 w-5 text-purple-300" />
                         <span className="text-blue-100">Roczne oszczędności</span>
                       </div>
                     </div>
@@ -347,8 +347,8 @@ const ROICalculatorSection: React.FC<ROICalculatorSectionProps> = ({ isVisible }
                   {/* Payback period */}
                   <div className="bg-gradient-to-r from-yellow-500/20 to-orange-500/20 backdrop-blur-sm rounded-2xl p-6 border border-yellow-400/30">
                     <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center space-x-2">
-                        <Zap className="w-5 h-5 text-yellow-300" />
+                      <div className="flex items-center gap-2">
+                        <Zap className="h-5 w-5 text-yellow-300" />
                         <span className="text-yellow-100">Zwrot inwestycji</span>
                       </div>
                     </div>
@@ -369,9 +369,9 @@ const ROICalculatorSection: React.FC<ROICalculatorSectionProps> = ({ isVisible }
                       "Konserwatywne szacunki oparte na rzeczywistych wynikach klientów"
                     }
                   </p>
-                  <button className="inline-flex items-center space-x-2 px-8 py-4 bg-white text-blue-600 font-semibold rounded-2xl hover:shadow-lg transform hover:scale-105 transition-all duration-300">
+                  <button className="inline-flex items-center gap-2 rounded-2xl bg-white px-6 py-3 text-sm font-semibold text-blue-600 transition-all duration-300 hover:scale-105 hover:shadow-lg sm:px-8 sm:py-4 sm:text-base">
                     <span>Przetestuj Bezpłatnie</span>
-                    <ArrowRight className="w-5 h-5" />
+                    <ArrowRight className="h-5 w-5" />
                   </button>
                 </div>
               </div>
@@ -381,27 +381,27 @@ const ROICalculatorSection: React.FC<ROICalculatorSectionProps> = ({ isVisible }
 
         {/* Bottom insight */}
         <div 
-          className={`mt-16 text-center transition-all duration-1000 transform ${
+          className={`mt-14 text-center transition-all duration-1000 transform sm:mt-16 ${
             isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
           }`}
           style={{ transitionDelay: '0.6s' }}
         >
-          <div className="bg-white/70 backdrop-blur-sm rounded-3xl p-8 border border-white/50 max-w-4xl mx-auto">
-            <div className="flex items-center justify-center space-x-3 mb-4">
-              <Users className="w-8 h-8 text-blue-600" />
-              <h3 className="text-2xl font-bold text-gray-900">Średnie wyniki naszych klientów</h3>
+          <div className="mx-auto max-w-4xl rounded-3xl border border-white/50 bg-white/70 p-6 backdrop-blur-sm sm:p-8">
+            <div className="mb-4 flex items-center justify-center gap-3">
+              <Users className="h-7 w-7 text-blue-600 sm:h-8 sm:w-8" />
+              <h3 className="text-xl font-bold text-gray-900 sm:text-2xl">Średnie wyniki naszych klientów</h3>
             </div>
-            <div className="grid md:grid-cols-3 gap-6 text-center">
+            <div className="grid gap-6 text-center sm:grid-cols-3">
               <div>
-                <div className="text-3xl font-bold text-blue-600 mb-2">1,200 PLN</div>
+                <div className="mb-2 text-2xl font-bold text-blue-600 sm:text-3xl">1,200 PLN</div>
                 <p className="text-gray-600">Średnie miesięczne oszczędności</p>
               </div>
               <div>
-                <div className="text-3xl font-bold text-green-600 mb-2">1.2</div>
+                <div className="mb-2 text-2xl font-bold text-green-600 sm:text-3xl">1.2</div>
                 <p className="text-gray-600">Miesiące zwrotu inwestycji</p>
               </div>
               <div>
-                <div className="text-3xl font-bold text-purple-600 mb-2">25%</div>
+                <div className="mb-2 text-2xl font-bold text-purple-600 sm:text-3xl">25%</div>
                 <p className="text-gray-600">Średnia oszczędność czasu</p>
               </div>
             </div>

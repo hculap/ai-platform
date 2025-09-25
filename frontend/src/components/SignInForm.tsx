@@ -72,19 +72,19 @@ const SignInForm: React.FC<SignInFormProps> = ({ onBack, onSignIn, isSubmitting 
   };
 
   return (
-    <section className="px-6 py-12">
-      <div className="max-w-md mx-auto">
+    <section className="px-4 py-10 sm:px-6 sm:py-12">
+      <div className="mx-auto max-w-md">
         <div className="animate-fade-in">
           <div className="text-center mb-8">
             <div className="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mx-auto mb-6">
               <LogIn className="w-8 h-8 text-white" />
             </div>
-            <h2 className="text-3xl font-bold text-gray-900 mb-2">{t('signin.title')}</h2>
-            <p className="text-gray-600">{t('signin.description')}</p>
+            <h2 className="mb-2 text-2xl font-bold text-gray-900 sm:text-3xl">{t('signin.title')}</h2>
+            <p className="text-sm text-gray-600 sm:text-base">{t('signin.description')}</p>
           </div>
 
-          <form onSubmit={handleSubmit} className="bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden">
-            <div className="p-8 space-y-6">
+          <form onSubmit={handleSubmit} className="overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-xl">
+            <div className="space-y-6 p-6 sm:p-8">
               {/* Email Field */}
               <div>
                 <label className="block text-sm font-semibold text-gray-700 mb-3">
@@ -96,7 +96,7 @@ const SignInForm: React.FC<SignInFormProps> = ({ onBack, onSignIn, isSubmitting 
                   name="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className={`w-full px-4 py-4 bg-gray-50 border rounded-xl focus:outline-none transition-all duration-200 ${
+                  className={`w-full rounded-xl border bg-gray-50 px-4 py-3 transition-all duration-200 focus:outline-none sm:py-4 ${
                     errors.email 
                       ? 'border-red-500 focus:border-red-500 focus:bg-red-50' 
                       : 'border-gray-200 focus:border-blue-500 focus:bg-white'
@@ -122,7 +122,7 @@ const SignInForm: React.FC<SignInFormProps> = ({ onBack, onSignIn, isSubmitting 
                     name="password"
                     value={formData.password}
                     onChange={handleInputChange}
-                    className={`w-full px-4 py-4 pr-12 bg-gray-50 border rounded-xl focus:outline-none transition-all duration-200 ${
+                    className={`w-full rounded-xl border bg-gray-50 px-4 py-3 pr-12 transition-all duration-200 focus:outline-none sm:py-4 ${
                       errors.password 
                         ? 'border-red-500 focus:border-red-500 focus:bg-red-50' 
                         : 'border-gray-200 focus:border-blue-500 focus:bg-white'
@@ -146,11 +146,11 @@ const SignInForm: React.FC<SignInFormProps> = ({ onBack, onSignIn, isSubmitting 
               </div>
 
               {/* Action Buttons */}
-              <div className="flex justify-between items-center pt-6 mt-8 border-t border-gray-100">
+              <div className="mt-8 flex flex-col gap-4 border-t border-gray-100 pt-6 sm:flex-row sm:items-center sm:justify-between">
                 <button 
                   type="button" 
                   onClick={onBack}
-                  className="flex items-center px-6 py-3 text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200"
+                  className="inline-flex items-center justify-center rounded-xl px-6 py-3 text-sm font-medium text-blue-600 transition-colors duration-200 hover:text-blue-700"
                   disabled={isSubmitting}
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
@@ -160,7 +160,7 @@ const SignInForm: React.FC<SignInFormProps> = ({ onBack, onSignIn, isSubmitting 
                 <button 
                   type="submit"
                   disabled={isSubmitting}
-                  className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  className="inline-flex items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:from-blue-700 hover:to-purple-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 sm:px-8 sm:text-base"
                 >
                   {isSubmitting ? t('signin.button.signingIn') : t('signin.button.signIn')}
                 </button>

@@ -111,7 +111,7 @@ const AIDemoSection: React.FC<AIDemoSectionProps> = ({ isVisible, onTryDemo }) =
     <section 
       id="ai-demo" 
       data-section 
-      className="py-20 bg-gradient-to-br from-gray-900 to-blue-900 text-white relative overflow-hidden"
+      className="relative overflow-hidden bg-gradient-to-br from-gray-900 to-blue-900 py-16 text-white sm:py-20"
     >
       {/* Background effects */}
       <div className="absolute inset-0">
@@ -136,20 +136,20 @@ const AIDemoSection: React.FC<AIDemoSectionProps> = ({ isVisible, onTryDemo }) =
         ))}
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6">
         {/* Section header */}
         <div 
           className={`text-center mb-16 transition-all duration-1000 transform ${
             isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
           }`}
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+          <h2 className="mb-6 text-3xl font-bold sm:text-4xl md:text-5xl">
             <span className="text-white">Zobacz Platformę </span>
             <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
               w Akcji
             </span>
           </h2>
-          <p className="text-xl text-blue-100 max-w-3xl mx-auto">
+          <p className="mx-auto max-w-3xl text-base text-blue-100 sm:text-lg md:text-xl">
             3-minutowe demo pokazujące jak cały zespół AI pracuje dla Twojego biznesu w czasie rzeczywistym
           </p>
         </div>

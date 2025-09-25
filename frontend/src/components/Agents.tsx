@@ -550,7 +550,7 @@ const Agents: React.FC<AgentsProps> = ({
         {/* Content with relative positioning */}
         <div className="relative p-8">
           {/* Header Section - Title and Available Count */}
-          <div className="flex justify-between items-center mb-8">
+          <div className="flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
             {/* Left - Title and Icon */}
             <div className="flex items-center gap-4">
               <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg">
@@ -587,23 +587,23 @@ const Agents: React.FC<AgentsProps> = ({
           </div>
 
           {/* Search Section */}
-          <div className="flex justify-between items-center gap-4 mb-2">
+          <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             {/* Search Input */}
-            <div className="flex-1 max-w-md">
-              <div className="relative bg-white/90 backdrop-blur-sm rounded-xl border border-gray-200/60 shadow-lg">
+            <div className="w-full sm:max-w-md">
+              <div className="relative rounded-xl border border-gray-200/60 bg-white/90 shadow-lg backdrop-blur-sm">
                 <div className="relative">
-                  <Search className="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
                     placeholder={t('agents.search.placeholder', 'Szukaj agentów...')}
                     value={searchQuery}
                     onChange={handleSearchChange}
-                    className="w-full pl-12 pr-12 py-3 bg-transparent border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500 font-medium rounded-xl"
+                    className="w-full rounded-xl border-0 bg-transparent py-3 pl-12 pr-12 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery('')}
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 rounded-lg p-1 text-gray-400 transition-colors hover:text-red-500"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -613,7 +613,7 @@ const Agents: React.FC<AgentsProps> = ({
             </div>
 
             {/* Right - Empty for consistent spacing */}
-            <div></div>
+            <div className="hidden sm:block"></div>
           </div>
 
           {/* Search feedback */}

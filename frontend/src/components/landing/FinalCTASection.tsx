@@ -142,20 +142,20 @@ const FinalCTASection: React.FC<FinalCTASectionProps> = ({ isVisible, onAnalyze,
         ))}
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6">
         {/* Main CTA */}
         <div 
           className={`text-center mb-20 transition-all duration-1000 transform ${
             isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
           }`}
         >
-          <div className="inline-flex items-center space-x-2 px-6 py-3 bg-white/10 backdrop-blur-md rounded-full border border-white/20 text-sm font-medium mb-8">
+          <div className="mb-8 inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-6 py-3 text-sm font-medium backdrop-blur-md">
             <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
             <span>Dołącz do {animatedStats[0]?.toLocaleString() || '2000+'} zadowolonych firm</span>
             <Sparkles className="w-4 h-4 text-yellow-400" />
           </div>
 
-          <h2 className="text-5xl md:text-6xl lg:text-7xl font-extrabold mb-8 leading-tight">
+          <h2 className="mb-8 text-3xl font-extrabold leading-tight sm:text-5xl md:text-6xl lg:text-7xl">
             <span className="text-white">Przestań Płacić</span>
             <br />
             <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-400 bg-clip-text text-transparent">
@@ -163,48 +163,49 @@ const FinalCTASection: React.FC<FinalCTASectionProps> = ({ isVisible, onAnalyze,
             </span>
           </h2>
 
-          <p className="text-xl md:text-2xl text-blue-100 max-w-4xl mx-auto mb-12 leading-relaxed">
+          <p className="mx-auto mb-12 max-w-4xl text-base leading-relaxed text-blue-100 sm:text-xl md:text-2xl">
             Jeden AI Growth OS zastępuje dziesiątki narzędzi i cały dział marketingu. 
             <br />
             <span className="font-semibold text-white">Oszczędzaj 60-80% kosztów przy 10x lepszych wynikach.</span>
           </p>
 
           {/* Quick start form */}
-          <div className="max-w-2xl mx-auto mb-12">
-            <div className="relative">
+          <div className="mx-auto mb-12 w-full max-w-2xl">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
               <input
                 type="text"
                 value={demoUrl}
                 onChange={(e) => setDemoUrl(e.target.value)}
                 placeholder="Wprowadź URL i uruchom kompletny AI Growth OS"
-                className="w-full px-8 py-6 text-lg bg-white/10 backdrop-blur-sm border border-white/30 rounded-2xl text-white placeholder-blue-200 focus:outline-none focus:border-blue-400 focus:bg-white/20 transition-all duration-300"
+                className="w-full rounded-2xl border border-white/30 bg-white/10 px-5 py-4 text-base text-white placeholder-blue-200 transition-all duration-300 focus:border-blue-400 focus:bg-white/20 focus:outline-none sm:px-7 sm:py-5 sm:text-lg"
               />
               <button
                 onClick={handleAnalyze}
-                className="absolute right-2 top-2 bottom-2 px-8 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transform hover:scale-105 transition-all duration-300 flex items-center space-x-2"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 px-5 py-4 text-sm font-semibold text-white transition-all duration-300 hover:scale-105 hover:shadow-lg sm:w-auto sm:px-7 sm:text-base"
+                type="button"
               >
-                <Zap className="w-5 h-5" />
+                <Zap className="h-5 w-5" />
                 <span>Uruchom AI Growth OS</span>
               </button>
             </div>
           </div>
 
           {/* Alternative CTAs */}
-          <div className="flex flex-col sm:flex-row gap-6 justify-center items-center mb-16">
+          <div className="mb-16 flex flex-col items-center justify-center gap-4 sm:flex-row sm:gap-6">
             <button 
               onClick={onSignUp}
-              className="px-10 py-5 bg-gradient-to-r from-green-500 to-emerald-600 text-white text-lg font-bold rounded-2xl hover:shadow-2xl transform hover:scale-110 transition-all duration-300 flex items-center space-x-3"
+              className="flex items-center justify-center gap-3 rounded-2xl bg-gradient-to-r from-green-500 to-emerald-600 px-8 py-4 text-sm font-bold text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl sm:px-10 sm:py-5 sm:text-lg"
             >
               <CheckCircle className="w-6 h-6" />
               <span>Testuj AI Growth OS</span>
               <ArrowRight className="w-6 h-6" />
             </button>
             
-            <div className="text-blue-200 text-sm">
+            <div className="text-sm text-blue-200">
               <span>lub </span>
               <button 
                 onClick={onSignUp}
-                className="text-white hover:text-blue-300 underline font-medium transition-colors"
+                className="font-medium text-white transition-colors hover:text-blue-300 underline"
               >
                 zobacz platformę w akcji
               </button>
@@ -219,18 +220,18 @@ const FinalCTASection: React.FC<FinalCTASectionProps> = ({ isVisible, onAnalyze,
           }`}
           style={{ transitionDelay: '0.2s' }}
         >
-          <div className="bg-white/5 backdrop-blur-sm rounded-3xl p-8 border border-white/10">
-            <div className="text-center mb-8">
-              <h3 className="text-2xl font-bold mb-4">Dlaczego musisz przejść na AI Growth OS już dziś?</h3>
+          <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-sm sm:p-8">
+            <div className="mb-8 text-center">
+              <h3 className="mb-4 text-xl font-bold sm:text-2xl">Dlaczego musisz przejść na AI Growth OS już dziś?</h3>
               
               {/* Rotating urgency reasons */}
-              <div className="relative h-24 overflow-hidden">
+              <div className="relative h-28 overflow-hidden sm:h-24">
                 {urgencyReasons.map((reason, index) => {
                   const Icon = reason.icon;
                   return (
                     <div 
                       key={index}
-                      className={`absolute inset-0 flex items-center justify-center space-x-4 transition-all duration-500 transform ${
+                      className={`absolute inset-0 flex items-center justify-center gap-4 transition-all duration-500 ${
                         index === currentUrgency 
                           ? 'translate-y-0 opacity-100' 
                           : index < currentUrgency 
@@ -238,12 +239,12 @@ const FinalCTASection: React.FC<FinalCTASectionProps> = ({ isVisible, onAnalyze,
                             : 'translate-y-full opacity-0'
                       }`}
                     >
-                      <div className="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center">
-                        <Icon className="w-6 h-6 text-white" />
+                      <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-orange-500 to-red-600">
+                        <Icon className="h-6 w-6 text-white" />
                       </div>
-                      <div className="text-left max-w-md">
-                        <h4 className="font-semibold text-white mb-1">{reason.title}</h4>
-                        <p className="text-blue-200 text-sm">{reason.description}</p>
+                      <div className="max-w-md text-left">
+                        <h4 className="mb-1 text-sm font-semibold text-white sm:text-base">{reason.title}</h4>
+                        <p className="text-xs text-blue-200 sm:text-sm">{reason.description}</p>
                       </div>
                     </div>
                   );
@@ -253,20 +254,20 @@ const FinalCTASection: React.FC<FinalCTASectionProps> = ({ isVisible, onAnalyze,
 
             {/* Fake countdown timer */}
             <div className="text-center">
-              <p className="text-blue-200 mb-4">Specjalna oferta kończy się za:</p>
-              <div className="inline-flex items-center space-x-4 bg-gradient-to-r from-red-600/20 to-orange-600/20 backdrop-blur-sm rounded-2xl p-4 border border-red-500/30">
+              <p className="mb-4 text-sm text-blue-200 sm:text-base">Specjalna oferta kończy się za:</p>
+              <div className="inline-flex items-center gap-3 rounded-2xl border border-red-500/30 bg-gradient-to-r from-red-600/20 to-orange-600/20 p-4 backdrop-blur-sm sm:gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{timeLeft.hours.toString().padStart(2, '0')}</div>
+                  <div className="text-2xl font-bold text-white sm:text-3xl">{timeLeft.hours.toString().padStart(2, '0')}</div>
                   <div className="text-xs text-red-200">godzin</div>
                 </div>
-                <div className="text-red-300 text-xl">:</div>
+                <div className="text-xl text-red-300 sm:text-2xl">:</div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{timeLeft.minutes.toString().padStart(2, '0')}</div>
+                  <div className="text-2xl font-bold text-white sm:text-3xl">{timeLeft.minutes.toString().padStart(2, '0')}</div>
                   <div className="text-xs text-red-200">minut</div>
                 </div>
-                <div className="text-red-300 text-xl">:</div>
+                <div className="text-xl text-red-300 sm:text-2xl">:</div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-white">{timeLeft.seconds.toString().padStart(2, '0')}</div>
+                  <div className="text-2xl font-bold text-white sm:text-3xl">{timeLeft.seconds.toString().padStart(2, '0')}</div>
                   <div className="text-xs text-red-200">sekund</div>
                 </div>
               </div>
@@ -276,7 +277,7 @@ const FinalCTASection: React.FC<FinalCTASectionProps> = ({ isVisible, onAnalyze,
 
         {/* Final stats */}
         <div 
-          className={`grid grid-cols-2 md:grid-cols-4 gap-8 mb-16 transition-all duration-1000 transform ${
+          className={`mb-16 grid grid-cols-1 gap-6 transition-all duration-1000 transform sm:grid-cols-2 lg:grid-cols-4 lg:gap-8 ${
             isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
           }`}
           style={{ transitionDelay: '0.4s' }}
@@ -285,14 +286,14 @@ const FinalCTASection: React.FC<FinalCTASectionProps> = ({ isVisible, onAnalyze,
             const Icon = stat.icon;
             return (
               <div key={index} className="text-center">
-                <div className="w-16 h-16 bg-white/10 backdrop-blur-sm rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/20">
-                  <Icon className="w-8 h-8 text-blue-300" />
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/20 bg-white/10 backdrop-blur-sm">
+                  <Icon className="h-8 w-8 text-blue-300" />
                 </div>
-                <div className="text-2xl md:text-3xl font-bold text-white mb-2">
+                <div className="mb-2 text-2xl font-bold text-white sm:text-3xl">
                   {index === 2 ? animatedStats[index].toFixed(1) : animatedStats[index].toLocaleString()}
                   <span className="text-blue-400">{stat.suffix || ''}</span>
                 </div>
-                <p className="text-blue-200 text-sm">{stat.label}</p>
+                <p className="text-sm text-blue-200">{stat.label}</p>
               </div>
             );
           })}
@@ -305,7 +306,7 @@ const FinalCTASection: React.FC<FinalCTASectionProps> = ({ isVisible, onAnalyze,
           }`}
           style={{ transitionDelay: '0.6s' }}
         >
-          <div className="bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-sm rounded-3xl p-8 border border-white/20 relative overflow-hidden">
+          <div className="relative overflow-hidden rounded-3xl border border-white/20 bg-gradient-to-r from-blue-600/20 to-purple-600/20 p-6 backdrop-blur-sm sm:p-8">
             {/* Background pattern */}
             <div className="absolute inset-0 opacity-5">
               <div className="absolute top-4 left-4 w-20 h-20 border border-white rounded-full" />
@@ -313,31 +314,31 @@ const FinalCTASection: React.FC<FinalCTASectionProps> = ({ isVisible, onAnalyze,
               <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-32 h-32 border border-white rounded-full opacity-50" />
             </div>
 
-            <div className="relative z-10 max-w-4xl mx-auto">
-              <Globe className="w-16 h-16 text-blue-400 mx-auto mb-6" />
-              <h3 className="text-3xl font-bold mb-4">
+            <div className="relative z-10 mx-auto max-w-4xl">
+              <Globe className="mx-auto mb-6 h-14 w-14 text-blue-400 sm:h-16 sm:w-16" />
+              <h3 className="mb-4 text-2xl font-bold sm:text-3xl">
                 Twój biznes zasługuje na jeden kompletny system
               </h3>
-              <p className="text-xl text-blue-100 mb-8 leading-relaxed">
+              <p className="mb-8 text-base leading-relaxed text-blue-100 sm:text-lg md:text-xl">
                 Ponad 3240 firm już przeszło na AI Growth OS i oszczędza 60-80% kosztów. 
                 <br />
                 <span className="font-semibold text-white">Przestań płacić za chaos. Przejdź na jedną platformę.</span>
               </p>
               
-              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <div className="flex flex-col justify-center gap-3 sm:flex-row sm:gap-4">
                 <button 
                   onClick={onSignUp}
-                  className="px-12 py-5 bg-gradient-to-r from-blue-500 to-purple-600 text-white text-lg font-bold rounded-2xl hover:shadow-2xl transform hover:scale-110 transition-all duration-300"
+                  className="rounded-2xl bg-gradient-to-r from-blue-500 to-purple-600 px-8 py-4 text-sm font-bold text-white transition-all duration-300 hover:scale-105 hover:shadow-2xl sm:px-12 sm:py-5 sm:text-lg"
                 >
-                  <div className="flex items-center justify-center space-x-3">
-                    <Sparkles className="w-6 h-6" />
+                  <div className="flex items-center justify-center gap-3">
+                    <Sparkles className="h-6 w-6" />
                     <span>Uruchom AI Growth OS Bezpłatnie</span>
-                    <ArrowRight className="w-6 h-6" />
+                    <ArrowRight className="h-6 w-6" />
                   </div>
                 </button>
               </div>
               
-              <p className="text-blue-200 text-sm mt-6">
+              <p className="mt-6 text-sm text-blue-200">
                 ✓ 14 dni pełna wersja za darmo ✓ Gwarancja sukcesu lub zwrot ✓ Anuluj w każdej chwili
               </p>
             </div>

@@ -494,9 +494,9 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
         <div className="absolute -bottom-4 -left-4 w-32 h-32 bg-gradient-to-tr from-purple-400/10 to-blue-400/10 rounded-full blur-3xl"></div>
 
         {/* Content with relative positioning */}
-        <div className="relative p-8">
+        <div className="relative p-6 sm:p-8">
           {/* Header Section - Title and Count */}
-          <div className="flex justify-between items-center mb-8">
+          <div className="mb-8 flex flex-col gap-6 xl:flex-row xl:items-center xl:justify-between">
             {/* Left - Title and Icon */}
             <div className="flex items-center gap-4">
               <div className="p-2 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl shadow-lg">
@@ -533,23 +533,23 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
           </div>
 
           {/* Search and Actions Section */}
-          <div className="flex justify-between items-center gap-4 mb-2">
+          <div className="mb-4 flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
             {/* Left - Search */}
-            <div className="flex-1 max-w-md">
-              <div className="relative bg-white/90 backdrop-blur-sm rounded-xl border border-gray-200/60 shadow-lg">
+            <div className="w-full lg:max-w-md">
+              <div className="relative rounded-xl border border-gray-200/60 bg-white/90 shadow-lg backdrop-blur-sm">
                 <div className="relative">
-                  <Search className="w-5 h-5 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <Search className="absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
                   <input
                     type="text"
                     placeholder={t('competitions.search.placeholder', 'Szukaj konkurentów...')}
                     value={searchQuery}
                     onChange={handleSearchChange}
-                    className="w-full pl-12 pr-12 py-3 bg-transparent border-0 focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900 placeholder-gray-500 font-medium rounded-xl"
+                    className="w-full rounded-xl border-0 bg-transparent py-3 pl-12 pr-12 text-gray-900 placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                   {searchQuery && (
                     <button
                       onClick={() => setSearchQuery('')}
-                      className="absolute right-4 top-1/2 transform -translate-y-1/2 p-1 text-gray-400 hover:text-red-500 rounded-lg transition-colors"
+                      className="absolute right-4 top-1/2 -translate-y-1/2 rounded-lg p-1 text-gray-400 transition-colors hover:text-red-500"
                     >
                       <X className="w-4 h-4" />
                     </button>
@@ -559,7 +559,7 @@ const CompetitionComponent: React.FC<CompetitionProps> = ({
             </div>
 
             {/* Right - Action Buttons */}
-            <div className="flex gap-3">
+            <div className="flex flex-col gap-3 sm:flex-row">
               <button
                 onClick={handleFindCompetitorsWithAI}
                 className="flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200"

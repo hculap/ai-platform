@@ -4,7 +4,7 @@ import { Routes, Route, Link, useLocation, Navigate } from 'react-router-dom';
 import {
   User, Building2, LogOut, Search, Bell,
   Bot, Zap, FileText, Video, Target, TrendingUp, Megaphone,
-  Users, Activity, Clock, CheckCircle, Plus, Menu, Package,
+  Users, Activity, Clock, CheckCircle, Plus, Menu, Package, X,
   Play, Lightbulb, ChevronLeft, ChevronRight, Check, Home, Palette, TrendingUp as TrendingUpIcon, TrendingDown, Star,
   BarChart3, Globe, Heart, MessageSquare, Share2, Eye
 } from 'lucide-react';
@@ -56,6 +56,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
   const { t } = useTranslation();
   const location = useLocation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
   
   // Get current active section from URL
   const activeSection = location.pathname.split('/')[2] || 'overview';
@@ -87,6 +88,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
 
   // Command Palette state
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
+  const isSidebarCollapsed = sidebarCollapsed && !isMobileSidebarOpen;
 
   // Command Palette handlers
   const openCommandPalette = useCallback(() => {
@@ -105,6 +107,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
 
   // Setup keyboard shortcuts for command palette
   useKeyboardShortcuts(createCommandPaletteShortcuts(openCommandPalette));
+
+  useEffect(() => {
+    setIsMobileSidebarOpen(false);
+  }, [location.pathname]);
 
   // Function to update active profile (only one can be active at a time)
   const updateActiveProfile = useCallback(async (profileId: string) => {
@@ -810,23 +816,46 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
   );
 
   return (
-    <div className="h-screen bg-gray-50 flex overflow-hidden">
+    <div className="flex min-h-screen bg-gray-50">
+      {isMobileSidebarOpen && (
+        <button
+          type="button"
+          aria-label={t('dashboard.closeNavigation', 'Close navigation')}
+          className="fixed inset-0 z-30 bg-gray-900/40 backdrop-blur-sm lg:hidden"
+          onClick={() => setIsMobileSidebarOpen(false)}
+        />
+      )}
       {/* Sidebar */}
-      <div className={`bg-white border-r border-gray-200 transition-all duration-300 ${sidebarCollapsed ? 'w-16' : 'w-64'}`}>
+      <div
+        className={`fixed inset-y-0 left-0 z-40 flex w-72 transform flex-col bg-white shadow-xl transition-transform duration-300 lg:static lg:z-auto lg:h-auto lg:w-auto lg:translate-x-0 lg:border-r lg:border-gray-200 lg:shadow-none ${
+          isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
+        } ${isSidebarCollapsed ? 'lg:w-16' : 'lg:w-64'}`}
+      >
         {/* Sidebar Header */}
-        <div className="h-16 flex items-center justify-between px-4 border-b border-gray-200">
-          {!sidebarCollapsed && (
-            <div className="flex items-center">
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-purple-600 rounded-lg mr-3"></div>
+        <div className="flex h-16 items-center justify-between border-b border-gray-200 px-4">
+          {!isSidebarCollapsed && (
+            <div className="flex items-center gap-3">
+              <div className="h-8 w-8 rounded-lg bg-gradient-to-r from-blue-600 to-purple-600"></div>
               <span className="text-lg font-bold text-gray-900">AI Platform</span>
             </div>
           )}
-          <button
-            onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            className="p-2 rounded-lg hover:bg-gray-100 transition-colors"
-          >
-            <Menu className="w-4 h-4 text-gray-600" />
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition-colors hover:bg-gray-100 lg:hidden"
+              onClick={() => setIsMobileSidebarOpen(false)}
+              aria-label={t('dashboard.closeNavigation', 'Close navigation')}
+            >
+              <X className="h-5 w-5" />
+            </button>
+            <button
+              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+              className="hidden h-9 w-9 items-center justify-center rounded-lg text-gray-600 transition-colors hover:bg-gray-100 lg:inline-flex"
+              aria-label={isSidebarCollapsed ? t('dashboard.expandNavigation', 'Expand navigation') : t('dashboard.collapseNavigation', 'Collapse navigation')}
+            >
+              <Menu className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Navigation Container */}
@@ -838,14 +867,15 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
               <nav className="space-y-1 px-2">
                 <Link
                   to="/dashboard/overview"
-                  className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                  onClick={() => setIsMobileSidebarOpen(false)}
+                  className={`flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                     activeSection === 'overview' || activeSection === ''
-                      ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600'
+                      ? 'bg-blue-50 text-blue-700'
                       : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                   }`}
                 >
                   <Home className="w-5 h-5 mr-3 flex-shrink-0" />
-                  {!sidebarCollapsed && (
+                  {!isSidebarCollapsed && (
                     <span className="flex-1 text-left">{t('dashboard.nav.overview', 'Dashboard')}</span>
                   )}
                 </Link>
@@ -854,7 +884,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
 
             {navigationSections.map((section) => (
               <div key={section.id} className="mb-6">
-                {!sidebarCollapsed && (
+                {!isSidebarCollapsed && (
                   <h3 className="px-4 text-xs font-semibold text-gray-500 uppercase tracking-wide mb-2">
                     {section.title}
                   </h3>
@@ -864,18 +894,19 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                     <Link
                       key={item.id}
                       to={`/dashboard/${item.id}`}
-                      className={`w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      onClick={() => setIsMobileSidebarOpen(false)}
+                      className={`flex items-center rounded-lg px-3 py-2 text-sm font-medium transition-colors ${
                         activeSection === item.id
-                          ? 'bg-blue-50 text-blue-700 border-r-2 border-blue-600'
+                          ? 'bg-blue-50 text-blue-700'
                           : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
                       }`}
                     >
-                      <item.icon className="w-5 h-5 mr-3 flex-shrink-0" />
-                      {!sidebarCollapsed && (
+                      <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
+                      {!isSidebarCollapsed && (
                         <>
                           <span className="flex-1 text-left">{item.label}</span>
                           {item.count !== undefined && item.count !== null && (
-                            <span className="bg-gray-200 text-gray-700 text-xs px-2 py-1 rounded-full">
+                            <span className="rounded-full bg-gray-200 px-2 py-1 text-xs text-gray-700">
                               {item.count}
                             </span>
                           )}
@@ -889,33 +920,34 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
           </div>
 
           {/* Bottom Navigation - Fixed at Bottom */}
-          <div className="border-t border-gray-200 pt-4 pb-2">
+          <div className="border-t border-gray-200 pb-4 pt-3">
             {/* Navigation Links */}
-            <nav className="space-y-1 px-2 mb-3">
+            <nav className="mb-3 space-y-1 px-2">
               <Link
                 to="/dashboard/profile"
-                className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors"
+                onClick={() => setIsMobileSidebarOpen(false)}
+                className="flex items-center rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
               >
-                <User className="w-5 h-5 mr-3 flex-shrink-0" />
-                {!sidebarCollapsed && t('dashboard.nav.profile')}
+                <User className="mr-3 h-5 w-5 flex-shrink-0" />
+                {!isSidebarCollapsed && t('dashboard.nav.profile')}
               </Link>
               {onLogout && (
                 <button
                   onClick={onLogout}
-                  className="w-full flex items-center px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50 hover:text-gray-900 rounded-lg transition-colors"
+                  className="flex w-full items-center rounded-lg px-3 py-2 text-sm font-medium text-gray-600 transition-colors hover:bg-gray-50 hover:text-gray-900"
                   title={t('dashboard.logout')}
                 >
-                  <LogOut className="w-5 h-5 mr-3 flex-shrink-0" />
-                  {!sidebarCollapsed && t('dashboard.logout')}
+                  <LogOut className="mr-3 h-5 w-5 flex-shrink-0" />
+                  {!isSidebarCollapsed && t('dashboard.logout')}
                 </button>
               )}
             </nav>
 
             {/* Credits Card - Compact Version for Sidebar */}
-            {!sidebarCollapsed && (
-              <div className="px-2 mb-3">
-                <CreditsCard 
-                  className="!p-3 !border-0 !shadow-none !bg-gray-50"
+            {!isSidebarCollapsed && (
+              <div className="mb-3 px-2">
+                <CreditsCard
+                  className="!bg-gray-50 !p-3 !shadow-none"
                   onCreditUpdate={(creditData) => setCredits(creditData)}
                 />
               </div>
@@ -923,18 +955,18 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
 
             {/* User Identity - Very Compact and Subtle */}
             <div className="px-2">
-              <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'px-2 py-1.5'}`}>
-                {sidebarCollapsed ? (
-                  <div className="w-6 h-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center">
-                    <User className="w-3 h-3 text-white" />
+              <div className={`flex items-center ${isSidebarCollapsed ? 'justify-center' : 'px-2 py-1.5'}`}>
+                {isSidebarCollapsed ? (
+                  <div className="flex h-6 w-6 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-purple-600">
+                    <User className="h-3 w-3 text-white" />
                   </div>
                 ) : (
                   <>
-                    <div className="w-6 h-6 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full flex items-center justify-center mr-2 flex-shrink-0">
-                      <User className="w-3 h-3 text-white" />
+                    <div className="mr-2 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-gradient-to-r from-blue-600 to-purple-600">
+                      <User className="h-3 w-3 text-white" />
                     </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="text-xs text-gray-600 truncate">{user.email}</div>
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-xs text-gray-600">{user.email}</div>
                       <div className="text-xs text-gray-400">{t('dashboard.userRole.admin')}</div>
                     </div>
                   </>
@@ -946,18 +978,33 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex flex-1 flex-col overflow-hidden">
         {/* Header */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
-              <h1 className="text-2xl font-bold text-gray-900">{t('dashboard.title')}</h1>
-              
+        <header className="bg-white border-b border-gray-200 px-4 py-4 sm:px-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="flex flex-1 items-center gap-3">
+                <button
+                  type="button"
+                  className="inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition-colors hover:bg-gray-100 lg:hidden"
+                  onClick={() => setIsMobileSidebarOpen(true)}
+                  aria-label={t('dashboard.openNavigation', 'Open navigation')}
+                >
+                  <Menu className="h-5 w-5" />
+                </button>
+                <div className="min-w-0">
+                  <h1 className="truncate text-xl font-bold text-gray-900 sm:text-2xl">{t('dashboard.title')}</h1>
+                  <p className="mt-1 hidden text-sm text-gray-500 sm:block">
+                    {t('dashboard.subtitle', 'Monitoruj i rozwijaj swój biznes z pomocą AI')}
+                  </p>
+                </div>
+              </div>
+
               {/* Business Profile Selector */}
-              <div className="relative">
+              <div className="relative w-full sm:w-auto">
                 {isLoadingProfiles ? (
-                  <div className="flex items-center space-x-2 px-4 py-2 bg-gray-50 rounded-lg">
-                    <Building2 className="w-4 h-4 text-gray-600" />
+                  <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-4 py-2">
+                    <Building2 className="h-4 w-4 text-gray-600" />
                     <span className="text-sm font-medium text-gray-900">Loading...</span>
                   </div>
                 ) : businessProfiles.length > 0 ? (
@@ -966,11 +1013,10 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                     onChange={async (e) => {
                       const selectedProfile = businessProfiles.find(p => p.id === e.target.value);
                       if (selectedProfile) {
-                        // Update the active profile in the backend
                         await updateActiveProfile(selectedProfile.id);
                       }
                     }}
-                    className="flex items-center px-4 py-2 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors border-0 focus:ring-2 focus:ring-blue-500 focus:outline-none cursor-pointer min-w-[200px]"
+                    className="w-full rounded-lg border border-gray-200 bg-gray-50 px-4 py-2 text-sm font-medium text-gray-800 transition-colors focus:border-blue-500 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 sm:w-auto"
                   >
                     {businessProfiles.map((profile) => (
                       <option key={profile.id} value={profile.id}>
@@ -979,36 +1025,36 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
                     ))}
                   </select>
                 ) : (
-                  <div className="flex items-center space-x-2 px-4 py-2 bg-gray-50 rounded-lg text-gray-500">
-                    <Building2 className="w-4 h-4" />
+                  <div className="flex items-center gap-2 rounded-lg bg-gray-50 px-4 py-2 text-gray-500">
+                    <Building2 className="h-4 w-4" />
                     <span className="text-sm font-medium">No business profiles</span>
                   </div>
                 )}
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
+            <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center sm:justify-end sm:gap-4">
               {/* Search */}
-              <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <div className="relative w-full sm:w-72">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-400" />
                 <input
                   type="text"
                   placeholder={t('dashboard.search.placeholder', 'Search...')}
-                  className="pl-10 pr-4 py-2 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                  className="w-full rounded-lg border border-gray-200 py-2 pl-9 pr-4 text-sm focus:border-transparent focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
               </div>
 
               {/* Notifications */}
-              <button className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative">
-                <Bell className="w-5 h-5 text-gray-600" />
-                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+              <button className="relative inline-flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 text-gray-600 transition-colors hover:bg-gray-100">
+                <Bell className="h-5 w-5" />
+                <span className="absolute -top-1 -right-1 h-3 w-3 rounded-full bg-red-500"></span>
               </button>
             </div>
           </div>
         </header>
 
         {/* Dashboard Content */}
-        <main className="flex-1 overflow-y-auto p-6">
+        <main className="flex-1 overflow-y-auto p-4 sm:p-6">
           <div className="max-w-7xl mx-auto">
             {/* Render different content based on routes */}
             <Routes>

@@ -106,7 +106,7 @@ const FeatureGalaxySection: React.FC<FeatureGalaxySectionProps> = ({ isVisible }
     <section 
       id="feature-galaxy" 
       data-section 
-      className="py-20 bg-gradient-to-br from-gray-50 to-indigo-50 relative overflow-hidden"
+      className="relative overflow-hidden bg-gradient-to-br from-gray-50 to-indigo-50 py-16 sm:py-20"
     >
       {/* Background elements */}
       <div className="absolute inset-0">
@@ -115,14 +115,14 @@ const FeatureGalaxySection: React.FC<FeatureGalaxySectionProps> = ({ isVisible }
         <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-gradient-to-r from-indigo-100/20 to-purple-100/20 rounded-full blur-3xl" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6">
         {/* Section header */}
         <div 
-          className={`text-center mb-20 transition-all duration-1000 transform ${
+          className={`mb-16 text-center transition-all duration-1000 transform sm:mb-20 ${
             isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
           }`}
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+          <h2 className="mb-6 text-3xl font-bold sm:text-4xl md:text-5xl">
             <span className="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
               10 Narzędzi AI
             </span>
@@ -131,14 +131,14 @@ const FeatureGalaxySection: React.FC<FeatureGalaxySectionProps> = ({ isVisible }
               Business Growth Toolkit
             </span>
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="mx-auto max-w-3xl text-base text-gray-600 sm:text-lg md:text-xl">
             Każde narzędzie to specjalistyczna funkcja AI, która zastępuje agencje marketingowe i drogie oprogramowanie.
             Płać tylko za to, czego używasz.
           </p>
         </div>
 
         {/* Tools grid */}
-        <div className="grid lg:grid-cols-2 xl:grid-cols-3 gap-6 mb-16 max-w-7xl mx-auto">
+        <div className="mx-auto mb-12 grid gap-5 sm:mb-16 sm:gap-6 lg:grid-cols-2 xl:grid-cols-3">
           {tools.map((tool, index) => {
             const Icon = tool.icon;
             const isHovered = hoveredFeature === tool.id;
@@ -156,7 +156,7 @@ const FeatureGalaxySection: React.FC<FeatureGalaxySectionProps> = ({ isVisible }
                 onClick={() => setSelectedFeature(isSelected ? null : tool.id)}
               >
                 {/* Card */}
-                <div className={`h-full bg-white/80 backdrop-blur-sm rounded-3xl p-8 border-2 transition-all duration-500 ${
+                <div className={`h-full rounded-3xl border-2 bg-white/80 p-6 transition-all duration-500 backdrop-blur-sm sm:p-8 ${
                   isHovered || isSelected 
                     ? 'border-transparent shadow-2xl' 
                     : 'border-white/50 shadow-lg hover:shadow-xl'

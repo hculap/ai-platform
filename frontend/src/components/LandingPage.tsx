@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Menu, X } from 'lucide-react';
 import HeroSection from './landing/HeroSection';
 import SocialProofSection from './landing/SocialProofSection';
 import ProblemSolutionSection from './landing/ProblemSolutionSection';
@@ -26,6 +27,21 @@ const LandingPage: React.FC<LandingPageProps> = ({
   const { t } = useTranslation();
   const [scrollY, setScrollY] = useState(0);
   const [visibleSections, setVisibleSections] = useState<Set<string>>(new Set());
+  const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+
+  const navLinks = [
+    { id: 'agents', label: t('dashboard.nav.agents'), sectionId: 'feature-galaxy' },
+    { id: 'features', label: t('features.ai.title'), sectionId: 'ai-demo' },
+    { id: 'pricing', label: 'Cennik', sectionId: 'pricing' }
+  ];
+
+  const handleScrollTo = useCallback((sectionId: string) => {
+    const section = document.getElementById(sectionId);
+    if (section) {
+      section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    setIsMobileNavOpen(false);
+  }, []);
 
   // Handle scroll for parallax and animations
   useEffect(() => {
@@ -97,37 +113,76 @@ const LandingPage: React.FC<LandingPageProps> = ({
       </div>
 
       {/* Navigation */}
-      <nav className="relative z-50 px-6 py-4 bg-white/10 backdrop-blur-md border-b border-white/20">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <div className="flex items-center space-x-3">
-            <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-              <svg className="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <nav className="relative z-50 px-4 py-4 sm:px-6 bg-white/60 backdrop-blur-xl border-b border-white/30">
+        <div className="mx-auto flex max-w-7xl items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 shadow-lg">
+              <svg className="h-6 w-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
               </svg>
             </div>
-            <span className="text-2xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent sm:text-2xl">
               {t('header.title')}
             </span>
           </div>
-          
-          <div className="flex items-center space-x-4">
-            <button className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors">
-              {t('dashboard.nav.agents')}
-            </button>
-            <button className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors">
-              {t('features.ai.title')}
-            </button>
-            <button className="px-4 py-2 text-gray-600 hover:text-gray-900 transition-colors">
-              Cennik
-            </button>
-            <button 
+
+          <div className="hidden items-center gap-4 md:flex">
+            {navLinks.map((link) => (
+              <button
+                key={link.id}
+                type="button"
+                onClick={() => handleScrollTo(link.sectionId)}
+                className="px-4 py-2 text-sm font-medium text-gray-600 transition-colors hover:text-gray-900"
+              >
+                {link.label}
+              </button>
+            ))}
+            <button
               onClick={onSignIn}
-              className="px-6 py-3 text-sm font-medium text-white bg-gradient-to-r from-blue-600 to-purple-600 rounded-full hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+              className="rounded-full bg-gradient-to-r from-blue-600 to-purple-600 px-6 py-3 text-sm font-medium text-white transition-all duration-200 hover:scale-105 hover:shadow-lg"
             >
               {t('header.signIn')}
             </button>
           </div>
+
+          <button
+            type="button"
+            className="inline-flex items-center justify-center rounded-lg border border-white/40 bg-white/40 p-2 text-gray-600 shadow-sm transition-colors hover:bg-white/70 md:hidden"
+            aria-label={isMobileNavOpen ? t('common.close', 'Close navigation') : t('common.menu', 'Open navigation')}
+            onClick={() => setIsMobileNavOpen((prev) => !prev)}
+          >
+            {isMobileNavOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+          </button>
         </div>
+
+        {isMobileNavOpen && (
+          <div className="md:hidden">
+            <div className="mt-4 rounded-2xl border border-white/40 bg-white/80 p-4 shadow-xl backdrop-blur-xl">
+              <div className="flex flex-col gap-2">
+                {navLinks.map((link) => (
+                  <button
+                    key={link.id}
+                    type="button"
+                    onClick={() => handleScrollTo(link.sectionId)}
+                    className="w-full rounded-xl px-4 py-3 text-left text-sm font-semibold text-gray-700 transition-all duration-200 hover:bg-white hover:text-gray-900"
+                  >
+                    {link.label}
+                  </button>
+                ))}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsMobileNavOpen(false);
+                    onSignIn();
+                  }}
+                  className="mt-2 inline-flex w-full items-center justify-center rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-3 text-sm font-semibold text-white transition-all duration-200 hover:from-blue-700 hover:to-purple-700"
+                >
+                  {t('header.signIn')}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Main Content */}

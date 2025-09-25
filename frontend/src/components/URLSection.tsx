@@ -64,10 +64,10 @@ const URLSection: React.FC<URLSectionProps> = ({ onAnalyze, onSkipToForm, isAnal
   };
 
   return (
-    <section className="px-6 py-12">
-      <div className="max-w-4xl mx-auto text-center">
+    <section className="px-4 py-10 sm:px-6 sm:py-12">
+      <div className="mx-auto max-w-4xl text-center">
         <div className="animate-fade-in">
-          <h1 className="text-6xl md:text-7xl font-bold mb-6 leading-tight">
+          <h1 className="mb-6 text-4xl font-bold leading-tight sm:text-5xl md:text-6xl">
             <span className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-600 bg-clip-text text-transparent">
               {t('url.title.analyze')}
             </span>
@@ -77,13 +77,13 @@ const URLSection: React.FC<URLSectionProps> = ({ onAnalyze, onSkipToForm, isAnal
             </span>
           </h1>
           
-          <p className="text-xl text-gray-600 mb-12 max-w-2xl mx-auto leading-relaxed">
+          <p className="mx-auto mb-10 max-w-2xl text-base leading-relaxed text-gray-600 sm:mb-12 sm:text-lg">
             {t('url.description')}
           </p>
         </div>
 
         <div className="animate-slide-up" style={{ animationDelay: '0.2s' }}>
-          <div className="max-w-2xl mx-auto">
+          <div className="mx-auto max-w-2xl">
             <form onSubmit={handleSubmit} className="relative">
               <div className="relative group">
                 <input 
@@ -91,7 +91,7 @@ const URLSection: React.FC<URLSectionProps> = ({ onAnalyze, onSkipToForm, isAnal
                   value={url}
                   onChange={(e) => setUrl(e.target.value)}
                   placeholder={t('url.placeholder')}
-                  className="w-full px-8 py-6 text-lg bg-white border-2 border-gray-200 rounded-2xl focus:border-blue-500 focus:outline-none input-glow transition-all duration-300 group-hover:border-gray-300"
+                  className="input-glow w-full rounded-2xl border-2 border-gray-200 bg-white px-5 py-4 text-base transition-all duration-300 focus:border-blue-500 focus:outline-none group-hover:border-gray-300 sm:px-8 sm:py-6 sm:text-lg"
                   required
                   disabled={isAnalyzing}
                 />
@@ -104,13 +104,13 @@ const URLSection: React.FC<URLSectionProps> = ({ onAnalyze, onSkipToForm, isAnal
                 <button 
                   type="submit" 
                   disabled={isAnalyzing}
-                  className="px-12 py-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white text-lg font-semibold rounded-2xl hover:shadow-2xl transform hover:-translate-y-1 transition-all duration-300 hover:from-blue-700 hover:to-purple-700 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                  className="w-full rounded-2xl bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-4 text-base font-semibold text-white transition-all duration-300 hover:-translate-y-1 hover:from-blue-700 hover:to-purple-700 hover:shadow-2xl disabled:cursor-not-allowed disabled:opacity-50 disabled:transform-none sm:w-auto sm:px-12 sm:text-lg"
                 >
                   {isAnalyzing ? t('url.button.analyzing') : t('url.button.analyze')}
                   <ArrowRight className="inline-block ml-2 w-5 h-5" />
                 </button>
                 
-                <div className="flex items-center justify-center space-x-2 text-gray-500">
+                <div className="flex flex-col items-center justify-center gap-1 text-sm text-gray-500 sm:flex-row sm:gap-2 sm:text-base">
                   <span>{t('url.or')}</span>
                   <button
                     type="button"
@@ -126,8 +126,8 @@ const URLSection: React.FC<URLSectionProps> = ({ onAnalyze, onSkipToForm, isAnal
         </div>
 
         {/* Features */}
-        <div className="mt-20 grid md:grid-cols-3 gap-8 animate-slide-up" style={{ animationDelay: '0.4s' }}>
-          <div className="p-6 bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200 hover:shadow-lg transition-all duration-300">
+        <div className="mt-16 grid grid-cols-1 gap-6 animate-slide-up sm:mt-20 sm:grid-cols-3 sm:gap-8" style={{ animationDelay: '0.4s' }}>
+          <div className="rounded-2xl border border-gray-200 bg-white/70 p-6 transition-all duration-300 hover:shadow-lg backdrop-blur-sm">
             <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mb-4 mx-auto">
               <Lightbulb className="w-6 h-6 text-white" />
             </div>
@@ -135,7 +135,7 @@ const URLSection: React.FC<URLSectionProps> = ({ onAnalyze, onSkipToForm, isAnal
             <p className="text-gray-600">{t('features.ai.description')}</p>
           </div>
           
-          <div className="p-6 bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200 hover:shadow-lg transition-all duration-300">
+          <div className="rounded-2xl border border-gray-200 bg-white/70 p-6 transition-all duration-300 hover:shadow-lg backdrop-blur-sm">
             <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mb-4 mx-auto">
               <Zap className="w-6 h-6 text-white" />
             </div>
@@ -143,7 +143,7 @@ const URLSection: React.FC<URLSectionProps> = ({ onAnalyze, onSkipToForm, isAnal
             <p className="text-gray-600">{t('features.instant.description')}</p>
           </div>
           
-          <div className="p-6 bg-white/70 backdrop-blur-sm rounded-2xl border border-gray-200 hover:shadow-lg transition-all duration-300">
+          <div className="rounded-2xl border border-gray-200 bg-white/70 p-6 transition-all duration-300 hover:shadow-lg backdrop-blur-sm">
             <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-xl flex items-center justify-center mb-4 mx-auto">
               <CheckCircle className="w-6 h-6 text-white" />
             </div>

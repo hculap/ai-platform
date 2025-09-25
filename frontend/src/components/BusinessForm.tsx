@@ -101,19 +101,19 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze, o
   };
 
   return (
-    <section className={isAgentAnalysis ? "p-6" : "px-6 py-12"}>
-      <div className="max-w-4xl mx-auto">
+    <section className={isAgentAnalysis ? 'px-4 py-6 sm:px-6' : 'px-4 py-10 sm:px-6 sm:py-12'}>
+      <div className="mx-auto max-w-4xl">
         <div className="animate-fade-in">
           {!isAgentAnalysis && (
             <div className="text-center mb-12">
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">{t('form.title')}</h2>
-              <p className="text-lg text-gray-600">{t('form.description')}</p>
+              <h2 className="mb-4 text-3xl font-bold text-gray-900 sm:text-4xl">{t('form.title')}</h2>
+              <p className="text-base text-gray-600 sm:text-lg">{t('form.description')}</p>
             </div>
           )}
 
-          <form id="businessForm" onSubmit={handleSubmit} className={isAgentAnalysis ? "bg-transparent" : "bg-white rounded-3xl shadow-xl border border-gray-100 overflow-hidden"}>
-            <div className="p-8">
-              <div className="grid md:grid-cols-2 gap-8">
+          <form id="businessForm" onSubmit={handleSubmit} className={isAgentAnalysis ? 'bg-transparent' : 'overflow-hidden rounded-3xl border border-gray-100 bg-white shadow-xl'}>
+            <div className={isAgentAnalysis ? 'space-y-8' : 'space-y-8 p-6 sm:p-8'}>
+              <div className="grid gap-6 md:grid-cols-2 md:gap-8">
                 {/* Company Name */}
                 <div className="md:col-span-2">
                   <label className="block text-sm font-semibold text-gray-700 mb-3">{t('form.companyName')}</label>
@@ -122,7 +122,7 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze, o
                     name="companyName"
                     value={formData.companyName}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-200"
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-all duration-200 focus:border-blue-500 focus:bg-white focus:outline-none sm:py-4"
                     placeholder={t('form.companyName.placeholder')}
                   />
                 </div>
@@ -135,7 +135,7 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze, o
                     name="formWebsiteUrl"
                     value={formData.formWebsiteUrl}
                     onChange={handleInputChange}
-                    className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-200"
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-all duration-200 focus:border-blue-500 focus:bg-white focus:outline-none sm:py-4"
                     placeholder={t('form.websiteUrl.placeholder')}
                     readOnly={!!initialData}
                   />
@@ -149,7 +149,7 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze, o
                     value={formData.offerDescription}
                     onChange={handleInputChange}
                     rows={4}
-                    className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-200 resize-none"
+                    className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-all duration-200 focus:border-blue-500 focus:bg-white focus:outline-none sm:py-4"
                     placeholder={t('form.offerDescription.placeholder')}
                   />
                 </div>
@@ -162,7 +162,7 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze, o
                     value={formData.targetCustomer}
                     onChange={handleInputChange}
                     rows={3}
-                    className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-200 resize-none"
+                    className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-all duration-200 focus:border-blue-500 focus:bg-white focus:outline-none sm:py-4"
                     placeholder={t('form.targetCustomer.placeholder')}
                   />
                 </div>
@@ -175,7 +175,7 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze, o
                     value={formData.problemSolved}
                     onChange={handleInputChange}
                     rows={3}
-                    className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-200 resize-none"
+                    className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-all duration-200 focus:border-blue-500 focus:bg-white focus:outline-none sm:py-4"
                     placeholder={t('form.problemSolved.placeholder')}
                   />
                 </div>
@@ -188,7 +188,7 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze, o
                     value={formData.customerDesires}
                     onChange={handleInputChange}
                     rows={3}
-                    className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-200 resize-none"
+                    className="w-full resize-none rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-all duration-200 focus:border-blue-500 focus:bg-white focus:outline-none sm:py-4"
                     placeholder={t('form.customerDesires.placeholder')}
                   />
                 </div>
@@ -202,7 +202,7 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze, o
                     value={formData.brandTone}
                     onChange={handleInputChange}
                     placeholder={t('form.brandTone.placeholder')}
-                    className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-200"
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-all duration-200 focus:border-blue-500 focus:bg-white focus:outline-none sm:py-4"
                   />
                 </div>
 
@@ -215,29 +215,29 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze, o
                     value={formData.communicationLanguage}
                     onChange={handleInputChange}
                     placeholder={t('form.communicationLanguage.placeholder')}
-                    className="w-full px-4 py-4 bg-gray-50 border border-gray-200 rounded-xl focus:border-blue-500 focus:bg-white focus:outline-none transition-all duration-200"
+                    className="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 transition-all duration-200 focus:border-blue-500 focus:bg-white focus:outline-none sm:py-4"
                   />
                 </div>
               </div>
 
               {/* Action Buttons */}
-              <div className={`flex justify-between items-center pt-8 mt-8 border-t border-gray-100 ${isAgentAnalysis ? 'justify-end' : ''}`}>
+              <div className={`mt-8 flex flex-col gap-4 border-t border-gray-100 pt-8 sm:flex-row sm:items-center sm:justify-between ${isAgentAnalysis ? 'sm:justify-end' : ''}`}>
                 {!isAgentAnalysis && (
                   <button
                     type="button"
                     onClick={onReanalyze}
-                    className="flex items-center px-6 py-3 text-blue-600 hover:text-blue-700 font-medium transition-colors duration-200"
+                    className="inline-flex items-center justify-center rounded-xl px-6 py-3 text-sm font-medium text-blue-600 transition-colors duration-200 hover:text-blue-700"
                   >
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     {t('form.button.reanalyze')}
                   </button>
                 )}
 
-                <div className="flex space-x-4">
+                <div className={`flex flex-col gap-3 sm:flex-row sm:items-center ${isAgentAnalysis ? '' : 'sm:gap-4'}`}>
                   {!isAgentAnalysis && (
                     <button
                       type="button"
-                      className="px-8 py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-semibold rounded-xl transition-all duration-200"
+                      className="rounded-xl bg-gray-100 px-8 py-3 text-sm font-semibold text-gray-700 transition-all duration-200 hover:bg-gray-200"
                     >
                       {t('form.button.saveAsDraft')}
                     </button>
@@ -245,7 +245,7 @@ const BusinessForm: React.FC<BusinessFormProps> = ({ initialData, onReanalyze, o
                   <button
                     type="submit"
                     disabled={isSubmitting}
-                    className="px-8 py-3 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none"
+                    className="rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-3 text-sm font-semibold text-white transition-all duration-200 hover:-translate-y-0.5 hover:from-blue-700 hover:to-purple-700 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 sm:text-base"
                   >
                     {isSubmitting ? t('form.button.creating') : (isAgentAnalysis ? t('form.button.createProfile') : t('form.button.continueToSignup'))}
                   </button>

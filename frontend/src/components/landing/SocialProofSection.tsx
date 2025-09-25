@@ -112,7 +112,7 @@ const SocialProofSection: React.FC<SocialProofSectionProps> = ({ isVisible }) =>
     <section 
       id="social-proof" 
       data-section 
-      className="py-20 bg-gradient-to-br from-gray-50 to-blue-50 relative overflow-hidden"
+      className="relative overflow-hidden bg-gradient-to-br from-gray-50 to-blue-50 py-16 sm:py-20"
     >
       {/* Background decoration */}
       <div className="absolute inset-0">
@@ -120,14 +120,14 @@ const SocialProofSection: React.FC<SocialProofSectionProps> = ({ isVisible }) =>
         <div className="absolute bottom-10 right-10 w-32 h-32 bg-purple-200/30 rounded-full blur-xl" />
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 relative z-10">
+      <div className="relative z-10 mx-auto max-w-7xl px-4 sm:px-6">
         {/* Section header */}
         <div 
           className={`text-center mb-16 transition-all duration-1000 transform ${
             isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
           }`}
         >
-          <h2 className="text-4xl md:text-5xl font-bold mb-6">
+          <h2 className="mb-6 text-3xl font-bold sm:text-4xl md:text-5xl">
             <span className="bg-gradient-to-r from-gray-900 to-gray-600 bg-clip-text text-transparent">
               Dołącz do Tysięcy Firm
             </span>
@@ -136,7 +136,7 @@ const SocialProofSection: React.FC<SocialProofSectionProps> = ({ isVisible }) =>
               Używających AI Growth OS
             </span>
           </h2>
-          <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+          <p className="mx-auto max-w-3xl text-base text-gray-600 sm:text-lg md:text-xl">
             Od startupów po globalne korporacje - firmy z różnych branż zastąpiły dziesiątki narzędzi 
             jedną inteligentną platformą wzrostu
           </p>
@@ -144,7 +144,7 @@ const SocialProofSection: React.FC<SocialProofSectionProps> = ({ isVisible }) =>
 
         {/* Stats grid */}
         <div 
-          className={`grid grid-cols-2 md:grid-cols-4 gap-8 mb-20 transition-all duration-1000 transform ${
+          className={`mb-16 grid grid-cols-1 gap-6 transition-all duration-1000 transform sm:grid-cols-2 sm:gap-8 lg:mb-20 lg:grid-cols-4 ${
             isVisible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0'
           }`}
           style={{ transitionDelay: '0.2s' }}
@@ -159,7 +159,7 @@ const SocialProofSection: React.FC<SocialProofSectionProps> = ({ isVisible }) =>
                 <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-4 mx-auto shadow-lg">
                   <Icon className="w-8 h-8 text-white" />
                 </div>
-                <div className="text-3xl md:text-4xl font-bold text-gray-900 mb-2">
+                <div className="mb-2 text-3xl font-bold text-gray-900 md:text-4xl">
                   {index === 3 ? animatedStats[index].toFixed(1) : animatedStats[index].toLocaleString()}
                   <span className="text-blue-600">{stat.suffix}</span>
                 </div>
@@ -177,30 +177,30 @@ const SocialProofSection: React.FC<SocialProofSectionProps> = ({ isVisible }) =>
           style={{ transitionDelay: '0.4s' }}
         >
           <div className="relative max-w-4xl mx-auto">
-            <div className="bg-white/80 backdrop-blur-sm rounded-3xl p-8 md:p-12 shadow-2xl border border-white/20">
-              <div className="flex items-start space-x-4">
+            <div className="rounded-3xl border border-white/20 bg-white/80 p-6 shadow-2xl backdrop-blur-sm sm:p-8 md:p-12">
+              <div className="flex flex-col gap-4 sm:flex-row sm:gap-6">
                 <div className="flex-shrink-0">
-                  <div className={`w-16 h-16 bg-gradient-to-br ${testimonials[currentTestimonial].gradient} rounded-2xl flex items-center justify-center text-white font-bold text-xl shadow-lg`}>
+                  <div className={`flex h-16 w-16 items-center justify-center rounded-2xl bg-gradient-to-br ${testimonials[currentTestimonial].gradient} text-xl font-bold text-white shadow-lg sm:h-20 sm:w-20`}>
                     {testimonials[currentTestimonial].avatar}
                   </div>
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center mb-4">
-                    <Quote className="w-8 h-8 text-blue-500 mr-2" />
+                  <div className="mb-4 flex flex-col gap-2 sm:flex-row sm:items-center">
+                    <Quote className="h-7 w-7 text-blue-500 sm:h-8 sm:w-8" />
                     <div className="flex space-x-1">
                       {[...Array(5)].map((_, i) => (
-                        <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+                        <Star key={i} className="h-5 w-5 fill-current text-yellow-400" />
                       ))}
                     </div>
                   </div>
-                  <blockquote className="text-lg md:text-xl text-gray-800 mb-6 leading-relaxed">
+                  <blockquote className="mb-6 text-base leading-relaxed text-gray-800 sm:text-lg md:text-xl">
                     "{testimonials[currentTestimonial].content}"
                   </blockquote>
                   <div>
-                    <cite className="font-semibold text-gray-900 text-lg">
+                    <cite className="text-lg font-semibold text-gray-900">
                       {testimonials[currentTestimonial].name}
                     </cite>
-                    <p className="text-blue-600 font-medium">
+                    <p className="font-medium text-blue-600">
                       {testimonials[currentTestimonial].role}, {testimonials[currentTestimonial].company}
                     </p>
                   </div>
@@ -209,7 +209,7 @@ const SocialProofSection: React.FC<SocialProofSectionProps> = ({ isVisible }) =>
             </div>
             
             {/* Testimonial indicators */}
-            <div className="flex justify-center space-x-3 mt-6">
+            <div className="mt-6 flex justify-center space-x-3">
               {testimonials.map((_, index) => (
                 <button
                   key={index}
@@ -232,10 +232,10 @@ const SocialProofSection: React.FC<SocialProofSectionProps> = ({ isVisible }) =>
           }`}
           style={{ transitionDelay: '0.6s' }}
         >
-          <p className="text-center text-gray-600 mb-8 font-medium">
+          <p className="mb-6 text-center text-sm font-medium text-gray-600 sm:mb-8 sm:text-base">
             Firmy z różnych branż zastąpiły swoje działy marketingu AI Growth OS
           </p>
-          <div className="flex flex-wrap justify-center items-center gap-8 md:gap-12">
+          <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 md:gap-10">
             {companyLogos.map((company, index) => (
               <div 
                 key={index}
