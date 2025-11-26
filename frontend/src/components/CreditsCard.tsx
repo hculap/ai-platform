@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { createPortal } from 'react-dom';
 import { useTranslation } from 'react-i18next';
 import {
   Zap,
@@ -247,7 +248,7 @@ const CreditsCard: React.FC<CreditsCardProps> = ({ className = '', onCreditUpdat
       </div>
 
       {/* Transaction History Modal */}
-      {showTransactions && (
+      {showTransactions && createPortal(
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl max-w-2xl w-full max-h-[80vh] overflow-hidden">
             <div className="p-6 border-b border-gray-200">
@@ -297,10 +298,10 @@ const CreditsCard: React.FC<CreditsCardProps> = ({ className = '', onCreditUpdat
             </div>
           </div>
         </div>
-      )}
+      , document.body)}
 
       {/* Upgrade Modal */}
-      {showUpgrade && (
+      {showUpgrade && createPortal(
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl max-w-md w-full">
             <div className="p-6 border-b border-gray-200">
@@ -366,7 +367,7 @@ const CreditsCard: React.FC<CreditsCardProps> = ({ className = '', onCreditUpdat
             </div>
           </div>
         </div>
-      )}
+      , document.body)}
     </>
   );
 };

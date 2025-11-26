@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { BrowserRouter as Router, Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { LoadingState, BusinessProfile, User } from './types';
+import { LoadingState, BusinessProfile, User, AuthResponse } from './types';
 import { startBackgroundAnalysis, checkAnalysisStatus, registerUser, loginUser, createBusinessProfile } from './services/api';
 import { tokenManager } from './services/tokenManager';
 
@@ -37,6 +37,23 @@ function AppContent() {
   const [isSigningIn, setIsSigningIn] = useState(false);
   const [isAuthLoaded, setIsAuthLoaded] = useState(false);
   const [refreshBusinessProfiles, setRefreshBusinessProfiles] = useState<(() => Promise<void>) | null>(null);
+
+  // Central place to persist auth data and start token monitoring
+  const establishSession = useCallback((authData: AuthResponse) => {
+    setCurrentUser(authData.user);
+    setAuthToken(authData.access_token);
+
+    localStorage.setItem('user', JSON.stringify(authData.user));
+    localStorage.setItem('authToken', authData.access_token);
+
+    if (authData.refresh_token) {
+      localStorage.setItem('refreshToken', authData.refresh_token);
+    } else {
+      localStorage.removeItem('refreshToken');
+    }
+
+    tokenManager.startTokenMonitoring();
+  }, []);
 
   const handleAnalyze = async (url: string) => {
     setIsAnalyzing(true);
@@ -205,15 +222,7 @@ function AppContent() {
       }
 
       const authData = registerResult.data;
-      setCurrentUser(authData.user);
-      setAuthToken(authData.access_token);
-      
-      // Save to localStorage
-      localStorage.setItem('user', JSON.stringify(authData.user));
-      localStorage.setItem('authToken', authData.access_token);
-      if (authData.refresh_token) {
-        localStorage.setItem('refreshToken', authData.refresh_token);
-      }
+      establishSession(authData);
 
       // Create business profile if we have accepted profile data
       if (acceptedProfileData) {
@@ -276,15 +285,7 @@ function AppContent() {
       }
 
       const authData = loginResult.data;
-      setCurrentUser(authData.user);
-      setAuthToken(authData.access_token);
-      
-      // Save to localStorage
-      localStorage.setItem('user', JSON.stringify(authData.user));
-      localStorage.setItem('authToken', authData.access_token);
-      if (authData.refresh_token) {
-        localStorage.setItem('refreshToken', authData.refresh_token);
-      }
+      establishSession(authData);
 
       // Show success notification
       const successDiv = document.createElement('div');

@@ -90,6 +90,11 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
   const [isCommandPaletteOpen, setIsCommandPaletteOpen] = useState(false);
   const isSidebarCollapsed = sidebarCollapsed && !isMobileSidebarOpen;
 
+  // Stable callback prevents CreditsCard from recreating loadCredits on every render
+  const handleCreditUpdate = useCallback((creditData: UserCredit) => {
+    setCredits(creditData);
+  }, []);
+
   // Command Palette handlers
   const openCommandPalette = useCallback(() => {
     setIsCommandPaletteOpen(true);
@@ -827,7 +832,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
       )}
       {/* Sidebar */}
       <div
-        className={`fixed inset-y-0 left-0 z-40 flex w-72 transform flex-col bg-white shadow-xl transition-transform duration-300 lg:static lg:z-auto lg:h-auto lg:w-auto lg:translate-x-0 lg:border-r lg:border-gray-200 lg:shadow-none ${
+        className={`fixed inset-y-0 left-0 z-40 flex w-72 transform flex-col bg-white shadow-xl transition-transform duration-300 lg:sticky lg:top-0 lg:z-auto lg:h-screen lg:w-auto lg:translate-x-0 lg:border-r lg:border-gray-200 lg:shadow-none ${
           isMobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'
         } ${isSidebarCollapsed ? 'lg:w-16' : 'lg:w-64'}`}
       >
@@ -948,7 +953,7 @@ const Dashboard: React.FC<DashboardProps> = ({ user, authToken, onLogout, onProf
               <div className="mb-3 px-2">
                 <CreditsCard
                   className="!bg-gray-50 !p-3 !shadow-none"
-                  onCreditUpdate={(creditData) => setCredits(creditData)}
+                  onCreditUpdate={handleCreditUpdate}
                 />
               </div>
             )}
